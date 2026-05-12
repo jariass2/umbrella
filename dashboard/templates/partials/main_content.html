@@ -1,4 +1,4 @@
-<h2 style="margin-bottom:16px;font-size:16px;font-weight:600;">Pipeline de Análisis</h2>
+<h2 class="main-title">Pipeline de Análisis</h2>
 
 <!-- Pipeline Strip -->
 <div class="pipeline">
@@ -7,10 +7,15 @@
   <div class="agent-card status-{{ status }}">
     <div class="agent-name">{{ agent }}</div>
     <div class="agent-status">
-      {% if status == 'completed' %}Completado
-      {% elif status == 'running' %}Ejecutando...
-      {% elif status == 'error' %}Error
-      {% else %}En espera{% endif %}
+      {% if status == 'completed' %}
+        <i data-lucide="check-circle-2" style="width:10px;height:10px;"></i> Completado
+      {% elif status == 'running' %}
+        <i data-lucide="loader" style="width:10px;height:10px;"></i> Ejecutando
+      {% elif status == 'error' %}
+        <i data-lucide="alert-circle" style="width:10px;height:10px;"></i> Error
+      {% else %}
+        <i data-lucide="clock" style="width:10px;height:10px;"></i> En espera
+      {% endif %}
     </div>
   </div>
   {% endfor %}
