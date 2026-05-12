@@ -1,4 +1,4 @@
-"""Componente de entrada estructurada de fórmula con filas de ingredientes."""
+"""Formula input matching the wireframe exactly."""
 
 import streamlit as st
 
@@ -6,67 +6,72 @@ from dashboard.utils.formula_parser import VALID_UNITS
 
 
 def render_formula_input():
-    """Renderiza el formulario de fórmula en la sidebar.
+    """Renderiza el formulario de fórmula en la sidebar con estilo wireframe."""
+    # Título sidebar
+    st.markdown('<div class="sidebar-title">Umbrella</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-subtitle">Análisis Regulatorio Inteligente</div>', unsafe_allow_html=True)
 
-    Devuelve: (product_name, ingredients, analyze_clicked)
-    """
-    st.markdown("### Formula")
+    # Sección Fórmula
+    st.markdown('<div class="sidebar-section-title">Fórmula</div>', unsafe_allow_html=True)
+    product_name = st.text_input("Nombre del producto", value="", label_visibility="collapsed",
+                                  placeholder="Nombre del producto")
 
-    product_name = st.text_input("Nombre del producto", placeholder="Collagen Complex Pro")
-
-    st.markdown("#### Ingredientes")
+    # Sección Ingredientes
+    st.markdown('<div class="sidebar-section-title" style="margin-top:16px">Ingredientes</div>',
+                unsafe_allow_html=True)
 
     if "ingredients" not in st.session_state:
-        st.session_state.ingredients = [
-            {"name": "", "dosage": "", "unit": "mg"},
-        ]
+        st.session_state.ingredients = [{"name": "", "dosage": "", "unit": "mg"}]
 
-    # Renderizar filas de ingredientes
+    ingredients = st.session_state.ingredients
     indices_to_remove = []
-    for i, ing in enumerate(st.session_state.ingredients):
-        cols = st.columns([4, 1.5, 1, 0.4])
-        with cols[0]:
+
+    for i, ing in enumerate(ingredients):
+        col_name, col_dose, col_unit, col_remove = st.columns([4, 1.5, 1, 0.3])
+
+        with col_name:
             ing["name"] = st.text_input(
-                "Ingrediente", value=ing["name"],
-                key=f"ing_name_{i}", label_visibility="collapsed",
-                placeholder="Ingrediente",
+                f"ing_name_{i}", value=ing["name"],
+                placeholder="Ingrediente", label_visibility="collapsed", key=f"ing_name_{i}"
             )
-        with cols[1]:
+        with col_dose:
             ing["dosage"] = st.text_input(
-                "Dosis", value=ing["dosage"],
-                key=f"ing_dose_{i}", label_visibility="collapsed",
-                placeholder="Dosis",
+                f"ing_dose_{i}", value=ing["dosage"],
+                placeholder="Dosis", label_visibility="collapsed", key=f"ing_dose_{i}"
             )
-        with cols[2]:
+        with col_unit:
             ing["unit"] = st.selectbox(
-                "Unidad", VALID_UNITS,
+                f"ing_unit_{i}", options=VALID_UNITS,
                 index=VALID_UNITS.index(ing["unit"]) if ing["unit"] in VALID_UNITS else 0,
-                key=f"ing_unit_{i}", label_visibility="collapsed",
+                label_visibility="collapsed", key=f"ing_unit_{i}"
             )
-        with cols[3]:
-            if st.button("✕", key=f"ing_remove_{i}", help="Eliminar"):
+        with col_remove:
+            if st.button("×", key=f"ing_remove_{i}"):
                 indices_to_remove.append(i)
 
-    # Eliminar ingredientes marcados
     if indices_to_remove:
         for i in sorted(indices_to_remove, reverse=True):
-            st.session_state.ingredients.pop(i)
+            if len(ingredients) > 1:
+                ingredients.pop(i)
+        st.session_state.ingredients = ingredients
         st.rerun()
 
-    # Añadir ingrediente
-    if st.button("+ Añadir ingrediente", use_container_width=True):
+    st.session_state.ingredients = ingredients
+
+    # Botón añadir ingrediente
+    if st.button("+ Añadir ingrediente", use_container_width=True, key="add_ingredient"):
         st.session_state.ingredients.append({"name": "", "dosage": "", "unit": "mg"})
         st.rerun()
 
-    # Botón de análisis
-    st.markdown("---")
-    has_ingredients = any(ing["name"].strip() for ing in st.session_state.ingredients)
+    # Botón analizar
+    has_ingredients = any(ing["name"].strip() for ing in ingredients)
     has_product = bool(product_name.strip())
     analyze_clicked = st.button(
-        "Analizar Formula",
+        "Analizar Fórmula",
         type="primary",
         use_container_width=True,
         disabled=not (has_product and has_ingredients) or st.session_state.get("pipeline_running", False),
+        key="analyze_btn",
     )
 
-    return product_name, st.session_state.ingredients, analyze_clicked
+    return product_name, ingredients, analyze_clicked

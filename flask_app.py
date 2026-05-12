@@ -1,0 +1,290 @@
+"""Umbrella Dashboard — Flask + HTMX."""
+
+from __future__ import annotations
+
+import json
+import os
+import threading
+from datetime import datetime
+from pathlib import Path
+from queue import Queue
+
+from flask import Flask, render_template, request, Markup, redirect, url_for
+
+from dashboard.api.runner import AGENT_ORDER, run_pipeline
+from dashboard.api.store import (
+    init_db, create_run, update_run_status, save_agent_result,
+    get_run, list_runs, get_agent_results, load_run_results,
+)
+from dashboard.utils.formula_parser import VALID_UNITS, validate_ingredient
+
+THIS_DIR = Path(__file__).resolve().parent
+app = Flask(
+    __name__,
+    template_folder=str(THIS_DIR / "dashboard" / "templates"),
+    static_folder=str(THIS_DIR / "dashboard" / "static"),
+)
+app.secret_key = os.environ.get("FLASK_SECRET", "umbrella-dev-key")
+
+PROJECT_ROOT = str(Path(__file__).resolve().parent)
+
+AGENT_LABELS = {
+    "KIC": "KIC — Clasificación de Ingredientes",
+    "Regulatorio": "Regulatorio — Validación Normativa",
+    "Ficha Técnica": "Ficha Técnica",
+    "Claims": "Claims — Declaraciones Regulatorias",
+    "Etiqueta": "Etiqueta — Texto de Etiqueta",
+    "Formatos": "Formatos — Formatos de Presentación",
+    "Docs Internos": "Docs Internos — Documentación Interna",
+    "QC": "QC — Plan de Control de Calidad",
+}
+
+# Pipeline state: run_id -> Queue
+_pipeline_queues: dict[int, Queue] = {}
+
+
+def _summarize(agent: str, data: dict) -> str:
+    if not data:
+        return "Sin resultados."
+    ingredients = data.get("fase_2_ingredientes") or data.get("ingredientes")
+    if ingredients and isinstance(ingredients, list):
+        count = len(ingredients)
+        return f"{count} ingrediente{'s' if count != 1 else ''} procesado{'s' if count != 1 else ''}."
+    for key in ["resumen", "summary", "resultado", "conclusion", "evaluacion_global"]:
+        val = data.get(key)
+        if val:
+            if isinstance(val, dict):
+                return json.dumps(val, ensure_ascii=False)[:200]
+            return str(val)[:200]
+    return "Resultado disponible."
+
+
+def _build_report_markdown(product_name: str, results: dict, md_contents: dict) -> str:
+    lines = [
+        "# Informe de Análisis Regulatorio",
+        "",
+        f"**Producto:** {product_name}",
+        f"**Fecha:** {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+        "",
+        "---",
+        "",
+    ]
+    for agent in AGENT_ORDER:
+        data = results.get(agent)
+        if not data:
+            continue
+        lines.append(f"## {AGENT_LABELS.get(agent, agent)}")
+        lines.append("")
+        md = md_contents.get(agent)
+        if md:
+            lines.append(md)
+        else:
+            lines.append("```json")
+            lines.append(json.dumps(data, indent=2, ensure_ascii=False))
+            lines.append("```")
+        lines.append("")
+        lines.append("---")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def _get_main_context(run_id: int | None = None, pipeline_running: bool = False) -> dict:
+    agent_statuses = {a: "waiting" for a in AGENT_ORDER}
+    agent_results = {}
+    md_contents = {}
+    all_completed = False
+
+    if run_id:
+        raw_results = get_agent_results(run_id)
+        for r in raw_results:
+            agent = r["agent_name"]
+            if r["status"] == "completed":
+                agent_statuses[agent] = "completed"
+                if r["output_json"]:
+                    try:
+                        agent_results[agent] = json.loads(r["output_json"])
+                    except json.JSONDecodeError:
+                        agent_results[agent] = {"raw": r["output_json"]}
+                if r.get("output_md"):
+                    md_contents[agent] = r["output_md"]
+            elif r["status"] == "error":
+                agent_statuses[agent] = "error"
+
+        run_data = get_run(run_id)
+        if run_data and run_data["status"] == "running":
+            pipeline_running = True
+
+    all_completed = all(s == "completed" for s in agent_statuses.values())
+
+    return {
+        "agent_order": AGENT_ORDER,
+        "agent_statuses": agent_statuses,
+        "agent_results": agent_results,
+        "md_contents": md_contents,
+        "agent_labels": AGENT_LABELS,
+        "all_completed": all_completed,
+        "pipeline_running": pipeline_running,
+        "run_id": run_id,
+    }
+
+
+def _run_pipeline_and_save(formula_text: str, output_dir: str, run_id: int):
+    queue = Queue()
+    _pipeline_queues[run_id] = queue
+
+    # Run in a nested thread so this thread can consume the queue
+    def _target():
+        run_pipeline(formula_text, output_dir, queue)
+
+    thread = threading.Thread(target=_target, daemon=True)
+    thread.start()
+
+    # Consume queue events and save to DB
+    completed_agents = set()
+    while True:
+        event = queue.get()
+        if "agent" in event:
+            agent = event["agent"]
+            status = event["status"]
+            if status == "completed":
+                completed_agents.add(agent)
+                save_agent_result(
+                    run_id, agent, "completed",
+                    output_json=json.dumps(event.get("data", {}), ensure_ascii=False),
+                    output_md=event.get("output_md"),
+                    duration_s=event.get("duration_s"),
+                )
+            elif status == "error":
+                save_agent_result(run_id, agent, "error")
+        elif event.get("pipeline") == "completed":
+            break
+
+    # Determine final status
+    final = "completed" if len(completed_agents) == len(AGENT_ORDER) else "error"
+    update_run_status(run_id, final)
+    _pipeline_queues.pop(run_id, None)
+
+
+# ── Routes ────────────────────────────────────────────────────────────
+
+@app.route("/")
+def index():
+    init_db()
+    selected_run_id = request.args.get("run_id", type=int)
+
+    # Prepare runs with completed count
+    runs_raw = list_runs(limit=15)
+    runs = []
+    for r in runs_raw:
+        results = get_agent_results(r["id"])
+        r["completed_count"] = sum(1 for x in results if x["status"] == "completed")
+        r["total_agents"] = len(AGENT_ORDER)
+        runs.append(r)
+
+    ingredients = [{"name": "", "dosage": "", "unit": "mg"}]
+
+    ctx = _get_main_context(selected_run_id)
+
+    return render_template(
+        "index.html",
+        product_name="",
+        ingredients=ingredients,
+        units=VALID_UNITS,
+        runs=runs,
+        selected_run_id=selected_run_id,
+        **ctx,
+    )
+
+
+@app.route("/analyze", methods=["POST"])
+def analyze():
+    init_db()
+    product_name = request.form.get("product_name", "").strip()
+    names = request.form.getlist("ing_name")
+    dosages = request.form.getlist("ing_dosage")
+    units = request.form.getlist("ing_unit")
+
+    errors = []
+    valid_ingredients = []
+    for name, dosage, unit in zip(names, dosages, units):
+        if not name.strip():
+            continue
+        err = validate_ingredient(name, dosage, unit)
+        if err:
+            errors.append(f"{name}: {err}")
+        else:
+            valid_ingredients.append({"name": name, "dosage": dosage, "unit": unit})
+
+    if errors:
+        return f'<div class="error-msg">{"<br>".join(errors)}</div>', 400
+
+    if not valid_ingredients:
+        return '<div class="warning-msg">Añade al menos un ingrediente.</div>', 400
+
+    formula_text = _rows_to_formula(product_name, valid_ingredients)
+    run_id = create_run(product_name, formula_text)
+    output_dir = os.path.join(PROJECT_ROOT, "outputs", f"run_{run_id}")
+
+    # Start pipeline in background
+    thread = threading.Thread(
+        target=_run_pipeline_and_save,
+        args=(formula_text, output_dir, run_id),
+        daemon=True,
+    )
+    thread.start()
+
+    ctx = _get_main_context(run_id, pipeline_running=True)
+    return render_template("partials/main_content.html", **ctx)
+
+
+@app.route("/pipeline-status/<int:run_id>")
+def pipeline_status(run_id):
+    ctx = _get_main_context(run_id)
+    return render_template("partials/main_content.html", **ctx)
+
+
+@app.route("/run/<int:run_id>")
+def load_run(run_id):
+    ctx = _get_main_context(run_id)
+    return render_template("partials/main_content.html", **ctx)
+
+
+@app.route("/download/<int:run_id>")
+def download_report(run_id):
+    from flask import Response
+    run_data = get_run(run_id)
+    if not run_data:
+        return "Run not found", 404
+
+    results = load_run_results(run_id)
+    raw = get_agent_results(run_id)
+    md_contents = {}
+    for r in raw:
+        if r.get("output_md"):
+            md_contents[r["agent_name"]] = r["output_md"]
+
+    md = _build_report_markdown(run_data["product_name"], results, md_contents)
+    filename = f"{run_data['product_name'] or 'informe'}_report.md"
+    return Response(
+        md,
+        mimetype="text/markdown",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+def _rows_to_formula(product_name: str, ingredients: list[dict]) -> str:
+    lines = [f"Producto: {product_name}", ""]
+    for ing in ingredients:
+        lines.append(f"- {ing['name']} {ing['dosage']}{ing['unit']}")
+    return "\n".join(lines)
+
+
+# Register template filter for summarize
+@app.template_filter("summarize")
+def summarize_filter(data):
+    return Markup(_summarize("", data))
+
+
+if __name__ == "__main__":
+    init_db()
+    app.run(debug=True, port=8503)

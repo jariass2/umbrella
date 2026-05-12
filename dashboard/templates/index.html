@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Umbrella — Análisis Regulatorio</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h1>Umbrella</h1>
+    <div class="subtitle">Análisis Regulatorio Inteligente</div>
+
+    <h2>Fórmula</h2>
+    <form id="analyze-form" hx-post="/analyze" hx-target="#main-content" hx-swap="innerHTML">
+      <div class="form-group">
+        <input type="text" name="product_name" placeholder="Nombre del producto" value="{{ product_name or '' }}">
+      </div>
+
+      <h2 style="margin-top:16px">Ingredientes</h2>
+
+      <div id="ingredients-list">
+        {% for ing in ingredients %}
+        <div class="ingredient-row">
+          <input name="ing_name" placeholder="Ingrediente" value="{{ ing.name }}">
+          <input name="ing_dosage" placeholder="Dosis" value="{{ ing.dosage }}" style="width:70px;flex:none;">
+          <select name="ing_unit">
+            {% for u in units %}
+            <option value="{{ u }}" {{ 'selected' if u == ing.unit else '' }}>{{ u }}</option>
+            {% endfor %}
+          </select>
+          <button type="button" class="remove" onclick="this.parentElement.remove()">×</button>
+        </div>
+        {% endfor %}
+      </div>
+
+      <button type="button" class="btn btn-add" id="add-ingredient-btn">+ Añadir ingrediente</button>
+      <button type="submit" class="btn btn-run" {{ 'disabled' if pipeline_running else '' }}>
+        {{ 'Analizando...' if pipeline_running else 'Analizar Fórmula' }}
+      </button>
+    </form>
+
+    <!-- History -->
+    <div class="history">
+      <h2>Historial</h2>
+      {% for run in runs %}
+      <div class="history-item {{ 'active' if run.id == selected_run_id else '' }}"
+           hx-get="/run/{{ run.id }}" hx-target="#main-content" hx-swap="innerHTML">
+        <div class="name">
+          {% if run.status == 'completed' %}✅{% elif run.status == 'error' %}❌{% else %}⏳{% endif %}
+          {{ run.product_name }}
+        </div>
+        <div class="meta">#{{ run.id }} — {{ run.completed_count }}/{{ run.total_agents }} agentes</div>
+      </div>
+      {% endfor %}
+      {% if not runs %}
+      <div style="color:#999;font-size:12px;padding:8px 0;">No hay runs anteriores.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main" id="main-content">
+    {% include 'partials/main_content.html' %}
+  </div>
+</div>
+
+<script>
+// Add ingredient row
+document.getElementById('add-ingredient-btn').addEventListener('click', function() {
+  const row = document.createElement('div');
+  row.className = 'ingredient-row';
+  row.innerHTML = `
+    <input name="ing_name" placeholder="Ingrediente" value="">
+    <input name="ing_dosage" placeholder="Dosis" value="" style="width:70px;flex:none;">
+    <select name="ing_unit">
+      {% for u in units %}
+      <option value="{{ u }}">{{ u }}</option>
+      {% endfor %}
+    </select>
+    <button type="button" class="remove" onclick="this.parentElement.remove()">×</button>
+  `;
+  document.getElementById('ingredients-list').appendChild(row);
+});
+</script>
+
+</body>
+</html>

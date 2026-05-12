@@ -1,5 +1,7 @@
 """Ejecuta el pipeline en un thread background, empujando eventos de estado a una Queue."""
 
+from __future__ import annotations
+
 import json
 import os
 import re

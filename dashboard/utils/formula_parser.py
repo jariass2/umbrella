@@ -1,5 +1,7 @@
 """Convierte filas estructuradas de ingredientes al formato de texto del pipeline."""
 
+from __future__ import annotations
+
 VALID_UNITS = ["mg", "g", "µg", "mcg", "% VRN", "UI"]
 
 

@@ -15,6 +15,7 @@ PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
+from dashboard.styles import get_global_css
 from dashboard.api.runner import AGENT_ORDER, run_pipeline
 from dashboard.api.store import (
     init_db, create_run, update_run_status, save_agent_result,
@@ -30,7 +31,11 @@ st.set_page_config(
     page_title="Umbrella — Análisis Regulatorio",
     page_icon="🌂",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
+
+# Inyectar CSS global
+st.markdown(get_global_css(), unsafe_allow_html=True)
 
 init_db()
 
@@ -46,46 +51,45 @@ for key, default in _defaults.items():
     if key not in st.session_state:
         st.session_state[key] = default
 
-# ── Layout ────────────────────────────────────────────────────────────
+# ── Sidebar ───────────────────────────────────────────────────────────
 with st.sidebar:
-    st.title("Umbrella")
-    st.caption("Análisis Regulatorio Inteligente")
-
     product_name, ingredients, analyze_clicked = render_formula_input()
-
-    st.divider()
+    st.markdown("---")
     render_run_history()
 
-# Título principal
-st.markdown("## Pipeline de Análisis")
+# ── Main Content ──────────────────────────────────────────────────────
+st.markdown(
+    '<h2 style="margin-bottom:16px;font-size:16px;font-weight:600;">Pipeline de Análisis</h2>',
+    unsafe_allow_html=True,
+)
 render_pipeline_strip(st.session_state.agent_statuses)
 st.markdown("---")
 render_result_cards(st.session_state.agent_statuses, st.session_state.agent_results)
 
-# ── Botón de descarga PDF ─────────────────────────────────────────────
+# ── Botón de descarga ─────────────────────────────────────────────────
 all_completed = all(
     st.session_state.agent_statuses.get(a) == "completed"
     for a in AGENT_ORDER
 )
 if all_completed and st.session_state.agent_results:
-    st.markdown("---")
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.markdown("### ✅ Informe completo generado")
-    with col2:
-        report_md = _build_report_markdown(product_name, st.session_state.agent_results)
-        st.download_button(
-            "Descargar Informe (Markdown)",
-            data=report_md,
-            file_name=f"{product_name or 'informe'}_report.md",
-            mime="text/markdown",
-            type="primary",
-            use_container_width=True,
-        )
+    report_md = _build_report_markdown(product_name, st.session_state.agent_results)
+    download_html = (
+        '<div class="download-bar">'
+        '<div class="label"><span class="check">&#10003;</span> Informe completo generado</div>'
+        '</div>'
+    )
+    st.markdown(download_html, unsafe_allow_html=True)
+    st.download_button(
+        "Descargar Informe (Markdown)",
+        data=report_md,
+        file_name=f"{product_name or 'informe'}_report.md",
+        mime="text/markdown",
+        type="primary",
+        use_container_width=True,
+    )
 
 # ── Iniciar pipeline ──────────────────────────────────────────────────
 if analyze_clicked and not st.session_state.pipeline_running:
-    # Validar ingredientes
     errors = []
     valid_ingredients = []
     for ing in ingredients:
@@ -110,13 +114,11 @@ if analyze_clicked and not st.session_state.pipeline_running:
     output_dir = os.path.join(PROJECT_ROOT, "outputs", f"run_{run_id}")
     update_run_status(run_id, "running")
 
-    # Resetear estado
     st.session_state.agent_statuses = {a: "waiting" for a in AGENT_ORDER}
     st.session_state.agent_results = {}
     st.session_state.pipeline_running = True
     st.session_state.current_run_id = run_id
 
-    # Crear queue y arrancar thread
     status_queue: Queue = Queue()
     st.session_state.status_queue = status_queue
 
@@ -126,10 +128,7 @@ if analyze_clicked and not st.session_state.pipeline_running:
         daemon=True,
     )
     thread.start()
-
-    # Guardar referencia al thread para join
     st.session_state._pipeline_thread = thread
-
     st.rerun()
 
 # ── Polling de estado ─────────────────────────────────────────────────
@@ -154,7 +153,6 @@ if st.session_state.pipeline_running and st.session_state.status_queue:
                 if event.get("output_md"):
                     st.session_state[f"{agent}_md"] = event["output_md"]
 
-                # Persistir en SQLite
                 run_id = st.session_state.current_run_id
                 if run_id:
                     save_agent_result(
@@ -190,7 +188,7 @@ if st.session_state.pipeline_running and st.session_state.status_queue:
 
 
 def _build_report_markdown(product_name: str, results: dict) -> str:
-    """Genera un informe consolidado en Markdown a partir de los resultados."""
+    """Genera un informe consolidado en Markdown."""
     from datetime import datetime
 
     lines = [
@@ -223,7 +221,6 @@ def _build_report_markdown(product_name: str, results: dict) -> str:
         lines.append(f"## {label}")
         lines.append("")
 
-        # Si hay markdown en session_state, usarlo
         md_content = st.session_state.get(f"{agent}_md")
         if md_content:
             lines.append(md_content)
