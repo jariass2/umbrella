@@ -2,64 +2,77 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Umbrella — Análisis Regulatorio</title>
 <link rel="stylesheet" href="/static/css/style.css">
 <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-<script src="https://unpkg.com/lucide@0.344.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 </head>
 <body>
 
 <div class="app">
   <!-- Sidebar -->
   <div class="sidebar">
-    <div class="sidebar-brand">
-      <div class="sidebar-brand-icon"><i data-lucide="shield-check"></i></div>
-      <h1>Umbrella</h1>
-    </div>
-    <div class="subtitle">Análisis Regulatorio Inteligente</div>
-
-    <h2>Fórmula</h2>
-    <form id="analyze-form" hx-post="/analyze" hx-target="#main-content" hx-swap="innerHTML">
-      <div class="form-group">
-        <input type="text" name="product_name" placeholder="Nombre del producto" value="{{ product_name or '' }}">
-      </div>
-
-      <h2 style="margin-top:16px">Ingredientes</h2>
-
-      <div id="ingredients-list">
-        {% for ing in ingredients %}
-        <div class="ingredient-row">
-          <input name="ing_name" placeholder="Ingrediente" value="{{ ing.name }}">
-          <input name="ing_dosage" placeholder="Dosis" value="{{ ing.dosage }}" style="width:70px;flex:none;">
-          <select name="ing_unit">
-            {% for u in units %}
-            <option value="{{ u }}" {{ 'selected' if u == ing.unit else '' }}>{{ u }}</option>
-            {% endfor %}
-          </select>
-          <button type="button" class="remove" onclick="this.parentElement.remove()">×</button>
+    <div class="sidebar-top">
+      <div class="sidebar-brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
         </div>
-        {% endfor %}
+        <span class="brand-name">Umbrella</span>
+      </div>
+      <div class="brand-sub">Análisis Regulatorio Inteligente</div>
+      <div class="section-label">Fórmula</div>
+    </div>
+
+    <form id="analyze-form" hx-post="/analyze" hx-target="#main-content" hx-swap="innerHTML">
+      <div class="form-body">
+        <div class="field">
+          <input type="text" name="product_name" placeholder="Nombre del producto" value="{{ product_name or '' }}">
+        </div>
       </div>
 
-      <button type="button" class="btn btn-add" id="add-ingredient-btn">+ Añadir ingrediente</button>
-      <button type="submit" class="btn btn-run" {{ 'disabled' if pipeline_running else '' }}>
-        {{ 'Analizando...' if pipeline_running else 'Analizar Fórmula' }}
-      </button>
+      <div class="sidebar-divider"></div>
+
+      <div class="ingredients-section" style="padding-top:12px">
+        <div class="section-label">Ingredientes</div>
+
+        <div id="ingredients-list">
+          {% for ing in ingredients %}
+          <div class="ing-row">
+            <input name="ing_name" placeholder="Ingrediente" value="{{ ing.name }}">
+            <input name="ing_dosage" class="ing-dose" placeholder="Dosis" value="{{ ing.dosage }}">
+            <select name="ing_unit">
+              {% for u in units %}
+              <option value="{{ u }}" {{ 'selected' if u == ing.unit else '' }}>{{ u }}</option>
+              {% endfor %}
+            </select>
+            <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
+          </div>
+          {% endfor %}
+        </div>
+
+        <button type="button" class="btn-add" id="add-ingredient-btn">+ Añadir ingrediente</button>
+        <button type="submit" class="btn-run" {{ 'disabled' if pipeline_running else '' }}>
+          {{ 'Analizando...' if pipeline_running else 'Analizar Fórmula' }}
+        </button>
+      </div>
     </form>
 
+    <div class="sidebar-divider"></div>
+
     <!-- History -->
-    <div class="history">
-      <h2>Historial</h2>
+    <div class="history-section">
+      <div class="section-label">Historial</div>
       {% for run in runs %}
       <div class="history-item {{ 'active' if run.id == selected_run_id else '' }}"
            hx-get="/run/{{ run.id }}" hx-target="#main-content" hx-swap="innerHTML">
-        <div class="name">
-          {% if run.status == 'completed' %}<i data-lucide="check-circle-2" style="width:12px;height:12px;color:var(--done);vertical-align:-1px;"></i>
-          {% elif run.status == 'error' %}<i data-lucide="alert-circle" style="width:12px;height:12px;color:var(--error);vertical-align:-1px;"></i>
-          {% else %}<i data-lucide="clock" style="width:12px;height:12px;color:var(--text-muted);vertical-align:-1px;"></i>{% endif %}
-          {{ run.product_name }}
+        <div class="history-dot {% if run.status == 'completed' %}done{% elif run.status == 'running' %}running{% elif run.status == 'error' %}error{% else %}other{% endif %}"></div>
+        <div class="history-info">
+          <div class="history-name">{{ run.product_name or 'Sin nombre' }}</div>
+          <div class="history-meta">#{{ run.id }} — {{ run.completed_count }}/{{ run.total_agents }} agentes</div>
         </div>
-        <div class="meta">#{{ run.id }} — {{ run.completed_count }}/{{ run.total_agents }} agentes</div>
       </div>
       {% endfor %}
       {% if not runs %}
@@ -77,23 +90,37 @@
 <script>
 document.getElementById('add-ingredient-btn').addEventListener('click', function() {
   const row = document.createElement('div');
-  row.className = 'ingredient-row';
+  row.className = 'ing-row';
   row.innerHTML = `
     <input name="ing_name" placeholder="Ingrediente" value="">
-    <input name="ing_dosage" placeholder="Dosis" value="" style="width:70px;flex:none;">
+    <input name="ing_dosage" class="ing-dose" placeholder="Dosis" value="">
     <select name="ing_unit">
       {% for u in units %}
       <option value="{{ u }}">{{ u }}</option>
       {% endfor %}
     </select>
-    <button type="button" class="remove" onclick="this.parentElement.remove()">×</button>
+    <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
   `;
   document.getElementById('ingredients-list').appendChild(row);
 });
 
-// Initialize Lucide icons after HTMX swaps
-document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
-document.body.addEventListener('htmx:afterSwap', () => lucide.createIcons());
+function renderMarkdown() {
+  document.querySelectorAll('.md-body[data-md]').forEach(el => {
+    el.innerHTML = marked.parse(el.dataset.md);
+    delete el.dataset.md;
+  });
+}
+
+function toggleCard(header) {
+  const card = header.closest('.result-card');
+  const body = card.querySelector('.result-body');
+  if (!body) return;
+  card.classList.toggle('expanded');
+  body.classList.toggle('collapsed');
+}
+
+document.addEventListener('DOMContentLoaded', () => { renderMarkdown(); });
+document.body.addEventListener('htmx:afterSwap', () => { renderMarkdown(); });
 </script>
 
 </body>

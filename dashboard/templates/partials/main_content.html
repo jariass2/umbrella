@@ -1,20 +1,26 @@
-<h2 class="main-title">Pipeline de Análisis</h2>
+<div class="main-title">Pipeline de Análisis</div>
 
 <!-- Pipeline Strip -->
 <div class="pipeline">
   {% for agent in agent_order %}
   {% set status = agent_statuses.get(agent, 'waiting') %}
   <div class="agent-card status-{{ status }}">
-    <div class="agent-name">{{ agent }}</div>
-    <div class="agent-status">
-      {% if status == 'completed' %}
-        <i data-lucide="check-circle-2" style="width:10px;height:10px;"></i> Completado
+    <div class="agent-icon">
+      {% if status == 'completed' %}✓
       {% elif status == 'running' %}
-        <i data-lucide="loader" style="width:10px;height:10px;"></i> Ejecutando
-      {% elif status == 'error' %}
-        <i data-lucide="alert-circle" style="width:10px;height:10px;"></i> Error
-      {% else %}
-        <i data-lucide="clock" style="width:10px;height:10px;"></i> En espera
+        <svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="10" height="10">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+      {% elif status == 'error' %}✕
+      {% else %}–
+      {% endif %}
+    </div>
+    <div class="agent-name">{{ agent }}</div>
+    <div class="agent-status-text">
+      {% if status == 'completed' %}Completado
+      {% elif status == 'running' %}Ejecutando
+      {% elif status == 'error' %}Error
+      {% else %}En espera
       {% endif %}
     </div>
   </div>
@@ -28,44 +34,68 @@
   {% set data = agent_results.get(agent) %}
 
   {% if status == 'completed' and data %}
-  <div class="result-card">
-    <div class="result-header">
-      <h3>{{ loop.index }}. {{ agent_labels[agent] }}</h3>
-      {% set warnings = data.get('avisos') or data.get('warnings') or data.get('advertencias') %}
-      {% if warnings and warnings is iterable and warnings is not string and warnings|length > 0 %}
-      <span class="badge badge-warn">{{ warnings|length }} avisos</span>
-      {% else %}
-      <span class="badge badge-ok">OK</span>
-      {% endif %}
+  <div class="result-card card-done expanded">
+    <div class="result-header" onclick="toggleCard(this)">
+      <div class="result-header-left">
+        <span class="result-num">{{ loop.index }}</span>
+        <div><div class="result-title">{{ agent_labels[agent] }}</div></div>
+      </div>
+      <div class="result-header-right">
+        {% set warnings = data.get('avisos') or data.get('warnings') or data.get('advertencias') %}
+        {% if warnings and warnings is iterable and warnings is not string and warnings|length > 0 %}
+        <span class="badge badge-warn">{{ warnings|length }} avisos</span>
+        {% else %}
+        <span class="badge badge-ok">OK</span>
+        {% endif %}
+        <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+      </div>
     </div>
     <div class="result-body">
-      {% if md_contents.get(agent) %}
-      {{ md_contents[agent] }}
-      {% else %}
-      {{ summarize(agent, data) }}
-      {% endif %}
+      <div class="md-content{% if md_contents.get(agent) %} md-body{% endif %}"
+           {% if md_contents.get(agent) %}data-md="{{ md_contents[agent] | e }}"{% endif %}>
+        {% if not md_contents.get(agent) %}{{ data | summarize }}{% endif %}
+      </div>
     </div>
   </div>
 
   {% elif status == 'running' %}
-  <div class="result-card">
-    <div class="result-header" style="opacity:0.5">
-      <h3>{{ loop.index }}. {{ agent_labels[agent] }} — En ejecución...</h3>
+  <div class="result-card card-running">
+    <div class="result-header">
+      <div class="result-header-left">
+        <span class="result-num">{{ loop.index }}</span>
+        <div><div class="result-title">{{ agent_labels[agent] }}</div></div>
+      </div>
+      <div class="result-header-right">
+        <span class="badge badge-run">Ejecutando</span>
+      </div>
     </div>
-    <div class="result-body collapsed">
-      <span class="placeholder">Resultados disponibles al completar el agente.</span>
-    </div>
+    <div class="result-placeholder">Resultados disponibles al completar el agente.</div>
   </div>
 
   {% elif status == 'error' %}
-  <div class="result-card">
+  <div class="result-card card-error">
     <div class="result-header">
-      <h3>{{ loop.index }}. {{ agent_labels[agent] }}</h3>
-      <span class="badge badge-error">Error</span>
+      <div class="result-header-left">
+        <span class="result-num">{{ loop.index }}</span>
+        <div><div class="result-title">{{ agent_labels[agent] }}</div></div>
+      </div>
+      <div class="result-header-right">
+        <span class="badge badge-err">Error</span>
+      </div>
     </div>
-    <div class="result-body">El agente falló durante la ejecución.</div>
+    <div class="result-placeholder" style="color:var(--error)">El agente falló durante la ejecución.</div>
   </div>
 
+  {% else %}
+  <div class="result-card card-waiting">
+    <div class="result-header">
+      <div class="result-header-left">
+        <span class="result-num">{{ loop.index }}</span>
+        <div><div class="result-title" style="color:var(--text-muted);font-weight:500">{{ agent_labels[agent] }}</div></div>
+      </div>
+      <div class="result-header-right"><span class="badge badge-dim">En espera</span></div>
+    </div>
+  </div>
   {% endif %}
   {% endfor %}
 </div>
@@ -73,7 +103,7 @@
 <!-- Download bar -->
 {% if all_completed and agent_results %}
 <div class="download-bar">
-  <div class="label"><span class="check">&#10003;</span> Informe completo generado</div>
+  <div class="download-label"><span class="download-check">✓</span> Informe completo generado</div>
   <a href="/download/{{ run_id }}" class="btn-download">Descargar Informe (Markdown)</a>
 </div>
 {% endif %}

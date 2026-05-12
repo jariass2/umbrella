@@ -1,20 +1,6 @@
-"""
-Pipeline v2 completo: 9 agentes en cadena
-KIC → Regulatorio → Ficha Técnica → Claims → Etiqueta → Formatos → Docs Internos → QC → Informe
+"""Pipeline v2 completo: 9 agentes en cadena."""
 
-Cada agente recibe SOLO el contexto que necesita (dependencias mínimas):
-  1 KIC            → solo fórmula
-  2 Regulatorio    → KIC
-  3 Ficha Técnica  → KIC + Regulatorio
-  4 Claims         → Regulatorio
-  5 Etiqueta       → Claims + Ficha Técnica
-  6 Formatos       → solo fórmula
-  7 Docs Internos  → solo fórmula
-  8 QC             → solo fórmula
-  9 Informe        → todos los anteriores
-
-Guarda cada resultado en JSON (para la cadena) y en Markdown (para lectura humana).
-"""
+from __future__ import annotations
 
 import argparse
 import json

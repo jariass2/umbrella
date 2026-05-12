@@ -9,14 +9,16 @@ from datetime import datetime
 from pathlib import Path
 from queue import Queue
 
-from flask import Flask, render_template, request, Markup, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for
+from markupsafe import Markup
 
 from dashboard.api.runner import AGENT_ORDER, run_pipeline
 from dashboard.api.store import (
     init_db, create_run, update_run_status, save_agent_result,
     get_run, list_runs, get_agent_results, load_run_results,
+    set_run_output_dir,
 )
-from dashboard.utils.formula_parser import VALID_UNITS, validate_ingredient
+from dashboard.utils.formula_parser import VALID_UNITS, validate_ingredient, rows_to_formula
 
 THIS_DIR = Path(__file__).resolve().parent
 app = Flask(
@@ -128,36 +130,55 @@ def _get_main_context(run_id: int | None = None, pipeline_running: bool = False)
     }
 
 
+_PIPELINE_TIMEOUT_S = 3600  # 1 hour hard limit per run
+
+
 def _run_pipeline_and_save(formula_text: str, output_dir: str, run_id: int):
     queue = Queue()
     _pipeline_queues[run_id] = queue
 
-    # Run in a nested thread so this thread can consume the queue
     def _target():
         run_pipeline(formula_text, output_dir, queue)
 
     thread = threading.Thread(target=_target, daemon=True)
     thread.start()
 
-    # Consume queue events and save to DB
+    # Consume queue events and save to DB.
+    # Use a timeout so we don't block forever if the subprocess crashes hard
+    # without emitting {"pipeline": "completed"}.
     completed_agents = set()
-    while True:
-        event = queue.get()
-        if "agent" in event:
-            agent = event["agent"]
-            status = event["status"]
-            if status == "completed":
-                completed_agents.add(agent)
-                save_agent_result(
-                    run_id, agent, "completed",
-                    output_json=json.dumps(event.get("data", {}), ensure_ascii=False),
-                    output_md=event.get("output_md"),
-                    duration_s=event.get("duration_s"),
-                )
-            elif status == "error":
-                save_agent_result(run_id, agent, "error")
-        elif event.get("pipeline") == "completed":
-            break
+    deadline = threading.Event()
+    timer = threading.Timer(_PIPELINE_TIMEOUT_S, deadline.set)
+    timer.daemon = True
+    timer.start()
+
+    try:
+        while not deadline.is_set():
+            try:
+                event = queue.get(timeout=5)
+            except Exception:
+                # queue.get timed out — check if worker thread is still alive
+                if not thread.is_alive() and queue.empty():
+                    break
+                continue
+
+            if "agent" in event:
+                agent = event["agent"]
+                status = event["status"]
+                if status == "completed":
+                    completed_agents.add(agent)
+                    save_agent_result(
+                        run_id, agent, "completed",
+                        output_json=json.dumps(event.get("data", {}), ensure_ascii=False),
+                        output_md=event.get("output_md"),
+                        duration_s=event.get("duration_s"),
+                    )
+                elif status == "error":
+                    save_agent_result(run_id, agent, "error")
+            elif event.get("pipeline") == "completed":
+                break
+    finally:
+        timer.cancel()
 
     # Determine final status
     final = "completed" if len(completed_agents) == len(AGENT_ORDER) else "error"
@@ -172,14 +193,9 @@ def index():
     init_db()
     selected_run_id = request.args.get("run_id", type=int)
 
-    # Prepare runs with completed count
-    runs_raw = list_runs(limit=15)
-    runs = []
-    for r in runs_raw:
-        results = get_agent_results(r["id"])
-        r["completed_count"] = sum(1 for x in results if x["status"] == "completed")
+    runs = list_runs(limit=15)
+    for r in runs:
         r["total_agents"] = len(AGENT_ORDER)
-        runs.append(r)
 
     ingredients = [{"name": "", "dosage": "", "unit": "mg"}]
 
@@ -216,14 +232,15 @@ def analyze():
             valid_ingredients.append({"name": name, "dosage": dosage, "unit": unit})
 
     if errors:
-        return f'<div class="error-msg">{"<br>".join(errors)}</div>', 400
+        return f'<div class="error-msg">{"<br>".join(errors)}</div>'
 
     if not valid_ingredients:
-        return '<div class="warning-msg">Añade al menos un ingrediente.</div>', 400
+        return '<div class="warning-msg">Añade al menos un ingrediente.</div>'
 
-    formula_text = _rows_to_formula(product_name, valid_ingredients)
+    formula_text = rows_to_formula(product_name, valid_ingredients)
     run_id = create_run(product_name, formula_text)
     output_dir = os.path.join(PROJECT_ROOT, "outputs", f"run_{run_id}")
+    set_run_output_dir(run_id, output_dir)
 
     # Start pipeline in background
     thread = threading.Thread(
@@ -270,13 +287,6 @@ def download_report(run_id):
         mimetype="text/markdown",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
-
-
-def _rows_to_formula(product_name: str, ingredients: list[dict]) -> str:
-    lines = [f"Producto: {product_name}", ""]
-    for ing in ingredients:
-        lines.append(f"- {ing['name']} {ing['dosage']}{ing['unit']}")
-    return "\n".join(lines)
 
 
 # Register template filter for summarize

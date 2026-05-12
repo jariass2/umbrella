@@ -4,11 +4,11 @@ Lee los JSON de los 8 agentes y genera un documento markdown profesional.
 Sin llamadas a LLM — composición puramente programática.
 """
 
+from __future__ import annotations
+
 import json
 import os
 from datetime import date
-
-OUTPUT_DIR = "outputs/v2"
 
 SEMAFORO = {
     "PERMITIDO": "✅",
@@ -65,8 +65,8 @@ def _format_cost(usd: float) -> str:
     return f"${usd:.4f}"
 
 
-def _load(filename: str) -> dict:
-    path = f"{OUTPUT_DIR}/{filename}.json"
+def _load(filename: str, output_dir: str) -> dict:
+    path = os.path.join(output_dir, f"{filename}.json")
     if os.path.exists(path):
         with open(path, encoding="utf-8") as f:
             return json.load(f)
@@ -1160,7 +1160,8 @@ def fmt_qc(d: dict) -> list[str]:
 # ── Compositor principal ────────────────────────────────────────────────────
 
 def compose_informe(formula: str, path: str, agent_models: dict | None = None,
-                    timings: dict | None = None, total_elapsed: float = 0) -> None:
+                    timings: dict | None = None, total_elapsed: float = 0,
+                    output_dir: str | None = None) -> None:
     """
     Lee los JSON de los 8 agentes y genera un informe de producto
     en formato markdown profesional.
@@ -1168,14 +1169,18 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
     nombre_producto = formula.strip().splitlines()[0]
     hoy = date.today().strftime("%d/%m/%Y")
 
-    kic = _load("agente_1_kic_v2")
-    reg = _load("agente_2_regulatorio_v2")
-    ft  = _load("agente_3_ficha_técnica_v2")
-    clm = _load("agente_4_claims_v2")
-    etq = _load("agente_5_etiqueta_v2")
-    fmt = _load("agente_6_formatos_v2")
-    doc = _load("agente_7_docs_internos_v2")
-    qc  = _load("agente_8_qc_v2")
+    # output_dir defaults to the directory containing the report itself
+    if output_dir is None:
+        output_dir = os.path.dirname(os.path.abspath(path))
+
+    kic = _load("agente_1_kic_v2", output_dir)
+    reg = _load("agente_2_regulatorio_v2", output_dir)
+    ft  = _load("agente_3_ficha_técnica_v2", output_dir)
+    clm = _load("agente_4_claims_v2", output_dir)
+    etq = _load("agente_5_etiqueta_v2", output_dir)
+    fmt = _load("agente_6_formatos_v2", output_dir)
+    doc = _load("agente_7_docs_internos_v2", output_dir)
+    qc  = _load("agente_8_qc_v2", output_dir)
 
     # Mapa prefix → _trazabilidad (para tokens y coste en el Anexo)
     _trazab_map: dict[str, dict] = {

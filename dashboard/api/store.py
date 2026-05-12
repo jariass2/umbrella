@@ -55,6 +55,12 @@ def create_run(product_name: str, formula_text: str, output_dir: str | None = No
         return cur.lastrowid
 
 
+def set_run_output_dir(run_id: int, output_dir: str):
+    with _conn() as conn:
+        conn.execute("UPDATE runs SET output_dir = ? WHERE id = ?", (output_dir, run_id))
+        conn.commit()
+
+
 def update_run_status(run_id: int, status: str):
     with _conn() as conn:
         completed_at = datetime.now(timezone.utc).isoformat() if status != "running" else None
@@ -92,9 +98,19 @@ def get_agent_results(run_id: int) -> list[dict]:
 
 
 def list_runs(limit: int = 20) -> list[dict]:
+    """Returns runs with completed_count pre-computed (single query)."""
     with _conn() as conn:
         rows = conn.execute(
-            "SELECT * FROM runs ORDER BY id DESC LIMIT ?", (limit,)
+            """
+            SELECT r.*,
+                   COUNT(CASE WHEN ar.status = 'completed' THEN 1 END) AS completed_count
+            FROM runs r
+            LEFT JOIN agent_results ar ON ar.run_id = r.id
+            GROUP BY r.id
+            ORDER BY r.id DESC
+            LIMIT ?
+            """,
+            (limit,),
         ).fetchall()
         return [dict(r) for r in rows]
 
