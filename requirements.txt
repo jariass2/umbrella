@@ -6,3 +6,5 @@ pydantic
 uvicorn
 fastapi
 httpx
+streamlit
+json-repair
