@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Propuesta Comercial — Umbrella AI</title>
+<style>
+/* ── Variables ── */
+:root {
+  --ink:      #111111;
+  --ink-mid:  #444444;
+  --ink-soft: #888888;
+  --rule:     #DDDDDD;
+  --bg:       #FFFFFF;
+  --accent:   #0F2040;   /* dark navy — used sparingly */
+  --accent-2: #1a6b5e;   /* teal only for traffic light / semaforo */
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+/* ── Base ── */
+body {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Page wrapper ── */
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 3rem;
+}
+
+/* ── Cover ── */
+.cover {
+  padding: 7rem 0 5rem;
+  border-bottom: 2px solid var(--ink);
+  margin-bottom: 4rem;
+}
+.cover-label {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 2.5rem;
+}
+.cover h1 {
+  font-size: 2.6rem;
+  font-weight: normal;
+  line-height: 1.2;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+.cover h1 em {
+  font-style: normal;
+  color: var(--ink);
+}
+.cover .subtitle {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 1rem;
+  color: var(--ink-mid);
+  margin-top: 1rem;
+  max-width: 520px;
+  line-height: 1.6;
+}
+.cover-meta {
+  margin-top: 3.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 2rem;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.82rem;
+  color: var(--ink-mid);
+}
+.cover-meta strong { color: var(--ink); font-weight: 600; }
+
+/* ── Executive Summary (standalone block) ── */
+.exec {
+  border-left: 3px solid var(--accent);
+  padding: 1.5rem 2rem;
+  margin-bottom: 4.5rem;
+  background: #f7f8fa;
+}
+.exec p {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--ink-mid);
+  margin-bottom: 0.75rem;
+}
+.exec p:last-child { margin-bottom: 0; }
+.exec strong { color: var(--ink); font-weight: 600; }
+.exec-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  padding-top: 1.25rem;
+}
+.kpi {
+  padding: 0 1.5rem 0 0;
+  border-right: 1px solid var(--rule);
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+.kpi:first-child { padding-left: 0; }
+.kpi:last-child { border-right: none; padding-right: 0; padding-left: 1.5rem; }
+.kpi-num {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.1;
+  display: block;
+}
+.kpi-label {
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  display: block;
+  margin-top: 0.2rem;
+}
+
+/* ── Sections ── */
+section { margin-bottom: 4rem; }
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--rule);
+}
+.section-num {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  flex-shrink: 0;
+  padding-top: 0.1em;
+}
+h2 {
+  font-size: 1.25rem;
+  font-weight: normal;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+h3 {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 2.5rem 0 1rem;
+}
+h4 {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 0.35rem;
+}
+p {
+  font-size: 0.92rem;
+  margin-bottom: 0.9rem;
+  color: #2a2a2a;
+}
+p:last-child { margin-bottom: 0; }
+ul, ol {
+  font-size: 0.92rem;
+  padding-left: 1.5rem;
+  margin-bottom: 0.9rem;
+  color: #2a2a2a;
+}
+li { margin-bottom: 0.35rem; }
+
+/* ── Two-column prose ── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  margin: 1.5rem 0;
+}
+.two-col .col-label {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* ── Tables ── */
+.table-wrap {
+  overflow-x: auto;
+  margin: 1.25rem 0 1.75rem;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.82rem;
+}
+thead th {
+  text-align: left;
+  padding: 0.6rem 1rem;
+  border-bottom: 2px solid var(--ink);
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  background: none;
+}
+tbody td {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  color: #2a2a2a;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: #fafafa; }
+td.bold { font-weight: 600; }
+td.accent { color: var(--accent); font-weight: 600; }
+td.total { font-weight: 700; border-top: 2px solid var(--ink); }
+td.muted { color: var(--ink-soft); }
+
+/* ── Highlight / callout ── */
+.callout {
+  border-left: 2px solid var(--ink);
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.85rem;
+  color: var(--ink-mid);
+  line-height: 1.65;
+}
+.callout strong { color: var(--ink); }
+
+/* ── Diagrams ── */
+.diagram {
+  margin: 2rem 0;
+  overflow-x: auto;
+}
+.diagram svg { display: block; width: 100%; height: auto; }
+.diagram figcaption {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  margin-top: 0.5rem;
+  letter-spacing: 0.03em;
+}
+
+/* ── Phases list ── */
+.phases { margin: 1.5rem 0; }
+.phase-row {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto;
+  gap: 1.25rem;
+  align-items: start;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.phase-row:first-child { border-top: 1px solid var(--rule); }
+.phase-num-box {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  letter-spacing: 0.06em;
+  padding-top: 0.15rem;
+}
+.phase-body p {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.82rem;
+  color: var(--ink-mid);
+  margin: 0.35rem 0 0;
+}
+.phase-price {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  text-align: right;
+  padding-top: 0.15rem;
+}
+.phase-price.tbd { color: var(--ink-soft); font-weight: 400; }
+
+/* ── Steps (next steps) ── */
+.steps-list { margin: 1.5rem 0; }
+.step-row {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--rule);
+  align-items: start;
+}
+.step-row:first-child { border-top: 1px solid var(--rule); }
+.step-n {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+  padding-top: 0.1rem;
+}
+.step-body h4 { font-size: 0.88rem; margin-bottom: 0.2rem; }
+.step-body p {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.8rem;
+  color: var(--ink-mid);
+  margin: 0;
+}
+
+/* ── Investment summary box ── */
+.inv-summary {
+  border: 1px solid var(--ink);
+  padding: 1.75rem 2rem;
+  margin: 2rem 0;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+.inv-summary-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 1.25rem;
+}
+.inv-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.85rem;
+  color: var(--ink-mid);
+}
+.inv-summary-row:last-child { border-bottom: none; }
+.inv-summary-row.total {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 1rem;
+  padding-top: 0.75rem;
+  border-top: 2px solid var(--ink);
+  border-bottom: none;
+  margin-top: 0.25rem;
+}
+.inv-summary-row .price { color: var(--ink); font-weight: 600; }
+.inv-summary-row.total .price { font-size: 1.1rem; }
+
+/* ── ROI inline numbers ── */
+.roi-line {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.85rem;
+  color: var(--ink-mid);
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+}
+.roi-line:first-child { border-top: 1px solid var(--rule); }
+.roi-line strong { color: var(--ink); }
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--rule);
+  padding: 1.75rem 0 3rem;
+  margin-top: 5rem;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  display: flex;
+  justify-content: space-between;
+  letter-spacing: 0.03em;
+}
+
+/* ── Print ── */
+@media print {
+  .page { padding: 0 2rem; }
+  body { font-size: 13px; }
+  section { page-break-inside: avoid; }
+}
+@page {
+  margin: 2cm 2cm 2.5cm;
+  @bottom-left {
+    content: "propuesta_umbrella_ai.html";
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 7pt;
+    color: #aaa;
+  }
+  @bottom-right {
+    content: "Documento confidencial · Abril 2026";
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 7pt;
+    color: #aaa;
+  }
+}
+
+/* ── Responsive ── */
+@media (max-width: 680px) {
+  .page { padding: 0 1.5rem; }
+  .cover h1 { font-size: 1.9rem; }
+  .cover-meta { grid-template-columns: 1fr; }
+  .exec-kpis { grid-template-columns: 1fr; gap: 1rem; }
+  .kpi { border-right: none; padding: 0; }
+  .two-col { grid-template-columns: 1fr; }
+  .phase-row { grid-template-columns: 2rem 1fr; }
+  .phase-price { grid-column: 2; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ── COVER ── -->
+<div class="cover">
+  <div class="cover-label">Propuesta Comercial · Confidencial</div>
+  <h1>Umbrella AI<br><em>Plataforma inteligente de desarrollo<br>para complementos alimenticios</em></h1>
+  <p class="subtitle">Sistema de 8 agentes de inteligencia artificial para automatizar el ciclo completo de formulación — desde el ingrediente hasta la documentación lista para producción.</p>
+  <div class="cover-meta">
+    <div><strong>Para</strong><br>Ümbrella Flavours &amp; Functional Ingredients, S.L.</div>
+    <div><strong>De</strong><br>Jordi Arias</div>
+    <div><strong>Fecha</strong><br>Abril 2026</div>
+    <div><strong>Versión</strong><br>1.0</div>
+  </div>
+</div>
+
+<!-- ── EXEC SUMMARY ── -->
+<div class="exec">
+  <p>Ümbrella invierte <strong>18–22 horas de trabajo técnico</strong> en cada formulación: validación regulatoria, cálculo de claims, generación de dossiers. Con 100 formulaciones al año, eso representa más de 160.000 € en tiempo técnico dedicado a tareas repetitivas.<sup style="font-size:0.65rem;color:var(--ink-soft);margin-left:2px">†</sup></p>
+  <p style="font-size:0.75rem;color:var(--ink-soft);font-family:'Helvetica Neue',Arial,sans-serif;margin-top:-0.5rem;line-height:1.5"><sup>†</sup> Estimación a confirmar con el equipo técnico de Ümbrella durante la Fase 0.</p>
+  <p><strong>Umbrella AI</strong> reduce ese proceso a <strong>3–5 minutos</strong>. El sistema ya está en uso interno. Esta propuesta cubre la implantación en producción para el equipo de Ümbrella, en fases validables con una inversión inicial de <strong>20.500 €</strong>.</p>
+  <div class="exec-kpis">
+    <div class="kpi">
+      <span class="kpi-num">~99%</span>
+      <span class="kpi-label">Reducción de tiempo<br>por formulación</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-num">669%</span>
+      <span class="kpi-label">ROI estimado<br>el primer año</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-num">&lt; 2 meses</span>
+      <span class="kpi-label">Payback de la<br>inversión inicial</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── 1. CONTEXTO ── -->
+<section id="contexto">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2>Contexto: el cuello de botella en formulación</h2>
+  </div>
+
+  <p>Ümbrella opera en un modelo integrado: desarrolla fórmulas a medida como laboratorio y las produce a escala como fabricante. El cuello de botella no está en la producción — está en la transición de la idea a la formulación validada.</p>
+
+  <div class="two-col">
+    <div>
+      <div class="col-label">Como laboratorio</div>
+      <p>Ümbrella recibe peticiones de clientes y transforma esa necesidad en una formulación viable: validar ingredientes, verificar normativa, calcular dosis, diseñar formato.</p>
+    </div>
+    <div>
+      <div class="col-label">Como fabricante</div>
+      <p>Ümbrella debe producir cada formulación de forma reproducible: Lista de Materiales precisa, plan de QC, documentación para regulatory, trazabilidad de lote.</p>
+    </div>
+  </div>
+
+  <h3>Desglose del tiempo técnico por formulación</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Tarea</th>
+          <th>Fuente regulatoria</th>
+          <th>Tiempo estimado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Verificar ingredientes en listas positivas</td><td>Dir. 2002/46/CE, BELFRIT/AESAN</td><td>3–4 h</td></tr>
+        <tr><td>Verificar dosis respecto al UL de EFSA</td><td>EFSA Journal</td><td>2–3 h</td></tr>
+        <tr><td>Calcular claims autorizados</td><td>Reg. (UE) 432/2012</td><td>2–3 h</td></tr>
+        <tr><td>Redactar ficha técnica conforme a AESAN</td><td>AESAN</td><td>3–4 h</td></tr>
+        <tr><td>Diseñar plan de control de calidad</td><td>Ph. Eur., guías ICH</td><td>2–3 h</td></tr>
+        <tr><td>Generar Lista de Materiales para producción</td><td>Navision / Business Central</td><td>2–3 h</td></tr>
+        <tr>
+          <td class="bold total">Total por formulación</td>
+          <td class="total"></td>
+          <td class="bold total" style="color:var(--accent)">18–22 horas</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:0.85rem;color:var(--ink-soft)">Coste estimado a 80 €/h: <strong style="color:var(--ink)">1.440–1.760 € por formulación</strong>. Con 100 formulaciones/año: <strong style="color:var(--ink)">160.000 €/año en tiempo técnico</strong>. Cada cambio en la fórmula obliga a repetir el proceso completo.</p>
+</section>
+
+<!-- ── 2. SOLUCIÓN ── -->
+<section id="solucion">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2>La solución: Umbrella AI</h2>
+  </div>
+
+  <p>Umbrella AI es un sistema de <strong>8 agentes de inteligencia artificial especializados</strong> que ejecutan en paralelo todo el ciclo de desarrollo — desde la fórmula hasta la documentación lista para producción — en <strong>3–5 minutos</strong>.</p>
+
+  <h3>Pipeline de ejecución</h3>
+  <div class="diagram">
+    <svg viewBox="0 0 740 390" xmlns="http://www.w3.org/2000/svg"
+         style="font-family:'Helvetica Neue',Arial,sans-serif">
+      <defs>
+        <marker id="a" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,1 L5,3 L0,5 Z" fill="#111"/>
+        </marker>
+        <marker id="a2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,1 L5,3 L0,5 Z" fill="#888"/>
+        </marker>
+      </defs>
+
+      <!-- Input -->
+      <rect x="270" y="0" width="200" height="36" rx="2" fill="#111"/>
+      <text x="370" y="22" text-anchor="middle" fill="#fff" font-size="11" font-weight="600" letter-spacing="0.03em">FÓRMULA DE ENTRADA</text>
+      <line x1="370" y1="36" x2="370" y2="56" stroke="#111" stroke-width="1.5" marker-end="url(#a)"/>
+
+      <!-- BATCH 1 -->
+      <rect x="0" y="58" width="740" height="96" rx="2" fill="none" stroke="#DDD" stroke-width="1"/>
+      <text x="10" y="73" fill="#AAA" font-size="8.5" font-weight="700" letter-spacing="0.12em">BATCH 1 — PARALELO</text>
+
+      <!-- Agent boxes batch 1 -->
+      <rect x="8"   y="78" width="165" height="66" rx="2" fill="#fff" stroke="#CCC" stroke-width="1"/>
+      <text x="90"  y="98" text-anchor="middle" fill="#111" font-size="10" font-weight="600">Ag. KIC</text>
+      <text x="90"  y="114" text-anchor="middle" fill="#666" font-size="8.5">Clasificación, biodisponibilidad</text>
+      <text x="90"  y="127" text-anchor="middle" fill="#666" font-size="8.5">sinergias e interacciones</text>
+      <text x="90"  y="140" text-anchor="middle" fill="#888" font-size="7.5">3–4 h → 45 s</text>
+
+      <rect x="183" y="78" width="165" height="66" rx="2" fill="#fff" stroke="#CCC" stroke-width="1"/>
+      <text x="265" y="98" text-anchor="middle" fill="#111" font-size="10" font-weight="600">Ag. Formatos</text>
+      <text x="265" y="114" text-anchor="middle" fill="#666" font-size="8.5">Evaluación sticks, cápsulas</text>
+      <text x="265" y="127" text-anchor="middle" fill="#666" font-size="8.5">viales y reactividad</text>
+      <text x="265" y="140" text-anchor="middle" fill="#888" font-size="7.5">1–2 h → 30 s</text>
+
+      <rect x="358" y="78" width="185" height="66" rx="2" fill="#fff" stroke="#CCC" stroke-width="1"/>
+      <text x="450" y="98" text-anchor="middle" fill="#111" font-size="10" font-weight="600">Ag. Docs Internos</text>
+      <text x="450" y="114" text-anchor="middle" fill="#666" font-size="8.5">Lista de Materiales</text>
+      <text x="450" y="127" text-anchor="middle" fill="#666" font-size="8.5">proceso de fabricación</text>
+      <text x="450" y="140" text-anchor="middle" fill="#888" font-size="7.5">2–3 h → 40 s</text>
+
+      <rect x="553" y="78" width="179" height="66" rx="2" fill="#fff" stroke="#CCC" stroke-width="1"/>
+      <text x="642" y="98" text-anchor="middle" fill="#111" font-size="10" font-weight="600">Ag. QC</text>
+      <text x="642" y="114" text-anchor="middle" fill="#666" font-size="8.5">Plan FTIR, granulometría</text>
+      <text x="642" y="127" text-anchor="middle" fill="#666" font-size="8.5">pH, estabilidad ICH</text>
+      <text x="642" y="140" text-anchor="middle" fill="#888" font-size="7.5">2–3 h → 40 s</text>
+
+      <!-- Arrow Batch 1 → 2 -->
+      <line x1="370" y1="154" x2="370" y2="174" stroke="#111" stroke-width="1.5" marker-end="url(#a)"/>
+
+      <!-- BATCH 2 -->
+      <rect x="0" y="176" width="740" height="78" rx="2" fill="none" stroke="#DDD" stroke-width="1"/>
+      <text x="10" y="191" fill="#AAA" font-size="8.5" font-weight="700" letter-spacing="0.12em">BATCH 2 — SECUENCIAL (depende de KIC)</text>
+      <rect x="190" y="198" width="360" height="46" rx="2" fill="#0F2040"/>
+      <text x="370" y="218" text-anchor="middle" fill="#fff" font-size="10" font-weight="600">Ag. Regulatorio</text>
+      <text x="370" y="233" text-anchor="middle" fill="rgba(255,255,255,0.65)" font-size="8.5">Semáforo ✓/⚠/✗ · UL EFSA · Dir. 2002/46/CE · BELFRIT/AESAN · Novel Foods</text>
+
+      <!-- Arrow Batch 2 → 3 -->
+      <line x1="370" y1="254" x2="370" y2="274" stroke="#111" stroke-width="1.5" marker-end="url(#a)"/>
+
+      <!-- BATCH 3 -->
+      <rect x="0" y="276" width="740" height="78" rx="2" fill="none" stroke="#DDD" stroke-width="1"/>
+      <text x="10" y="291" fill="#AAA" font-size="8.5" font-weight="700" letter-spacing="0.12em">BATCH 3 — PARALELO (depende de Regulatorio)</text>
+
+      <rect x="30" y="298" width="315" height="46" rx="2" fill="#fff" stroke="#CCC" stroke-width="1"/>
+      <text x="187" y="318" text-anchor="middle" fill="#111" font-size="10" font-weight="600">Ag. Ficha Técnica</text>
+      <text x="187" y="333" text-anchor="middle" fill="#666" font-size="8.5">Dossier AESAN: composición, nutricional, alérgenos · 3–4 h → 50 s</text>
+
+      <rect x="395" y="298" width="315" height="46" rx="2" fill="#fff" stroke="#CCC" stroke-width="1"/>
+      <text x="552" y="318" text-anchor="middle" fill="#111" font-size="10" font-weight="600">Ag. Claims</text>
+      <text x="552" y="333" text-anchor="middle" fill="#666" font-size="8.5">Claims autorizados Reg. 432/2012 · selling points · 2–3 h → 35 s</text>
+
+      <!-- Arrow Batch 3 → 4 -->
+      <line x1="370" y1="354" x2="370" y2="370" stroke="#111" stroke-width="1.5" marker-end="url(#a)"/>
+
+      <!-- BATCH 4 / Output -->
+      <rect x="195" y="372" width="350" height="16" rx="2" fill="#111"/>
+      <text x="370" y="384" text-anchor="middle" fill="#fff" font-size="9" font-weight="600" letter-spacing="0.04em">Ag. Etiqueta (Reg. 1169/2011) · 2 h → 30 s   →   Informe Ejecutivo</text>
+    </svg>
+    <figcaption>Figura 1. Pipeline de ejecución de Umbrella AI. Los batches 1 y 3 se ejecutan en paralelo; el batch 2 requiere el output del Ag. KIC; la etiqueta cierra el ciclo.</figcaption>
+  </div>
+
+  <h3>Entregables por agente</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Agente</th><th>Entregable</th><th>Tiempo manual</th><th>Tiempo con AI</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="bold">KIC</td><td>Clasificación funcional, biodisponibilidad, interacciones, sinergias</td><td>3–4 h</td><td>~45 s</td></tr>
+        <tr><td class="bold">Regulatorio</td><td>Semáforo por ingrediente, normativa aplicable, UL EFSA</td><td>2–3 h</td><td>~30 s</td></tr>
+        <tr><td class="bold">Ficha Técnica</td><td>Dossier AESAN: composición, nutricional, alérgenos, modo de empleo</td><td>3–4 h</td><td>~50 s</td></tr>
+        <tr><td class="bold">Claims</td><td>Claims autorizados UE 432/2012, selling points, advertencias legales</td><td>2–3 h</td><td>~35 s</td></tr>
+        <tr><td class="bold">Etiqueta</td><td>Texto cara principal, secundaria y lateral (Reg. 1169/2011)</td><td>2 h</td><td>~30 s</td></tr>
+        <tr><td class="bold">Formatos</td><td>Evaluación sticks/cápsulas/viales, reactividad, target</td><td>1–2 h</td><td>~25 s</td></tr>
+        <tr><td class="bold">Docs Internos</td><td>Lista de Materiales, proceso de fabricación, mapa de reactividad</td><td>2–3 h</td><td>~40 s</td></tr>
+        <tr><td class="bold">QC</td><td>Plan FTIR, granulometría, densidad, pH, estabilidad ICH</td><td>2–3 h</td><td>~40 s</td></tr>
+        <tr>
+          <td class="bold total">Total</td>
+          <td class="total"></td>
+          <td class="bold total">18–22 horas</td>
+          <td class="bold total" style="color:var(--accent)">3–5 minutos</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Diferenciadores</h3>
+  <ul>
+    <li><strong>Fuentes oficiales en tiempo real.</strong> Cada agente consulta EFSA Journal, BELFRIT, AESAN, Reg. 432/2012 y PubMed en el momento de ejecución, no a partir de una base de datos estática.</li>
+    <li><strong>Trazabilidad persistente del razonamiento.</strong> La base de datos almacena, por cada ejecución, el razonamiento completo de cada agente: inputs, outputs, fuentes consultadas, decisiones intermedias y timestamp. Esto permite auditar <em>qué</em> concluyó el sistema, <em>por qué</em> y <em>cuándo</em> — no solo el resultado final. La trazabilidad no se limita al output: cubre el proceso de razonamiento a lo largo del tiempo.</li>
+    <li><strong>Acceso segmentado por rol.</strong> El frontend presenta a cada responsable únicamente la información de su ámbito: el equipo regulatorio ve claims y normativa, el equipo de calidad accede a trazabilidad completa, formulación ve fichas técnicas y planes de QC. Nadie ve lo que no le corresponde.</li>
+    <li><strong>Sistema validado internamente.</strong> Umbrella AI ya está en uso dentro de Ümbrella para el desarrollo de fórmulas propias con formulaciones reales del sector.</li>
+    <li><strong>Diseño laboratorio + fabricante.</strong> Los agentes Docs Internos y QC generan documentación directamente usable en producción: LM estilo Navision, planes de control según Ph. Eur.</li>
+    <li><strong>Arquitectura extensible.</strong> Añadir un nuevo agente especializado es crear un archivo de configuración. El pipeline está diseñado para crecer con las necesidades de Ümbrella.</li>
+  </ul>
+</section>
+
+<!-- ── 3. CASOS DE USO ── -->
+<section id="casos">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <h2>Casos de uso para Ümbrella</h2>
+  </div>
+
+  <h3>Desarrollo rápido de fórmulas para clientes</h3>
+  <div class="two-col">
+    <div>
+      <div class="col-label">Sin Umbrella AI</div>
+      <p>18–22 horas de trabajo técnico por fórmula. Cuello de botella cuando hay 5–10 peticiones en paralelo.</p>
+    </div>
+    <div>
+      <div class="col-label">Con Umbrella AI</div>
+      <p>El técnico introduce la fórmula. En 15 minutos tiene el análisis completo con semáforo regulatorio, claims disponibles, ficha técnica preliminar y plan de QC. Puede evaluar 5–10 variantes en una mañana.</p>
+    </div>
+  </div>
+
+  <h3>Escalado del catálogo de productos propios</h3>
+  <div class="two-col">
+    <div>
+      <div class="col-label">Sin Umbrella AI</div>
+      <p>El equipo técnico produce cada dossier desde cero. 20 horas por producto es un cuello de botella para escalar el catálogo.</p>
+    </div>
+    <div>
+      <div class="col-label">Con Umbrella AI</div>
+      <p>El equipo introduce las fórmulas candidatas. Umbrella AI genera los dossiers en paralelo. El tiempo se invierte en decidir qué producto lanzar, no en redactar documentación.</p>
+    </div>
+  </div>
+
+  <h3>Evaluación de viabilidad de nuevas formulaciones</h3>
+  <div class="two-col">
+    <div>
+      <div class="col-label">Sin Umbrella AI</div>
+      <p>Requiere 2–3 días de estudio previo por un técnico regulatorio antes de comprometer recursos en desarrollo.</p>
+    </div>
+    <div>
+      <div class="col-label">Con Umbrella AI</div>
+      <p>Análisis de viabilidad en 10 minutos. El semáforo regulatorio indica inmediatamente qué ingredientes son problemáticos y por qué. Decisión informada antes de invertir.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 4. ARQUITECTURA ── -->
+<section id="arquitectura">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <h2>Arquitectura técnica</h2>
+  </div>
+
+  <h3>Stack tecnológico</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Componente</th><th>Tecnología</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">Orquestación</td><td>Agno Framework (Python)</td></tr>
+        <tr><td class="bold">Modelos de lenguaje</td><td>OpenAI GPT-4o / Claude — configurable por agente</td></tr>
+        <tr><td class="bold">Búsqueda regulatoria</td><td>EFSA Journal, BELFRIT, AESAN, PubMed (tiempo real)</td></tr>
+        <tr><td class="bold">Base de datos</td><td>PostgreSQL + pgvector — doble función: (1) base de conocimiento vectorial para RAG, (2) registro de trazabilidad: razonamiento, inputs, outputs y decisiones de cada agente por ejecución</td></tr>
+        <tr><td class="bold">Frontend</td><td>Next.js — interfaz web con autenticación JWT y control de acceso por rol (RBAC)</td></tr>
+        <tr><td class="bold">Integración ERP</td><td>Navision / Business Central vía API OData (Fase 2)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Base de conocimiento y RAG</h3>
+  <p>RAG (<em>Retrieval-Augmented Generation</em>) permite a los agentes consultar documentos propietarios como si fueran una base de conocimiento consultable. En lugar de depender solo del conocimiento interno del modelo, el agente recupera fragmentos relevantes de documentos y los usa para fundamentar sus respuestas con información real de Ümbrella.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 700 60" xmlns="http://www.w3.org/2000/svg"
+         style="font-family:'Helvetica Neue',Arial,sans-serif">
+      <defs>
+        <marker id="b" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,1 L5,3 L0,5 Z" fill="#888"/>
+        </marker>
+      </defs>
+      <!-- Steps -->
+      <rect x="0"   y="10" width="90"  height="38" rx="2" fill="#111"/>
+      <text x="45"  y="27" text-anchor="middle" fill="#fff" font-size="9" font-weight="600">Documentos</text>
+      <text x="45"  y="40" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="7.5">fichas, estudios</text>
+      <line x1="90" y1="29" x2="103" y2="29" stroke="#888" stroke-width="1.2" marker-end="url(#b)"/>
+
+      <rect x="104"  y="10" width="82"  height="38" rx="2" fill="#1a1a1a" stroke="#CCC" stroke-width="1"/>
+      <text x="145"  y="27" text-anchor="middle" fill="#fff" font-size="9" font-weight="600">Chunking</text>
+      <text x="145"  y="40" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="7.5">segmentación</text>
+      <line x1="186" y1="29" x2="199" y2="29" stroke="#888" stroke-width="1.2" marker-end="url(#b)"/>
+
+      <rect x="200"  y="10" width="82"  height="38" rx="2" fill="#1a1a1a" stroke="#CCC" stroke-width="1"/>
+      <text x="241"  y="27" text-anchor="middle" fill="#fff" font-size="9" font-weight="600">Embedding</text>
+      <text x="241"  y="40" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="7.5">vectorización</text>
+      <line x1="282" y1="29" x2="295" y2="29" stroke="#888" stroke-width="1.2" marker-end="url(#b)"/>
+
+      <rect x="296"  y="10" width="100" height="38" rx="2" fill="#222" stroke="#CCC" stroke-width="1"/>
+      <text x="346"  y="27" text-anchor="middle" fill="#fff" font-size="9" font-weight="600">Índice vectorial</text>
+      <text x="346"  y="40" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="7.5">pgvector</text>
+      <line x1="396" y1="29" x2="409" y2="29" stroke="#888" stroke-width="1.2" marker-end="url(#b)"/>
+
+      <rect x="410"  y="10" width="82"  height="38" rx="2" fill="#222" stroke="#CCC" stroke-width="1"/>
+      <text x="451"  y="27" text-anchor="middle" fill="#fff" font-size="9" font-weight="600">Retrieval</text>
+      <text x="451"  y="40" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="7.5">similitud</text>
+      <line x1="492" y1="29" x2="505" y2="29" stroke="#888" stroke-width="1.2" marker-end="url(#b)"/>
+
+      <rect x="506"  y="10" width="120" height="38" rx="2" fill="#0F2040"/>
+      <text x="566"  y="27" text-anchor="middle" fill="#fff" font-size="9" font-weight="600">Contexto LLM</text>
+      <text x="566"  y="40" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="7.5">respuesta fundamentada</text>
+    </svg>
+    <figcaption>Figura 2. Pipeline RAG. La base de conocimiento se evalúa en la Fase 0 antes de comprometer inversión en su diseño e ingesta.</figcaption>
+  </div>
+
+  <div class="callout">
+    <strong>¿Es necesario RAG para Ümbrella?</strong> La Fase 0 determina esto. Las preguntas clave son: ¿los agentes necesitan consultar documentación propietaria (fichas de proveedores, estudios internos) para dar respuestas precisas?, ¿el conocimiento interno del modelo es suficiente?, ¿la información propietaria está estructurada o son documentos sueltos? El resultado de la Fase 0 define si RAG tiene sentido y su coste real.
+  </div>
+
+  <h3>Trazabilidad del razonamiento de los agentes</h3>
+  <p>Cada ejecución del pipeline queda registrada en la base de datos con el razonamiento completo de cada agente. Esto garantiza que cualquier output puede reconstruirse y auditarse en el futuro, incluso si los modelos de lenguaje subyacentes cambian de versión.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Dato registrado</th><th>Descripción</th><th>Utilidad</th></tr></thead>
+      <tbody>
+        <tr><td>Input de la fórmula</td><td>Ingredientes, dosis y parámetros introducidos</td><td>Reproducibilidad exacta de la ejecución</td></tr>
+        <tr><td>Razonamiento del agente</td><td>Cadena de pensamiento y decisiones intermedias de cada agente</td><td>Auditoría de por qué el sistema llegó a una conclusión</td></tr>
+        <tr><td>Fuentes consultadas</td><td>URL, artículo, anexo y texto exacto recuperado de cada fuente regulatoria</td><td>Verificación independiente y cumplimiento AESAN</td></tr>
+        <tr><td>Output generado</td><td>Texto completo de cada entregable (ficha técnica, claims, plan QC…)</td><td>Historial de versiones de cada formulación</td></tr>
+        <tr><td>Timestamp</td><td>Fecha y hora de cada ejecución</td><td>Trazabilidad temporal: qué normativa estaba vigente en el momento</td></tr>
+        <tr><td>Versión del modelo</td><td>Modelo LLM utilizado por cada agente en esa ejecución</td><td>Comparación entre versiones y detección de regresiones</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout">
+    El registro de razonamiento no es solo un log técnico — es la garantía de que una decisión tomada por el sistema hace seis meses puede reconstruirse, explicarse y defenderse ante un cliente, un inspector o un equipo interno.
+  </div>
+
+  <h3>Acceso por rol: cada departamento ve su ámbito</h3>
+  <p>El frontend presenta la información filtrada según el rol del usuario autenticado. Cada responsable de departamento accede exclusivamente a los outputs de los agentes que corresponden a su función — sin exposición a información de otras áreas.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Rol</th><th>Acceso a outputs de agentes</th><th>Trazabilidad visible</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">Formulación</td><td>KIC, Ficha Técnica, Formatos, Docs Internos</td><td>Inputs y outputs de su área</td></tr>
+        <tr><td class="bold">Regulatorio</td><td>Agente Regulatorio, Claims</td><td>Fuentes normativas consultadas, razonamiento regulatorio</td></tr>
+        <tr><td class="bold">Etiquetado</td><td>Etiqueta, Claims</td><td>Decisiones de mención y formato</td></tr>
+        <tr><td class="bold">Calidad</td><td>QC, todos los agentes</td><td>Trazabilidad completa: razonamiento, fuentes, versión de modelo</td></tr>
+        <tr><td class="bold">Administrador</td><td>Todos los agentes</td><td>Acceso completo + gestión de usuarios y roles</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout">
+    El control de acceso no es solo una medida de seguridad — es una herramienta de claridad operativa. Cada persona ve exactamente lo que necesita para hacer su trabajo, sin ruido de otras áreas.
+  </div>
+
+  <h3>Complejidad de integrar RAG</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Aspecto</th><th>Complejidad</th><th>Nota</th></tr></thead>
+      <tbody>
+        <tr><td>Naturaleza de los documentos</td><td>Variable</td><td>PDFs, Word, estructura heterogénea, calidad variable</td></tr>
+        <tr><td>Chunking óptimo</td><td>Media–Alta</td><td>Cómo segmentar afecta la calidad de retrieval — requiere experimentación</td></tr>
+        <tr><td>Calidad de embeddings</td><td>Alta</td><td>El modelo de embedding determina la precisión del sistema</td></tr>
+        <tr><td>Freshness</td><td>Continua</td><td>¿Cómo y cuándo se actualiza la base de conocimiento?</td></tr>
+        <tr><td>Evaluación</td><td>Crítica</td><td>¿Cómo se mide que RAG mejora los outputs frente al modelo solo?</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── 5. IMPLANTACIÓN ── -->
+<section id="implantacion">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <h2>Modelo de implantación progresiva</h2>
+  </div>
+
+  <p>Recomendamos una implantación por fases que permite validar el valor con datos reales de Ümbrella en cada etapa, antes de comprometer inversión en la siguiente. Como el sistema ya está desarrollado, la Fase 0 puede ejecutarse con formulaciones reales del catálogo de Ümbrella.</p>
+
+  <h3>Fases y calendario</h3>
+  <div class="diagram">
+    <svg viewBox="0 0 700 100" xmlns="http://www.w3.org/2000/svg"
+         style="font-family:'Helvetica Neue',Arial,sans-serif">
+      <!-- Day labels -->
+      <text x="25"  y="12" text-anchor="middle" fill="#AAA" font-size="7.5">D1–5</text>
+      <text x="75"  y="12" text-anchor="middle" fill="#AAA" font-size="7.5">D6–10</text>
+      <text x="125" y="12" text-anchor="middle" fill="#AAA" font-size="7.5">D11–15</text>
+      <text x="175" y="12" text-anchor="middle" fill="#AAA" font-size="7.5">D16–20</text>
+      <text x="225" y="12" text-anchor="middle" fill="#AAA" font-size="7.5">D21–25</text>
+      <text x="275" y="12" text-anchor="middle" fill="#AAA" font-size="7.5">D26–30</text>
+      <text x="325" y="12" text-anchor="middle" fill="#AAA" font-size="7.5">D31–35</text>
+      <text x="375" y="12" text-anchor="middle" fill="#AAA" font-size="7.5">D36–40</text>
+      <text x="425" y="12" text-anchor="middle" fill="#AAA" font-size="7.5">D41–45</text>
+      <text x="475" y="12" text-anchor="middle" fill="#AAA" font-size="7.5">D46–50</text>
+      <text x="525" y="12" text-anchor="middle" fill="#AAA" font-size="7.5">D51–55</text>
+      <text x="575" y="12" text-anchor="middle" fill="#AAA" font-size="7.5">D56–60</text>
+      <text x="625" y="12" text-anchor="middle" fill="#AAA" font-size="7.5">D61–65</text>
+      <text x="675" y="12" text-anchor="middle" fill="#AAA" font-size="7.5">D66–70</text>
+
+      <!-- Bars -->
+      <!-- Fase 0: días 1-5 -->
+      <rect x="2"   y="20" width="47" height="22" rx="1" fill="#0F2040"/>
+      <text x="25" y="35" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">Fase 0</text>
+
+      <!-- Fase 1: días 6-15 -->
+      <rect x="52"  y="20" width="98" height="22" rx="1" fill="#333"/>
+      <text x="101" y="35" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">Fase 1</text>
+
+      <!-- Fase 1b: días 16-25 -->
+      <rect x="152" y="20" width="98" height="22" rx="1" fill="#555"/>
+      <text x="201" y="35" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">Fase 1b</text>
+
+      <!-- Fase 2: weeks 6-10 -->
+      <rect x="252" y="20" width="248" height="22" rx="1" fill="none" stroke="#CCC" stroke-width="1" stroke-dasharray="4 3"/>
+      <text x="376" y="35" text-anchor="middle" fill="#999" font-size="8">Fase 2 — a determinar tras Fase 0</text>
+
+      <!-- Fase 3: weeks 11-14 -->
+      <rect x="502" y="20" width="196" height="22" rx="1" fill="none" stroke="#DDD" stroke-width="1" stroke-dasharray="4 3"/>
+      <text x="600" y="35" text-anchor="middle" fill="#BBB" font-size="8">Fase 3 — opcional</text>
+
+      <!-- Price labels -->
+      <text x="25"  y="58" text-anchor="middle" fill="#0F2040" font-size="8" font-weight="700">3.000 €</text>
+      <text x="101" y="58" text-anchor="middle" fill="#333" font-size="8" font-weight="700">10.000 €</text>
+      <text x="201" y="58" text-anchor="middle" fill="#555" font-size="8" font-weight="700">7.500 €</text>
+      <text x="376" y="58" text-anchor="middle" fill="#999" font-size="8">A determinar</text>
+      <text x="600" y="58" text-anchor="middle" fill="#BBB" font-size="8">25.000–40.000 €</text>
+
+      <!-- Baseline -->
+      <line x1="2" y1="17" x2="698" y2="17" stroke="#EEE" stroke-width="1"/>
+    </svg>
+    <figcaption>Figura 3. Calendario en días laborables. El desarrollo no es continuo — los días se distribuyen según disponibilidad entre proyectos en paralelo. Las fases 2 y 3 se dimensionan tras los resultados de la Fase 0.</figcaption>
+  </div>
+
+  <div class="phases">
+    <div class="phase-row">
+      <div class="phase-num-box">F0</div>
+      <div class="phase-body">
+        <h4>Descubrimiento + Evaluación de Base de Conocimiento — 5 días</h4>
+        <p>Kick-off · Inventario de documentación en Navision y Dropbox · Evaluación de arquitectura RAG · Selección de 5 formulaciones representativas · Refinamiento de prompts · <strong>Entregable:</strong> informe con diseño recomendado de BC y estimación de esfuerzo para Fases 2 y 3.</p>
+      </div>
+      <div class="phase-price">3.000 €</div>
+    </div>
+    <div class="phase-row">
+      <div class="phase-num-box">F1</div>
+      <div class="phase-body">
+        <h4>Core — 4 agentes principales — 10 días</h4>
+        <p>Despliegue: Ag. KIC, Ag. Regulatorio, Ag. Ficha Técnica, Ag. Claims · Integración con fuentes regulatorias · Testing con formulaciones de Ümbrella · <strong>Entregable:</strong> 4 agentes funcionando con outputs validados.</p>
+      </div>
+      <div class="phase-price">10.000 €</div>
+    </div>
+    <div class="phase-row">
+      <div class="phase-num-box">F1b</div>
+      <div class="phase-body">
+        <h4>Core completo — 4 agentes adicionales — 10 días</h4>
+        <p>Despliegue: Ag. Etiqueta, Ag. Formatos, Ag. Docs Internos, Ag. QC · Testing integrado de los 8 agentes · <strong>Entregable:</strong> pipeline completo listo para producción.</p>
+      </div>
+      <div class="phase-price">7.500 €</div>
+    </div>
+    <div class="phase-row">
+      <div class="phase-num-box">F2</div>
+      <div class="phase-body">
+        <h4>Integración ERP + Base de Conocimiento — a determinar</h4>
+        <p>Conexión con Navision/Business Central · Diseño e implementación de arquitectura RAG según resultados de Fase 0 · Mapeo de artículos, proveedores y Lista de Materiales · Ingesta de documentación de Navision y Dropbox.</p>
+      </div>
+      <div class="phase-price tbd">A determinar</div>
+    </div>
+    <div class="phase-row">
+      <div class="phase-num-box">F3</div>
+      <div class="phase-body">
+        <h4>Personalización + Formación + BC completa — a determinar</h4>
+        <p>Adaptación de outputs a plantillas internas de Ümbrella · Formación del equipo técnico (2 sesiones de 2h) · Testing y validación con casos reales · Documentación de uso · Soporte incluido 3 meses.</p>
+      </div>
+      <div class="phase-price tbd">25.000–40.000 €</div>
+    </div>
+  </div>
+
+  <h3>Prerrequisitos para iniciar la Fase 0</h3>
+  <ul>
+    <li><strong>Cuenta de proveedor LLM.</strong> Recomendamos OpenRouter (multi-proveedor, coste por uso). Alternativas: OpenAI API, Anthropic API, Azure OpenAI.</li>
+    <li><strong>Entorno de ejecución.</strong> Infraestructura disponible (cloud o on-premise), PostgreSQL, acceso a internet para fuentes regulatorias.</li>
+    <li><strong>Acceso a Navision / Business Central.</strong> Para dimensionar la Fase 2: versión (cloud vs. on-premise), credenciales API OData, acceso a Dropbox u otro almacenamiento de documentación.</li>
+    <li><strong>5 formulaciones de prueba.</strong> Representativas del catálogo actual o en desarrollo. Se usan para validar precisión, comparar con documentación existente y estimar el ahorro real.</li>
+  </ul>
+</section>
+
+<!-- ── 6. MÉTRICAS ── -->
+<section id="metricas">
+  <div class="section-header">
+    <span class="section-num">06</span>
+    <h2>Métricas de impacto</h2>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Métrica</th><th>Antes</th><th>Después</th><th>Variación</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Tiempo por formulación completa</td><td>18–22 h (técnico a 80 €/h)</td><td>3–5 min</td><td class="accent">–99%</td></tr>
+        <tr><td>Coste por formulación</td><td>1.440–1.760 €</td><td>~25 € (compute)</td><td class="accent">–99%</td></tr>
+        <tr><td>Dossiers generados por mes</td><td>15–20</td><td>80–120+</td><td class="accent">×5–6</td></tr>
+        <tr><td>Errores de transcripción normativa</td><td>Frecuentes (humano)</td><td>Prácticamente nulos</td><td class="accent">—</td></tr>
+        <tr><td>Trazabilidad regulatoria</td><td>Manual, incompleta</td><td>Automática, completa</td><td class="accent">—</td></tr>
+        <tr><td>Tiempo hasta dossier AESAN</td><td>4–8 semanas</td><td>1–2 semanas</td><td class="accent">–60/75%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Ejemplo de ROI con 100 formulaciones/año</h3>
+
+  <div class="roi-line"><span>Coste actual (100 × 1.600 €)</span><strong>160.000 €/año</strong></div>
+  <div class="roi-line"><span>Coste con Umbrella AI (100 × 25 €)</span><strong>2.500 €/año</strong></div>
+  <div class="roi-line"><span>Ahorro anual</span><strong>157.500 €/año</strong></div>
+  <div class="roi-line"><span>Inversión Fases 0+1+1b</span><strong>20.500 €</strong></div>
+  <div class="roi-line"><span>ROI primer año</span><strong>669%</strong></div>
+  <div class="roi-line"><span>Break-even</span><strong>~13 formulaciones (&lt; 2 meses a 100 fórmulas/año)</strong></div>
+</section>
+
+<!-- ── 7. SEGURIDAD ── -->
+<section id="seguridad">
+  <div class="section-header">
+    <span class="section-num">07</span>
+    <h2>Seguridad, confidencialidad y privacidad</h2>
+  </div>
+
+  <h3>Infraestructura del sistema</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Opción</th><th>Descripción</th><th>Adecuado para</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">Cloud (recomendado)</td><td>Despliegue en Hetzner Cloud / VPS del cliente o infraestructura propia de Ümbrella</td><td>Flexibilidad, escalabilidad, coste optimizado</td></tr>
+        <tr><td class="bold">On-premise</td><td>Todo en servidores propios de Ümbrella</td><td>Requisitos de datos en premisa</td></tr>
+        <tr><td class="bold">Híbrido</td><td>Pipeline en cloud, datos sensibles on-premise</td><td>Equilibrio entre flexibilidad y control</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Confidencialidad de datos</h3>
+  <ul>
+    <li><strong>Fórmulas y documentación interna.</strong> Las formulaciones introducidas por Ümbrella y los outputs generados son propiedad exclusiva de Ümbrella. No se comparten con terceros ni se usan para entrenar modelos.</li>
+    <li><strong>Base de conocimiento regulatoria.</strong> La normativa europea (Directivas, Reglamentos, listas BELFRIT/AESAN) es información pública. No requiere confidencialidad.</li>
+    <li><strong>Datos de Navision.</strong> Catálogo, precios y proveedores permanecen en el entorno de Ümbrella. El sistema solo consulta los datos necesarios vía API.</li>
+    <li><strong>Fichas técnicas de proveedores.</strong> Si se ingieren en la base de conocimiento, permanecen cifradas en la base de datos de Ümbrella.</li>
+  </ul>
+
+  <h3>Proveedor de LLM y GDPR</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Proveedor</th><th>Datos de entrenamiento</th><th>Cumplimiento</th></tr></thead>
+      <tbody>
+        <tr><td>OpenRouter</td><td>No entrena con datos de clientes (por defecto)</td><td>GDPR compliant</td></tr>
+        <tr><td>OpenAI</td><td>No entrena con datos de API por defecto (opt-in)</td><td>GDPR compliant</td></tr>
+        <tr><td>Anthropic</td><td>No entrena con datos de API</td><td>GDPR, SOC 2</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <strong>Responsabilidad.</strong> El sistema asiste y genera documentación. La validación final es siempre del equipo técnico de Ümbrella. Ümbrella mantiene la responsabilidad sobre la conformidad regulatoria de sus productos.
+  </div>
+</section>
+
+<!-- ── 8. INVERSIÓN ── -->
+<section id="inversion">
+  <div class="section-header">
+    <span class="section-num">08</span>
+    <h2>Inversión</h2>
+  </div>
+
+  <div class="inv-summary">
+    <div class="inv-summary-title">Resumen de inversión por fase</div>
+    <div class="inv-summary-row">
+      <span>Fase 0 — Descubrimiento + Evaluación BC (5 días)</span>
+      <span class="price">3.000 €</span>
+    </div>
+    <div class="inv-summary-row">
+      <span>Fase 1 — Core: 4 agentes principales (10 días)</span>
+      <span class="price">10.000 €</span>
+    </div>
+    <div class="inv-summary-row">
+      <span>Fase 1b — Core completo: 4 agentes adicionales (10 días)</span>
+      <span class="price">7.500 €</span>
+    </div>
+    <div class="inv-summary-row">
+      <span>Fase 2 — Integración ERP + Base de Conocimiento (a determinar)</span>
+      <span class="price" style="color:var(--ink-soft);font-weight:400">A determinar tras Fase 0</span>
+    </div>
+    <div class="inv-summary-row">
+      <span>Fase 3 — Personalización + Formación + BC completa (a determinar)</span>
+      <span class="price" style="color:var(--ink-soft);font-weight:400">25.000–40.000 €</span>
+    </div>
+    <div class="inv-summary-row total">
+      <span>Total Fases 0 + 1 + 1b</span>
+      <span class="price">20.500 €</span>
+    </div>
+  </div>
+
+  <p style="font-size:0.82rem;color:var(--ink-soft)"><strong style="color:var(--ink)">Mantenimiento anual (opcional):</strong> 8.000–12.000 €/año — soporte, actualizaciones regulatorias, compute.</p>
+
+  <h3>Forma de pago</h3>
+  <ul>
+    <li><strong>Fase 0:</strong> 100% al inicio.</li>
+    <li><strong>Fase 1:</strong> 50% al inicio, 50% al delivery.</li>
+    <li><strong>Fases 1b, 2 y 3:</strong> Pago en hitos según alcance.</li>
+  </ul>
+</section>
+
+<!-- ── 9. PRÓXIMOS PASOS ── -->
+<section id="pasos">
+  <div class="section-header">
+    <span class="section-num">09</span>
+    <h2>Próximos pasos</h2>
+  </div>
+
+  <div class="steps-list">
+    <div class="step-row">
+      <div class="step-n">1</div>
+      <div class="step-body">
+        <h4>Reunión de 30 minutos</h4>
+        <p>Revisar la propuesta y validar el encaje con las necesidades de Ümbrella.</p>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-n">2</div>
+      <div class="step-body">
+        <h4>Selección de 5 formulaciones de prueba</h4>
+        <p>Formulaciones representativas del catálogo actual o en desarrollo para la validación.</p>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-n">3</div>
+      <div class="step-body">
+        <h4>Fase 0: Descubrimiento — 5 días · 3.000 €</h4>
+        <p>Inventario de documentación (Navision, Dropbox), diseño de arquitectura RAG, refinado de prompts con las 5 fórmulas.</p>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-n">4</div>
+      <div class="step-body">
+        <h4>Revisión de resultados</h4>
+        <p>Informe con diseño de arquitectura BC, estimación de esfuerzo y coste para Fases 2 y 3.</p>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-n">5</div>
+      <div class="step-body">
+        <h4>Decisión: ¿continuar con Fase 1?</h4>
+        <p>Con el informe sobre la mesa, Ümbrella decide con pleno conocimiento del coste y el valor antes de comprometer la inversión siguiente.</p>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-n">6</div>
+      <div class="step-body">
+        <h4>Fases 1 y 1b — 20 días · 17.500 €</h4>
+        <p>Despliegue del pipeline completo de 8 agentes, testing con formulaciones reales, entrega lista para producción.</p>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-n">7</div>
+      <div class="step-body">
+        <h4>Decisión sobre Fases 2 y 3</h4>
+        <p>Tras conocer el diseño de BC, la versión de Navision y los resultados de las primeras semanas de uso en producción.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 10. SOBRE ── -->
+<section id="sobre">
+  <div class="section-header">
+    <span class="section-num">10</span>
+    <h2>Sobre Ümbrella y Umbrella AI</h2>
+  </div>
+  <p>Ümbrella Flavours &amp; Functional Ingredients, S.L. es una empresa especializada en ingredientes funcionales y complementos alimenticios, con experiencia en formulación a medida y fabricación propia.</p>
+  <p>Umbrella AI nació de la necesidad interna de Ümbrella: un equipo técnico dedicando horas a tareas repetitivas (buscar normativa, calcular claims, redactar fichas) cuando podría estar innovando en nuevas fórmulas.</p>
+  <p>El sistema Umbrella AI ya está en uso interno para el desarrollo de fórmulas propias. Esta propuesta es para completar la implantación, integrar con Navision, y formalizar el sistema para uso en producción con el equipo de Ümbrella.</p>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <span>propuesta_umbrella_ai.html</span>
+  <span>Documento confidencial · Abril 2026</span>
+</footer>
+
+</div><!-- /page -->
+</body>
+</html>

@@ -1,0 +1,102 @@
+{
+  "producto": "Inmuno Complex Pro",
+  "tipo": "Complemento alimenticio",
+  "ingredientes_analizados": [
+    {
+      "ingrediente": "Vitamina C (ácido ascórbico)",
+      "dosis_diaria": "120 mg",
+      "porcentaje_vrn": "150% (VRN = 80 mg)",
+      "semaforo": "✅ PERMITIDO",
+      "evaluacion": "La vitamina C (ácido ascórbico) está incluida en el Anexo I de la Directiva 2002/46/CE como vitamina autorizada en complementos alimenticios, y el ácido ascórbico figura como forma permitida en el Anexo II [1][2]. La dosis de 120 mg (150% VRN) se encuentra muy por debajo del Nivel Máximo de Ingesta Admisible (UL) establecido por EFSA para adultos, que es de 2.000 mg/día [3][4]. AESAN aplica como referencia de seguridad la UL de EFSA, por lo que no existe restricción para esta dosis. No se trata de un Novel Food.",
+      "marco_normativo": [
+        "Directiva 2002/46/CE, Anexo I (lista de vitaminas) y Anexo II (lista de formas)",
+        "Reglamento (CE) 1170/2009, modificación de Anexos I y II",
+        "Reglamento (UE) 1169/2011, Anexo XIII — VRN vitamina C = 80 mg",
+        "Real Decreto 1487/2009, art. 5 (requisitos composición)"
+      ]
+    },
+    {
+      "ingrediente": "Zinc (gluconato de zinc)",
+      "dosis_diaria": "10 mg",
+      "porcentaje_vrn": "100% (VRN = 10 mg)",
+      "semaforo": "✅ PERMITIDO",
+      "evaluacion": "El zinc está incluido en el Anexo I de la Directiva 2002/46/CE como mineral autorizado en complementos alimenticios, y el gluconato de zinc figura como forma permitida en el Anexo II [1][2]. La dosis de 10 mg (100% VRN) se encuentra por debajo del Nivel Máximo de Ingesta Admisible (UL) de EFSA para adultos, fijado en 25 mg/día [3][4]. AESAN en su actualización de noviembre de 2024 confirma este UL como referencia de seguridad. No se trata de un Novel Food.",
+      "marco_normativo": [
+        "Directiva 2002/46/CE, Anexo I (lista de minerales) y Anexo II (lista de formas)",
+        "Reglamento (CE) 1170/2009, modificación de Anexos I y II",
+        "Reglamento (UE) 1169/2011, Anexo XIII — VRN zinc = 10 mg",
+        "Real Decreto 1487/2009, art. 5 (requisitos composición)"
+      ]
+    },
+    {
+      "ingrediente": "Vitamina D3 (colecalciferol)",
+      "dosis_diaria": "20 μg (800 UI)",
+      "porcentaje_vrn": "133% (VRN = 15 μg)",
+      "semaforo": "✅ PERMITIDO",
+      "evaluacion": "La vitamina D está incluida en el Anexo I de la Directiva 2002/46/CE como vitamina autorizada, y el colecalciferol (D3) figura como forma permitida en el Anexo II [1][2]. La dosis de 20 μg (800 UI) representa el 133% del VRN (15 μg) y se encuentra ampliamente por debajo del UL de EFSA para adultos, fijado en 100 μg/día (4.000 UI) [3][4]. Esta dosis (20 μg) está dentro del rango habitualmente aceptado por AESAN para complementos alimenticios destinados a la población general. No se trata de un Novel Food.",
+      "marco_normativo": [
+        "Directiva 2002/46/CE, Anexo I (lista de vitaminas) y Anexo II (lista de formas)",
+        "Reglamento (CE) 1170/2009, modificación de Anexos I y II",
+        "Reglamento (UE) 1169/2011, Anexo XIII — VRN vitamina D = 15 μg",
+        "Real Decreto 1487/2009, art. 5 (requisitos composición)"
+      ]
+    }
+  ],
+  "observaciones_adicionales": {
+    "aditivos": "No se declaran aditivos en esta fórmula. No aplica el Reglamento (CE) 1333/2008.",
+    "aromas": "No se declaran aromas en esta fórmula. No aplica el Reglamento (CE) 1334/2008.",
+    "novel_foods": "Ninguno de los ingredientes (ácido ascórbico, gluconato de zinc, colecalciferol) está catalogado como Novel Food en el Reglamento (UE) 2015/2283. Todos son sustancias convencionales con histórico de consumo.",
+    "etiquetado": "El etiquetado debe cumplir el Real Decreto 1487/2009 (art. 7-11) y el Reglamento (UE) 1169/2011, incluyendo: denominación 'complemento alimenticio', dosis diaria recomendada, advertencia de no superar la dosis, declaración de que el producto no debe sustituir una dieta variada y equilibrada, y mención de conservar fuera del alcance de los niños.",
+    "declaracion_sanitaria": "El producto requiere declaración responsable previa a la puesta en el mercado ante la autoridad sanitaria competente de la CC.AA. conforme al Real Decreto 1487/2009, art. 6.",
+    "apto_vegano": "El colecalciferol (D3) puede obtenerse de fuente animal (lanolina) o de fuente vegetal (liquen). Si se desea una claim 'apto para veganos', debe verificarse el origen del D3."
+  },
+  "resumen_ejecutivo": {
+    "viabilidad_regulatoria": "ALTA",
+    "puntuacion": "10/10",
+    "detalle": "Los tres ingredientes (vitamina C como ácido ascórbico, zinc como gluconato de zinc, y vitamina D3 como colecalciferol) están incluidos en las listas positivas de la Directiva 2002/46/CE (Anexos I y II) en las formas declaradas. Las dosis propuestas se encuentran por debajo de los UL de EFSA referenciados por AESAN. Ningún ingrediente presenta problemas de autorización, condiciones especiales ni situación de Novel Food. La fórmula es plenamente viable para su comercialización como complemento alimenticio en España, previa presentación de la declaración responsable ante la CC.AA. correspondiente.",
+    "recomendaciones": [
+      "Verificar el origen del colecalciferol si se desea claim vegano/vegetariano",
+      "Incluir en el etiquetado todas las menciones obligatorias del RD 1487/2009 y Reg. 1169/2011",
+      "Presentar declaración responsable ante la autoridad sanitaria autonómica antes de la comercialización",
+      "Realizar análisis de estabilidad para verificar que las dosis declaradas se mantienen durante la vida útil"
+    ]
+  },
+  "fuentes_consultadas": [
+    {
+      "id": 1,
+      "fuente": "EUR-Lex — Vitaminas y minerales en la UE (Directiva 2002/46/CE, Reglamento 1170/2009)",
+      "url": "https://eur-lex.europa.eu/ES/legal-content/summary/vitamins-and-minerals.html",
+      "tipo": "normativa"
+    },
+    {
+      "id": 2,
+      "fuente": "EUR-Lex — Reglamento (CE) 1170/2009, texto completo (Anexos I y II modificados)",
+      "url": "https://eur-lex.europa.eu/legal-content/ES/ALL/?uri=CELEX:32009R1170",
+      "tipo": "normativa"
+    },
+    {
+      "id": 3,
+      "fuente": "AESAN — Niveles máximos de ingesta admisible (UL) para vitaminas y minerales evaluados por EFSA (actualización noviembre 2024)",
+      "url": "https://www.aesan.gob.es/AECOSAN/web/seguridad_alimentaria/subdetalle/niveles_maximos.htm",
+      "tipo": "web_search"
+    },
+    {
+      "id": 4,
+      "fuente": "Lexsupplements — Actualización de los niveles máximos de ingesta admisible (UL) para vitaminas y minerales en complementos alimenticios (noviembre 2024)",
+      "url": "https://www.lexsupplements.com/es/blog/actualizacion-de-los-niveles-maximos-de-ingesta-admisible-ul-para-vitaminas-y-minerales-en-complementos-alimenticios",
+      "tipo": "web_search"
+    },
+    {
+      "id": 5,
+      "fuente": "Legalegonutrition — Guía AESAN de control del etiquetado y composición de complementos alimenticios",
+      "url": "https://legalegonutrition.com/nueva-guia-aesan-de-control-del-etiquetado-y-composicion-de-complementos-alimenticios/",
+      "tipo": "web_search"
+    },
+    {
+      "id": 6,
+      "fuente": "Conocimiento experto — Directiva 2002/46/CE, Real Decreto 1487/2009, Reglamento (UE) 1169/2011 Anexo XIII (VRN), Reglamento (UE) 2015/2283",
+      "url": "",
+      "tipo": "conocimiento"
+    }
+  ]
+}

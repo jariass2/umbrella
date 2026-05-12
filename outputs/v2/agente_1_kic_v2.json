@@ -1,0 +1,685 @@
+{
+  "fase_1_clasificacion": {
+    "tipo_producto": "complemento_alimenticio",
+    "objetivo_funcional_principal": "Soporte estructural osteoarticular y tegumentario (piel, articulaciones, tejido conectivo)",
+    "objetivos_funcionales_secundarios": [
+      "Antioxidación celular",
+      "Soporte nutricional para síntesis de colágeno",
+      "Energía y metabolismo"
+    ]
+  },
+  "fase_2_ingredientes": [
+    {
+      "ingrediente": "L-Glicina",
+      "tipologia": "AMINOÁCIDO",
+      "dosis_formula_mg": 5000,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "no aplica",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Precursor directo de colágeno (33% de sus residuos)",
+        "rol_secundario": "Neurotransmisor inhibitorio, soporte hepático"
+      },
+      "mecanismo_accion": {
+        "descripcion": "La glicina es el aminoácido más abundante en la secuencia de colágeno tipo I, II y III. Actúa como aminoácido glucogénico y ligando del receptor de glicina (GlyR) en SNC con efecto neuroprotector. Participa en la síntesis de glutatión y en la metilación hepática.",
+        "nivel_evidencia": "moderada"
+      },
+      "biodisponibilidad": {
+        "nivel": "ALTA",
+        "factores_mejora": [
+          "Administración en ayunas"
+        ],
+        "factores_reduccion": [
+          "Presencia de otros aminoácidos competitivos"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "adecuada"
+      },
+      "advertencias_formulacion": [
+        "Polvo altamente higroscópico - requiere ambiente con baja humedad relativa",
+        "Compatibilidad buena con otros aminoácidos en mezcla"
+      ]
+    },
+    {
+      "ingrediente": "Péptidos de Colágeno",
+      "tipologia": "PROTEÍNA_FUNCIONAL",
+      "dosis_formula_mg": 5000,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "no aplica",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Sustrato para síntesis endógena de colágeno articular y cutáneo",
+        "rol_secundario": "Estimulación de fibroblastos dérmicos"
+      },
+      "mecanismo_accion": {
+        "descripcion": "Los péptidos de colágeno (peso molecular 2-5 kDa) tras la ingestión son absorbidos como dipéptidos y tripéptidos que alcanzan la piel y articulaciones. Estimulan directamente la síntesis de colágeno tipo I por fibroblastos y la producción de ácido hialurónico por sinoviocitos. Dosis de 2,5-10g/día muestran beneficios documentados en elasticidad cutánea y dolor articular.",
+        "nivel_evidencia": "fuerte"
+      },
+      "biodisponibilidad": {
+        "nivel": "ALTA",
+        "factores_mejora": [
+          "Hidrolización optimizada (peso molecular < 5 kDa)",
+          "Combinación con vitamina C"
+        ],
+        "factores_reduccion": [
+          "Calor excesivo durante procesamiento"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "adecuada"
+      },
+      "advertencias_formulacion": [
+        "Sensible a temperaturas > 40°C - evitar procesamiento térmico",
+        "Puede conferir opacidad en cápsulas",
+        "Origen bovino/porcino/aviar debe declararse para alérgenos"
+      ]
+    },
+    {
+      "ingrediente": "Ácido Hialurónico",
+      "tipologia": "GLUCOSAMINGLICANO",
+      "dosis_formula_mg": 100,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "no aplica",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Lubricación articular y hidratación dérmica",
+        "rol_secundario": "Viscosificación del líquido sinovial"
+      },
+      "mecanismo_accion": {
+        "descripcion": "El ácido hialurónico oral (PM 800-1500 kDa) se fragmenta en el tracto GI y los fragmentos son absorbidos, acumulándose en piel y articulaciones. Estimula la síntesis endógena de HA por fibroblasts. Dosis de 80-200mg/día han demostrado mejorar la hidratación cutánea y reducir rigidez articular.",
+        "nivel_evidencia": "moderada"
+      },
+      "biodisponibilidad": {
+        "nivel": "MEDIA",
+        "factores_mejora": [
+          "Bajo peso molecular (< 900 kDa mejora absorción)"
+        ],
+        "factores_reduccion": [
+          "Alto peso molecular reduce absorción intestinal"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "adecuada"
+      },
+      "advertencias_formulacion": [
+        "Alta viscosidad puede dificultar encapsulado",
+        "Higroscópico - requiere sellado hermético",
+        "Origen fermentativo (Streptococcus) o aviario debe especificarse"
+      ]
+    },
+    {
+      "ingrediente": "Magnesio",
+      "tipologia": "MINERAL",
+      "dosis_formula_mg": 75,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "20%",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Cofactor en síntesis de colágeno y ATP muscular",
+        "rol_secundario": "Relajación muscular, función nerviosa"
+      },
+      "mecanismo_accion": {
+        "descripcion": "El magnesio es cofactor esencial de las prolil y lisil hidroxilasas, enzimas críticas para la hidroxilación del colágeno (pasos previos a la triple hélice). También actúa en >300 reacciones enzimáticas, incluyendo la síntesis de proteína y el metabolismo energético muscular.",
+        "nivel_evidencia": "fuerte"
+      },
+      "biodisponibilidad": {
+        "nivel": "MEDIA",
+        "factores_mejora": [
+          "Forma citrato, glicinato o malato"
+        ],
+        "factores_reduccion": [
+          "Fitatos, oxalatos, exceso de fibra dietética",
+          "Fármacos inhibidores de bomba (IPP)"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "adecuada"
+      },
+      "advertencias_formulacion": [
+        "Posible interacción con minerales pesados en excipientes",
+        "Compatibilidad con vitamina B6 mejora absorción",
+        "No exceder 400mg/día en suplementación prolongada"
+      ]
+    },
+    {
+      "ingrediente": "AKBA (Boswellia serrata 30%)",
+      "tipologia": "EXTRACTO_VEGETAL",
+      "dosis_formula_mg": 10,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "no aplica",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Antiinflamatorio natural (inhibición de 5-LOX)",
+        "rol_secundario": "Soporte articular"
+      },
+      "mecanismo_accion": {
+        "descripcion": "El ácido 3-O-acetil-11-ceto-β-boswélico (AKBA) es el máximo inhibidor conocido de la enzima 5-lipoxigenasa (5-LOX), bloqueando la síntesis de leucotrienos proinflamatorios (LTB4). Dosis de extractos estandarizados al 30% AKBA entre 100-250mg/día (equivalente a 30-75mg AKBA) son efectivas para osteoartritis. [1]",
+        "nivel_evidencia": "moderada"
+      },
+      "biodisponibilidad": {
+        "nivel": "BAJA",
+        "factores_mejora": [
+          "Formulación con lecitina (mejora absorción 3-5x)",
+          "Micronización",
+          "Combinación con pimienta negra (piperina)"
+        ],
+        "factores_reduccion": [
+          "Baja solubilidad acuosa intrínseca"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "subdosificado"
+      },
+      "advertencias_formulacion": [
+        "Baja biodisponibilidad oral - considerar formas lipídicas o vectorizadas",
+        "10mg de AKBA es dosis baja; se necesitarían al menos 100mg de extracto al 30% (30mg AKBA真正的)",
+        "Sensible a oxidación - proteger de luz y aire"
+      ]
+    },
+    {
+      "ingrediente": "Hierro",
+      "tipologia": "MINERAL",
+      "dosis_formula_mg": 3.5,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "25%",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Eritropoyesis, transporte de oxígeno",
+        "rol_secundario": "Cofactor en síntesis de colágeno (prolil hidroxilasa)"
+      },
+      "mecanismo_accion": {
+        "descripcion": "El hierro es cofactor de la prolil-4-hidroxilasa, enzima que hidroxila la prolina en colágeno. También es crítico para la síntesis de hemoglobina y mioglobina. La dosis de 3,5mg corresponde al 25% del NRV (14mg), apropiada para mantenimiento en población general.",
+        "nivel_evidencia": "fuerte"
+      },
+      "biodisponibilidad": {
+        "nivel": "MEDIA",
+        "factores_mejora": [
+          "Forma bisglicinato-quelado (mayor absorción que sulfato)",
+          "Vitamina C",
+          "Ácido cítrico"
+        ],
+        "factores_reduccion": [
+          "Calcio, taninos, fitatos, oxalatos",
+          "Antiácidos, IPP"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "adecuada"
+      },
+      "advertencias_formulacion": [
+        "Interacciona con calcio y zinc (absorción competitiva)",
+        "No tomar con lácteos o té",
+        "El hierro puede oxidar otros ingredientes - encapsular separately"
+      ]
+    },
+    {
+      "ingrediente": "Zinc",
+      "tipologia": "MINERAL",
+      "dosis_formula_mg": 2.5,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "25%",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Cofactor de metalotioneína y enzimas antioxidantes (SOD)",
+        "rol_secundario": "Síntesis de colágeno, función inmunitaria"
+      },
+      "mecanismo_accion": {
+        "descripcion": "El zinc es cofactor de las metaloproteinasas (MMP) que regulan el remodelado de matriz extracelular, y de la enzima superóxido dismutasa (Cu/Zn-SOD). Participa en la síntesis de colágeno tipos I y III, y en la proliferación de fibroblastos.",
+        "nivel_evidencia": "fuerte"
+      },
+      "biodisponibilidad": {
+        "nivel": "MEDIA",
+        "factores_mejora": [
+          "Forma picolinato, citrato, glicinato"
+        ],
+        "factores_reduccion": [
+          "Hierro, cobre, calcio (competencia)",
+          "Fitatos, fibra"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "adecuada"
+      },
+      "advertencias_formulacion": [
+        "Absorción competitiva con hierro - mantener separados",
+        "Dosis altas (>25mg/día) pueden causar náuseas",
+        "2,5mg es dosis segura de mantenimiento"
+      ]
+    },
+    {
+      "ingrediente": "Vitamina B5 (Ácido pantoténico)",
+      "tipologia": "VITAMINA",
+      "dosis_formula_mg": 1.5,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "25%",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Cofactor en síntesis deCoA y ác. grasos",
+        "rol_secundario": "Metabolismo energético"
+      },
+      "mecanismo_accion": {
+        "descripcion": "El ácido pantoténico se convierte en Coenzima A, esencial para el metabolismo de carbohidratos, grasas y la síntesis de colesterol (precursor de vitamina D y hormonas esteroideas). Participa en la cicatrización y regeneración de piel.",
+        "nivel_evidencia": "fuerte"
+      },
+      "biodisponibilidad": {
+        "nivel": "ALTA",
+        "factores_mejora": [
+          "Bien absorbido por difusión pasiva"
+        ],
+        "factores_reduccion": [
+          "Procesamiento térmico excesivo"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "adecuada"
+      },
+      "advertencias_formulacion": [
+        "Estable en condiciones normales de formulación",
+        "Compatible con vitaminas del grupo B"
+      ]
+    },
+    {
+      "ingrediente": "Astaxantina",
+      "tipologia": "CAROTENOIDE",
+      "dosis_formula_mg": 1,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "no aplica",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Antioxidante lipídico potentes",
+        "rol_secundario": "Protección frente a daño UV, soporte cutáneo"
+      },
+      "mecanismo_accion": {
+        "descripcion": "La astaxantina es un carotenoide xantofila con actividad antioxidante 500-1000x superior a vitamina E. Atraviesa la barrera hematoencefálica y se deposita en piel. Inhibe NF-κB y reduce marcadores inflamatorios. Dosis de 2-12mg/día muestran beneficios en foto protección oral y reduce expresión de metaloproteinasas (MMP-1). [2]",
+        "nivel_evidencia": "moderada"
+      },
+      "biodisponibilidad": {
+        "nivel": "MEDIA",
+        "factores_mejora": [
+          "Con lípidos (mejor absorción con comidas grasas)",
+          "Formulación en lípidos o fosfolípidos"
+        ],
+        "factores_reduccion": [
+          "Ausencia de matriz lipídica"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "subdosificado"
+      },
+      "advertencias_formulacion": [
+        "1mg es subdosificado - rango efectivo 4-12mg/día",
+        "Requierematriz lipídica para absorción óptima",
+        "Pigmentación roja natural puede manchar - encapsular",
+        "Proteger de oxidación (es carotenoidelípido)"
+      ]
+    },
+    {
+      "ingrediente": "Vitamina B2 (Riboflavina)",
+      "tipologia": "VITAMINA",
+      "dosis_formula_mg": 0.35,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "25%",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Cofactor en reacciones redox (FAD, FMN)",
+        "rol_secundario": "Metabolismo energético, integridad mucosa"
+      },
+      "mecanismo_accion": {
+        "descripcion": "La riboflavina es precursor de FAD y FMN, coenzimas esenciales en el metabolismo de carbohidratos, grasas y proteínas. Participa en la reducción del glutatión y en la producción de energía celular.",
+        "nivel_evidencia": "fuerte"
+      },
+      "biodisponibilidad": {
+        "nivel": "ALTA",
+        "factores_mejora": [
+          "Absorción eficiente por transportadores específicos"
+        ],
+        "factores_reduccion": [
+          "Alcohol, estrés, ciertos fármacos"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "adecuada"
+      },
+      "advertencias_formulacion": [
+        "Fotosensible - proteger de luz directa",
+        "Puede conferir coloración amarilla al producto"
+      ]
+    },
+    {
+      "ingrediente": "Vitamina B6 (Piridoxina)",
+      "tipologia": "VITAMINA",
+      "dosis_formula_mg": 0.35,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "25%",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Cofactor en metabolismo aminoacídico",
+        "rol_secundario": "Síntesis de neurotransmisores, hemoglobina"
+      },
+      "mecanismo_accion": {
+        "descripcion": "La piridoxina (PLP) es cofactor de >100 enzimas implicadas en el metabolismo de aminoácidos, síntesis de neurotransmisores (serotonina, dopamina), y formación de hemoglobina. Actúa sinérgicamente con magnesio para la síntesis de colágeno.",
+        "nivel_evidencia": "fuerte"
+      },
+      "biodisponibilidad": {
+        "nivel": "ALTA",
+        "factores_mejora": [
+          "Sinergia con magnesio"
+        ],
+        "factores_reduccion": [
+          "Alcohol, anticonceptivos orales"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "adecuada"
+      },
+      "advertencias_formulacion": [
+        "Estable en forma de piridoxina HCl",
+        "Compatible con otras vitaminas hidrosolubles"
+      ]
+    },
+    {
+      "ingrediente": "Vitamina B1 (Tiamina)",
+      "tipologia": "VITAMINA",
+      "dosis_formula_mg": 0.275,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "25%",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Cofactor en metabolismo de carbohidratos (TPP)",
+        "rol_secundario": "Función neurológica, producción de energía"
+      },
+      "mecanismo_accion": {
+        "descripcion": "La tiamina en forma de pirofosfato (TPP) es esencial en la descarboxilación oxidativa del piruvato y α-cetoglutarato en el ciclo de Krebs. Fundamental para la función neurológica y el metabolismo energético muscular.",
+        "nivel_evidencia": "fuerte"
+      },
+      "biodisponibilidad": {
+        "nivel": "ALTA",
+        "factores_mejora": [
+          "Absorción por transportadores activos"
+        ],
+        "factores_reduccion": [
+          "Alcohol, diets ricos en carbohidratos refinados"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "adecuada"
+      },
+      "advertencias_formulacion": [
+        "Tiamina HCl higroscópica - proteger de humedad",
+        "Compatible con complejo B"
+      ]
+    },
+    {
+      "ingrediente": "Folato (Ácido fólico)",
+      "tipologia": "VITAMINA",
+      "dosis_formula_mg": 0.05,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "25%",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Cofactor en síntesis de DNA, división celular",
+        "rol_secundario": "Metabolismo de metionina, eritropoyesis"
+      },
+      "mecanismo_accion": {
+        "descripcion": "El folato (en forma de THF) es cofactor en la síntesis de purinas y timina (DNA), y en la remetilación de homocisteína a metionina. Esencial para la división celular rápida (tejido conectivo, hematopoyesis).",
+        "nivel_evidencia": "fuerte"
+      },
+      "biodisponibilidad": {
+        "nivel": "MEDIA",
+        "factores_mejora": [
+          "Vitamina B12 necesaria para activación"
+        ],
+        "factores_reduccion": [
+          "Deficiencia de B12 bloquea activación"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "adecuada"
+      },
+      "advertencias_formulacion": [
+        "Ácido fólico sintético tiene mejor estabilidad que folatos naturales",
+        "B12 debe estar presente para conversión a metiltetrahidrofolato activo"
+      ]
+    },
+    {
+      "ingrediente": "Vitamina K2 (MK-7)",
+      "tipologia": "VITAMINA",
+      "dosis_formula_mg": 0.025,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "no aplica (AI: 75µg)",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Activación de proteínas Gla (osteocalcina, MGP)",
+        "rol_secundario": "Deposit calcium en hueso, no en tejidos blandos"
+      },
+      "mecanismo_accion": {
+        "descripcion": "La vitamina K2 (menaquinona-7) es cofactor de la γ-glutamil carboxilasa, enzima que carboxila residuos de ácido glutámico en osteocalcina y matrix Gla protein (MGP), permitiéndoles fijar calcio. Sin esta carboxilación, el calcio no se deposita correctamente en hueso. La dosis de 25µg es subóptima si se busca efecto óseo significativo (requiere 45-180µg).",
+        "nivel_evidencia": "moderada"
+      },
+      "biodisponibilidad": {
+        "nivel": "ALTA",
+        "factores_mejora": [
+          "Absorción mejora con grasas dietéticas"
+        ],
+        "factores_reduccion": [
+          "Absorción limitada sin matriz lipídica"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "subdosificado"
+      },
+      "advertencias_formulacion": [
+        "25µg es bajo - considerar 45-100µg para funcionalidad ósea",
+        "Requierematriz lipídica para absorción",
+        "Fotosensible - proteger de luz UV"
+      ]
+    },
+    {
+      "ingrediente": "Vitamina B12 (Cianocobalamina)",
+      "tipologia": "VITAMINA",
+      "dosis_formula_mg": 0.00063,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "25%",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Cofactor en isomerización de metilmalonil-CoA",
+        "rol_secundario": "Síntesis de DNA, mielina, folato activación"
+      },
+      "mecanismo_accion": {
+        "descripcion": "La cianocobalamina es cofactor de la metilmalonil-CoA mutasa (metabolismo de ácidos grasos odd-chain) y la metionina sintasa (reciclaje de homocisteína con folato). Esencial para la síntesis de mielina y eritropoyesis.",
+        "nivel_evidencia": "fuerte"
+      },
+      "biodisponibilidad": {
+        "nivel": "MEDIA",
+        "factores_mejora": [
+          "Factor intrínseco gástrico"
+        ],
+        "factores_reduccion": [
+          "Atrofia gástrica, аутоимунный гастрит",
+          "Metformina, IPP"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "adecuada"
+      },
+      "advertencias_formulacion": [
+        "Cianocobalamina es forma sintética estable",
+        "0,63µg equivale a 25% NRV - dosis mantenimiento adecuada",
+        "Estable en formulación"
+      ]
+    }
+  ],
+  "fase_3_interacciones_cruzadas": [
+    {
+      "par_ingredientes": [
+        "Vitamina C (implied)",
+        "Péptidos de Colágeno"
+      ],
+      "tipo_interaccion": "SINERGIA_FUERTE",
+      "relevancia_clinica": "alta",
+      "descripcion": "La vitamina C es cofactor esencial de las prolil y lisil hidroxilasas. Sin vitamina C, el colágeno recién sintetizado no puede hidroxilarse correctamente y se degrada prematuramente. La fórmula carece de vitamina C - gap crítico."
+    },
+    {
+      "par_ingredientes": [
+        "Hierro",
+        "Vitamina C"
+      ],
+      "tipo_interaccion": "SINERGIA_MODERADA",
+      "relevancia_clinica": "alta",
+      "descripcion": "La vitamina C mejora la absorción de hierro no hemo hasta 6x al reducir Fe3+ a Fe2+ (absorbible) y mantenerlo soluble. La fórmula no incluye vitamina C - oportunidad perdida."
+    },
+    {
+      "par_ingredientes": [
+        "Hierro",
+        "Zinc"
+      ],
+      "tipo_interaccion": "ANTAGONISMO_MODERADO",
+      "relevancia_clinica": "media",
+      "descripcion": "Hierro y zinc compiten por los mismos transportadores DMT1 en el enterocito. Ambos al 25% NRV pueden tener absorción subóptima cuando se administran juntos. Separar toma o usar formas queladas reduce la competencia."
+    },
+    {
+      "par_ingredientes": [
+        "Hierro",
+        "Magnesio"
+      ],
+      "tipo_interaccion": "ANTAGONISMO_MODERADO",
+      "relevancia_clinica": "media",
+      "descripcion": "El magnesio puede interferir con la absorción de hierro por competencia en el transporte. A dosis de mantenimiento (3,5mg Fe, 75mg Mg) el efecto es moderado pero medible."
+    },
+    {
+      "par_ingredientes": [
+        "Hierro",
+        "Vitamina K2"
+      ],
+      "tipo_interaccion": "SINERGIA_MODERADA",
+      "relevancia_clinica": "media",
+      "descripcion": "La vitamina K2 mejora la utilización del calcio, mientras que el hierro es necesario para la síntesis de osteocalcina (que requiere vitamina K2 para activarse). Sin hierro adecuado, la osteocalcina no puede sintetizarse aunque la K2 esté presente."
+    },
+    {
+      "par_ingredientes": [
+        "Vitamina B12",
+        "Folato"
+      ],
+      "tipo_interaccion": "SINERGIA_FUERTE",
+      "relevancia_clinica": "alta",
+      "descripcion": "La B12 es cofactor de la metionina sintasa que convierte homocisteína en metionina, y libera THF del pool de metiltetrahidrofolato. Sin B12, el folato queda 'atrapado' como 5-MTHF inactivo. Ambas presentes al 25% NRV."
+    },
+    {
+      "par_ingredientes": [
+        "Vitamina B6",
+        "Magnesio"
+      ],
+      "tipo_interaccion": "SINERGIA_MODERADA",
+      "relevancia_clinica": "media",
+      "descripcion": "La piridoxina se convierte en PLP, que forma complejo con magnesio para actuar como cofactor en >100 reacciones enzimáticas. El magnesio estabiliza el PLP. Sinergia en síntesis de colágeno y metabolismo aminoacídico."
+    },
+    {
+      "par_ingredientes": [
+        "Astaxantina",
+        "Vitamina E"
+      ],
+      "tipo_interaccion": "SINERGIA_MODERADA",
+      "relevancia_clinica": "baja",
+      "descripcion": "La astaxantina y la vitamina E actúan sinérgicamente como antioxidantes, regenerando mutuamente su capacidad redox. Ausencia de vitamina E en fórmula reduce el potencial de la astaxantina."
+    },
+    {
+      "par_ingredientes": [
+        "Zinc",
+        "Vitamina A"
+      ],
+      "tipo_interaccion": "SINERGIA_MODERADA",
+      "relevancia_clinica": "media",
+      "descripcion": "El zinc es necesario para la síntesis de RBP (retinol binding protein) que transporta vitamina A. También es cofactor de la alcohol deshidrogenasa que convierte retinol en retinal. Fórmula sin vitamina A."
+    }
+  ],
+  "fase_4_valoracion_global": {
+    "coherencia_funcional": "MEJORABLE",
+    "potencial_sinergetico": "La fórmula tiene una base sólida de péptidos de colágeno y glicina para soporte estructural, pero carece de la sinergia crítica con vitamina C para activación del colágeno. La presencia de vitaminas del grupo B es adecuada para metabolismo energético, pero la dosificación de algunos ingredientes clave (AKBA, astaxantina, K2) está por debajo de los rangos terapéuticos utilizados en estudios clínicos.",
+    "gaps_funcionales": [
+      {
+        "gap": "Ausencia de vitamina C",
+        "detalle": "La vitamina C es absolutamente crítica para la síntesis de colágeno: es cofactor de prolil-4-hidroxilasa y lisil hidroxilasa. Sin ella, el colágeno no puede triple-helizarse correctamente y se secreta como procolágeno defectuoso que se degrada. Estudios clínicos con colágeno + vitamina C muestran resultados superiores a colágeno solo.",
+        "accion_sugerida": "Añadir 60-100mg de ácido ascórbico (100-167% NRV). Esto cerraría también el gap de sinergia con hierro."
+      },
+      {
+        "gap": "Dosis subóptima de AKBA para efecto antiinflamatorio articular",
+        "detalle": "10mg de AKBA total es muy bajo. Los estudios con extractos estandarizados al 30% AKBA usan 100-250mg de extracto (30-75mg AKBA). A la dosis actual (3mg de AKBA real si el extracto es 30%), el efecto antiinflamatorio sobre 5-LOX será mínimo.",
+        "accion_sugerida": "Aumentar a mínimo 100mg de extracto al 30% AKBA (30mg AKBA), o considerar formas vectorizadas con lecitina para mejorar la ya de por sí baja biodisponibilidad."
+      },
+      {
+        "gap": "Dosis subóptima de astaxantina",
+        "detalle": "1mg de astaxantina está muy por debajo del rango de eficacia clínica (2-12mg/día para protección UV y antiaging cutáneo). Meta-análisis muestran beneficios a partir de 4mg/día.",
+        "accion_sugerida": "Aumentar a 4-8mg/día. Considerar formulación lipídica (fosfolípidos) para mejorar absorción."
+      },
+      {
+        "gap": "Dosis baja de vitamina K2",
+        "detalle": "25µg de K2 MK-7 está por debajo del rango efectivo (45-180µg) para activación de osteocalcina y mejora de densidad ósea. Los estudios con K2 para osteoporosis usan 45-180µg.",
+        "accion_sugerida": "Aumentar a 45-100µg de MK-7 para efecto óseo significativo."
+      }
+    ],
+    "riesgos_formulacion": [
+      {
+        "riesgo": "Oxidación de ingredientes lipídicos",
+        "detalle": "La astaxantina y el hierro son susceptibles a oxidación. En contacto prolongado pueden generar especies reactivas de oxígeno que degradan carotenoides y vitaminas.",
+        "accion_sugerida": "Usar encapsulado opaco, atmósfera de nitrógeno, y/o incluir antioxidante (vitamina E natural como conservante antioxidante a 15-30mg)."
+      },
+      {
+        "riesgo": "Higroscopicidad de glicina",
+        "detalle": "La glicina libre es altamente higroscópica y puede causar coalescencia en cápsulas o compactación en polvos.",
+        "accion_sugerida": "Usar desecante (sílica gel) en blíster o packaging hermético. Considerar premezcla con agente flowing."
+      },
+      {
+        "riesgo": "Interacción hierro-zinc por competencia de absorción",
+        "detalle": "Ambos minerales compiten por el transportador DMT1. A dosis simultáneas pueden reducirse mutuamente la absorción.",
+        "accion_sugerida": "Usar formas queladas (bisglicinato de hierro y zinc) que utilizan transportadores diferentes. Alternativamente, separar la toma o usar presentación de doble cápsula."
+      },
+      {
+        "riesgo": "Estabilidad de vitaminas del grupo B en mezcla",
+        "detalle": "Las vitaminas B son hidrosolubles y estables a pH neutro pero la riboflavina puede inducir fotodegradación de otras vitaminas B.",
+        "accion_sugerita": "Usar encapsulado opaco y evitar exposición a luz durante mezcla."
+      }
+    ],
+    "sugerencias_mejora": [
+      {
+        "sugerencia": "Añadir vitamina C (ácido ascórbico)",
+        "detalle": "填补el gap más crítico. Sin vitamina C, la inversión en colágeno es subóptima. 80-100mg complementarían la síntesis y mejorarían absorción de hierro.",
+        "accion_sugerida": "Formular a 90mg de ácido ascórbico (112,5% NRV) en la misma cápsula o en cápsula adyacente en blister."
+      },
+      {
+        "sugerencia": "Aumentar AKBA a dosis clinicamente efectiva",
+        "detalle": "La dosis actual es homeopática para el objetivo declarado (salud articular). Para inhibir 5-LOX se necesitan mínimo 30mg de AKBA real.",
+        "accion_sugerida": "Incrementar a 33-50mg de AKBA (110-165mg de extracto 30% AKBA). Considerar forma lecitinizada para compensar la baja biodisponibilidad."
+      },
+      {
+        "sugerencia": "Aumentar astaxantina a rango terapéutico",
+        "detalle": "1mg no alcanza el umbral efectivo para beneficios dermatológicos. Los meta-análisis usan 2-12mg. [2]",
+        "accion_sugerida": "Ajustar a 6mg de astaxantina. Formular con aceite de oliva u otro lípido para maximizar absorción."
+      },
+      {
+        "sugerencia": "Aumentar vitamina K2 a 45-90µg",
+        "detalle": "25µg no es suficiente para activar osteocalcina en cantidad significativa. La fórmula pretende salud articular y ósea.",
+        "accion_sugerida": "Subir a 45-90µg de MK-7. Asegurar presencia de vitamina D3 si se busca efecto óseo completo (sin D3, la K2 tiene utilidad limitada en metabolismo cálcico)."
+      },
+      {
+        "sugerencia": "Añadir vitamina E natural (mixed tocopherols)",
+        "detalle": "Protegería la astaxantina de oxidación y actuaría sinérgicamente como antioxidante. También protege las membranas celulares de peroxidación.",
+        "accion_sugerida": "Añadir 15-30mg de mixed tocopheroles (equivalente a 10-20mg RRR-α-TE) como antioxidante de fórmula."
+      },
+      {
+        "sugerencia": "Considerar añadir silicio (metilsilanol)",
+        "detalle": "El silicio orgánico es cofavorable para la síntesis de colágeno y la mineralización ósea. Estudos muestran synergia con colágeno.",
+        "accion_sugerida": "Añadir 10-20mg de silicio como metilsilanol DMAE o ácido ortosílicico estabilizado si se busca optimizar el perfil de salud articular."
+      }
+    ]
+  },
+  "fuentes_consultadas": [
+    {
+      "id": 1,
+      "fuente": "5-Loxin clinical trial - Osteoarthritis efficacy and safety",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/18573758/",
+      "tipo": "pubmed"
+    },
+    {
+      "id": 2,
+      "fuente": "Astaxanthin skin aging meta-analysis 2021",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/33760444/",
+      "tipo": "pubmed"
+    },
+    {
+      "id": 3,
+      "fuente": "Reglamento (UE) 1169/2011 - Valores de Referencia de Nutrientes",
+      "url": "https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:32011R1169",
+      "tipo": "web_search"
+    }
+  ],
+  "metadata": {
+    "version": "2.0",
+    "disclaimer": "Este análisis es orientativo y no sustituye la validación por un experto en formulación ni la verificación regulatoria específica para cada mercado de destino."
+  }
+}

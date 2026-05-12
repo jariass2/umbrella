@@ -1,0 +1,39 @@
+{
+  "nombre_formula": "Inmuno Complex Pro",
+  "analisis_kic": "Fórmula clásica de micronutrientes esenciales enfocada en la inmunorresistencia de primer nivel. Siguiendo los criterios de BELFRIT y las monografías de la AFEPDI, esta combinación representa el estándar de base (baseline) para soporte inmunitario, utilizando formas farmacéuticas seguras y bien documentadas en la base de datos PubMed y el Journal of Medicine.",
+  "ingredientes": [
+    {
+      "nombre": "Vitamina C (Ácido ascórbico)",
+      "dosis": "120mg (150% VRN)",
+      "funcion_tecnologica_nutricional": "Tecnológica: Actúa como antioxidante protector de otros activos en la matriz y regulador de pH. Nutricional: Cofactor esencial para la síntesis de colágeno, metabolismo energético y funcionamiento del sistema inmune innato y adaptativo.",
+      "mecanismo_accion_principal": "Actúa como donador de electrones, neutralizando especies reactivas de oxígeno (ROS) en el espacio extracelular. A nivel inmune, promueve la quimiotaxis de neutrófilos, potencia la fagocitosis y protege a los linfocitos T y B del daño oxidativo tras la exposición a patógenos (fuente: estudios de inmunología celular en PubMed).",
+      "interacciones_sinergicas": "Sinergia inmunológica clave con el Zinc: la Vitamina C regenera la forma oxidada del Zinc en las células inmunes y potencia la integridad de las barreras epiteliales. Junto con la Vitamina D3, facilita la diferenciación de monocitos a macrófagos.",
+      "incompatibilidades_antagonismos": "Incompatible con metales pesados y oxidantes fuertes en la misma matriz seca (puede degradarse a ácido dehidroascórbico). No presenta antagonismo bioquímico con el Zinc o la Vit D3 en este formato.",
+      "biodisponibilidad_factores": "La biodisponibilidad oral es saturable. A 120mg, la absorción a través de los transportadores SVCT1/SVCT2 en el intestino delgado es altamente eficiente (aprox. 70-90%). Dosis superiores a 500mg presentarían excreción urinaria significativa, por lo que esta dosis es óptima desde la perspectiva farmacocinética."
+    },
+    {
+      "nombre": "Zinc (Gluconato)",
+      "dosis": "10mg",
+      "funcion_tecnologica_nutricional": "Tecnológica: El gluconato actúa como agente quelante y estabilizante, mejorando la fluidez del polvo frente al óxido de zinc. Nutricional: Cofactor estructural y catalítico de más de 300 enzimas, esencial para la división celular inmune y la función barrier.",
+      "mecanismo_accion_principal": "Interviene en la señalización intracelular de linfocitos T (vía cinasas) y modula la respuesta inflamatoria inhibiendo la vía NF-kB. A nivel de barrera, mantiene la integridad de las uniones estrechas (tight junctions) del epitelio respiratorio y gastrointestinal, impidiendo la adhesión de patógenos (documentado en Journal of Medicine).",
+      "interacciones_sinergicas": "Sinergia directa con la Vitamina C en la protección del estallido oxidativo (respiratory burst) de los neutrófilos. Sinergia genómica con la Vitamina D3: los receptores de Vitamina D (VDR) contienen "dedos de zinc"; la presencia de este mineral es obligatoria para que el VDR se una al ADN y active la transcripción de genes inmunitarios.",
+      "incompatibilidades_antagonismos": "Antagonismo competitivo a nivel de absorción intestinal con el Calcio, Hierro y Cobre (compiten por el transportador DMT1). El uso de gluconato mitiga la irritación gástrica típica del sulfato de zinc.",
+      "biodisponibilidad_factores": "El zinc gluconato tiene una biodisponibilidad moderada-alta (alrededor del 60% frente al sulfato). Se ve negativamente afectada por la presencia de fitatos en la dieta, por lo que su consumo ideal es en ayunas o con comidas bajas en fibra."
+    },
+    {
+      "nombre": "Vitamina D3 (Colecalciferol)",
+      "dosis": "20μg (800 UI)",
+      "funcion_tecnologica_nutricional": "Tecnológica: Requiere de un excipiente lipídico (generalmente aceite MCT) para su estabilización en cápsulas blandas, o de agentes de recubrimiento (ej. almidón modificado) en polvos secos. Nutricional: Prohormona esencial para la homeostasis del calcio y la modulación inmunomoduladora.",
+      "mecanismo_accion_principal": "Se hidroxila en hígado y riñón a 1,25(OH)2D3. Se une al VDR en el núcleo de macrófagos y células dendríticas, estimulando la producción de péptidos antimicrobianos (catelicidina y beta-defensinas) y modulando la respuesta adaptativa para evitar reacciones autoinmunes (metaanálisis BMJ/PubMed sobre prevención de infecciones respiratorias agudas).",
+      "interacciones_sinergicas": "Depende estructuralmente del Zinc para la transcripción de sus genes diana. La Vitamina C protege la vitamina D de la peroxidación lipídica en las membranas celulares donde se almacena.",
+      "incompatibilidades_antagonismos": "Antagonizada por niveles muy elevados de Vitamina A (retinol) que compiten por el mismo receptor retinoide (RXR). Requiere lípidos para su absorción; en una matriz 100% acuosa sin coadyuvantes lipídicos tipo poloxámeros o lecitina, su absorción es casi nula.",
+      "biodisponibilidad_factores": "Es la vitamina liposoluble con mayor problema de solubilidad. Su biodisponibilidad depende casi exclusivamente de la matriz farmacéutica (micelas mixtas, emulsiones o presencia de grasa dietética simultánea). 800 UI es una dosis de mantenimiento idónea según NAVISION, aunque en población con déficit inicial puede resultar insuficiente para corrección rápida."
+    }
+  ],
+  "valoracion_global": {
+    "coherencia": "Alta. La fórmula respeta el paradigma de la tríada inmunológica base avalada por EMA y EFSA. Las dosis no superan los límites seguros establecidos por BELFRIT, utilizando el VRN como techo de seguridad para Vitamina C y maximizando el aporte de Zinc y D3 dentro del rango de mantenimiento estándar.",
+    "potencial_sinergetico": "Muy robusto a nivel intracelular. La sinergia entre Zinc y Vitamina D3 a nivel de transcripción génica (VDR) es el punto fuerte de esta fórmula, elevando el efecto farmacológico por encima de la suma de sus partes aisladas.",
+    "gaps_redundancias": "No existen redundancias bioquímicas. Sin embargo, existen dos gaps técnicos/nutricionales notables: 1) Gap de matriz: Al incluir Vit D3 liposoluble en una lista de polvos secos (ácido ascórbico, gluconato de zinc), la formulación requiere obligatoriamente de un sistema de vehiculización lipídico avanzado ( ej. cápsula softgel o polvo molecularmente disperso en lecitina), de lo contrario la Vit D3 será un placebo farmacocinético. 2) Gap de posicionamiento ("Pro"): Para un producto denominado "Complex Pro", la ausencia de un ingrediente de acción rápida o inmunomodulador botánico (ej. extracto estandarizado de Equinácea purpurea, o Saccharomyces boulardii) hace que el producto actúe únicamente como corrector de estados subóptimos basales, pero no como un activador agudo ante un cuadro infeccioso declarado.",
+    "conclusion_experta": "Fórmula ortodoxa, segura y con base científica incontestable, pero limitada en su ambición tecnológica. Su éxito comercial y terapéutico dependerá enteramente de la calidad del sistema de liberación (excipientes) utilizado para la Vitamina D3 en la planta de fabricación, más que de la innovación en los principios activos per se."
+  }
+}

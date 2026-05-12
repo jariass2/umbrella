@@ -1,0 +1,443 @@
+{
+  "fase_1_ftir": {
+    "objetivo": "Identificación inequívoca de cada materia prima activa y verificación de identidad del mix final, detectando sustituciones o adulteraciones",
+    "metodologia_general": {
+      "nombre": "FTIR-ATR",
+      "tecnica": "Espectroscopía infrarroja por transformada de Fourier con reflectancia total atenuada",
+      "equipo": "Espectrómetro FTIR equipado con cristal de diamante ATR",
+      "software": "Comparación espectral por índice de correlación (algoritmo Pearson o comparable)"
+    },
+    "control_mix_final": {
+      "criterio_aceptacion": "Índice de correlación ≥0,98 respecto al espectro de referencia del mix maestro validado; factor de concordancia ≥95% para picos marcadores de cada activo"
+    },
+    "espectros_referencia": {
+      "Vitamina C (ácido ascórbico)": {
+        "picos_principales": [
+          {
+            "numero_onda": "1750-1760",
+            "asignacion": "Ester C=O (lactona)"
+          },
+          {
+            "numero_onda": "3300-3400",
+            "asignacion": "OH alcohólico y enol (banda ancha asociada)"
+          },
+          {
+            "numero_onda": "1650",
+            "asignacion": "C=C alquénico conjugado"
+          }
+        ],
+        "criterio_aceptacion": "Concordancia posicional de picos ±5 cm⁻¹ vs referencia"
+      },
+      "Zinc (gluconato)": {
+        "picos_principales": [
+          {
+            "numero_onda": "1600",
+            "asignacion": "Carboxilato asimétrico (COO⁻)"
+          },
+          {
+            "numero_onda": "1080",
+            "asignacion": "C-O alcohólico"
+          },
+          {
+            "numero_onda": "3400",
+            "asignacion": "OH de humedad/hidroxilos (banda ancha)"
+          }
+        ],
+        "criterio_aceptacion": "Concordancia posicional de picos ±5 cm⁻¹ vs referencia"
+      },
+      "Magnesio (bisglicinato)": {
+        "picos_principales": [
+          {
+            "numero_onda": "1590-1610",
+            "asignacion": "Carboxilato asimétrico (COO⁻) quelado"
+          },
+          {
+            "numero_onda": "1400-1410",
+            "asignacion": "Carboxilato simétrico (COO⁻)"
+          },
+          {
+            "numero_onda": "3300-3500",
+            "asignacion": "NH/OH (banda ancha de amina e hidroxilos)"
+          },
+          {
+            "numero_onda": "1500-1550",
+            "asignacion": "Deformación N-H"
+          }
+        ],
+        "criterio_aceptacion": "Concordancia posicional de picos ±5 cm⁻¹ vs referencia; ausencia de picos de glicina libre a ~1710-1720 cm⁻¹ (ácido carboxílico no ionizado)"
+      }
+    },
+    "deteccion_adulteracion": {
+      "descripcion": "Se comparan frente a biblioteca de espectros de excipientes comunes y sustancias de relleno fraudulentas (almidón, maltodextrina, carbonato cálcico). Desviaciones >5 cm⁻¹ en picos marcadores o aparición de bandas extrañas (ej. 1710 cm⁻¹ indicando ácido carboxílico libre en lugar de quelato) rechazan el lote."
+    },
+    "frecuencia": "CADA_LOTE"
+  },
+  "fase_2_granulometria": {
+    "objetivo": "Garantizar la fluidez del polvo, minimizar la segregación durante el transporte y asegurar la homogeneidad de la mezcla en la dosificación",
+    "metodo_primario": {
+      "nombre": "Difracción láser",
+      "norma": "ISO 13320:2020",
+      "equipo": "Difractómetro láser en modo seco o húmedo según adecuación del material",
+      "dispersante": "Aire comprimido seco (método seco) o isopropanol (método húmedo si el polvo es cohesivo)"
+    },
+    "especificaciones_generales": {
+      "D10": ">10 µm (control de fines excesivos que aumentan cohesión)",
+      "D50": "50-150 µm (tamaño mediano óptimo para mezcla y fluidez)",
+      "D90": "<300 µm (prevención de segregación por arrastre de partículas grandes)"
+    },
+    "criterio_homogeneidad": {
+      "descripcion": "RSD ≤5% en 10 puntos de muestreo espacialmente distribuidos en el mixer (ensayo de homogeneidad del mix previo al envasado)",
+      "metodo": "Muestreo por thief probe en diferentes profundidades y alturas; análisis de contenido de Mg o Zn como marcadores"
+    },
+    "frecuencia": "CADA_LOTE"
+  },
+  "fase_3_densidad": {
+    "objetivo": "Caracterizar la reología del polvo para predecir problemas de flujo en dosificación, llenado y almacenamiento",
+    "metodos": {
+      "densidad_aparente": {
+        "nombre": "Densidad aparente (bulk density)",
+        "norma": "Ph. Eur. 2.9.15",
+        "tecnica": "Vertido libre en cilindro gradado de 100 mL; pesada",
+        "rango_especificacion": "0.40-0.70 g/cm³"
+      },
+      "densidad_compactada": {
+        "nombre": "Densidad compactada (tapped density)",
+        "norma": "Ph. Eur. 2.9.34",
+        "tecnica": "Golpeteo mecanizado (1250 golpes)",
+        "rango_especificacion": "Reportar valor y calcular índices"
+      }
+    },
+    "indices_reologia": {
+      "indice_carr": {
+        "nombre": "Índice de compresibilidad de Carr",
+        "formula": "((densidad_compactada - densidad_aparente) / densidad_compactada) × 100",
+        "rango_especificacion": "<20% (buena fluidez)",
+        "interpretacion": "15-20% aceptable; >25% rechazado por riesgo de formación de puentes"
+      },
+      "indice_hausner": {
+        "nombre": "Índice de Hausner",
+        "formula": "densidad_compactada / densidad_aparente",
+        "rango_especificacion": "<1.25",
+        "interpretacion": "Polvo de libre flujo; ≥1.25 indica cohesividad"
+      }
+    },
+    "frecuencia": "CADA_LOTE"
+  },
+  "fase_4_ph": {
+    "objetivo": "Control del pH de la matriz en suspensión como indicador indirecto de estabilidad química y ausencia de degradación/degradados ácidos",
+    "preparacion_muestra": {
+      "concentracion": "5% p/v",
+      "disolvente": "Agua destilada libre de CO₂",
+      "agitacion": "Agitación magnética 5 min; reposo 2 min antes de medida"
+    },
+    "condiciones_medicion": {
+      "temperatura": "20 ± 2°C",
+      "equipo": "pH-metro calibrado con buffer 4,0; 7,0 y 10,0 (Ph. Eur. 2.2.3)"
+    },
+    "rango_esperado": {
+      "ph_min": 4.5,
+      "ph_max": 6.5,
+      "justificacion": "El ácido ascórbico es estable entre pH 4-6; el bisglicinato de magnesio y el gluconato de zinc mantienen solubilidad y estabilidad quelática/química en este rango, evitando precipitación de hidróxidos metálicos a pH alcalino o hidrólisis ácida extrema."
+    },
+    "especificacion_aceptacion": "pH entre 4.5 y 6.5 en suspensión al 5% p/v a 20 ± 2°C",
+    "impacto_fuera_rango": {
+      "Vitamina C": "A pH >7 se inicia la oxidación irreversible a ácido deshidroascórbico y 2,3-diketogulonico, con pérdida de actividad y amarilleamiento. A pH <3 la degradación por hidrólisis de la lactona se acelera y puede resultar irritante.",
+      "Zinc gluconato": "A pH >8 el Zn²⁺ precipita como Zn(OH)₂; a pH muy ácido se disocia del gluconato, alterando biodisponibilidad.",
+      "Magnesio bisglicinato": "A pH >8.5 precipita Mg(OH)₂ y puede romperse el quelato; a pH <4 la glicina se protona, debilitando la estabilidad del complejo y liberando Mg²⁺ libre."
+    },
+    "frecuencia": "CADA_LOTE"
+  },
+  "fase_5_aspecto_organoleptico": {
+    "descripcion_producto": "Polvo fino y homogéneo de color blanco a blanco-crema, inodoro o con ligero olor ácido característico",
+    "criterios_aceptacion": {
+      "color": "Blanco a blanco-crema uniforme. Variación intra-lote ΔE* <2 respecto a patrón maestro (escala CIE L*a*b* si se dispone de colorímetro)",
+      "olor": "Inodoro a ligeramente ácido característico del ácido ascórbico, sin notas rancias ni amoniacales",
+      "textura": "Polvo fino, seco, libre de grumos, aglomerados o partículas extrañas",
+      "criterio_rechazo": "Apelmazamiento superior al 10% en peso tras tamizado por malla 1 mm; decoloración amarillenta/naranja intensa (signo de oxidación de vitamina C); presencia de manchas oscuras; olor rancio, metálico o desagradable"
+    },
+    "metodo_inspeccion": {
+      "nombre": "Inspección visual y táctil",
+      "condiciones": "Luz estándar D65, fondo blanco/neutro, observador entrenado. Tacto con guantes para detectar aglomerados.",
+      "muestra": "Mínimo 50 g observada en bandeja Petri blanca extendida en capa fina"
+    },
+    "frecuencia": "CADA_LOTE"
+  },
+  "fase_6_ensayos_analiticos_adicionales": {
+    "cuantificacion_activos": [
+      {
+        "parametro": "Vitamina C (ácido ascórbico)",
+        "metodo": "HPLC-UV (Ph. Eur. monografía Ácido ascórbico) o titulación iodométrica (Ph. Eur. 2.5.11)",
+        "especificacion": "90% - 110% del valor declarado en etiqueta (≥72 mg y ≤88 mg por dosis)",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "Zinc (Zn)",
+        "metodo": "ICP-OES (Ph. Eur. 2.2.22) o complejometría con EDTA (monografía Zinc gluconate Ph. Eur.)",
+        "especificacion": "90% - 110% del valor declarado en etiqueta (≥9 mg y ≤11 mg por dosis de Zn)",
+        "nota": "El resultado se expresa como Zn elemental",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "Magnesio (Mg)",
+        "metodo": "ICP-OES (Ph. Eur. 2.2.22) o complejometría con EDTA (monografía Magnesii bisglycinas Ph. Eur.)",
+        "especificacion": "90% - 110% del valor declarado en etiqueta (≥180 mg y ≤220 mg por dosis de Mg)",
+        "nota": "El resultado se expresa como Mg elemental",
+        "frecuencia": "CADA_LOTE"
+      }
+    ],
+    "uniformidad_contenido": {
+      "parametro": "Uniformidad de unidades de dosificación (por dosis)",
+      "metodo": "Ph. Eur. 2.9.40 (Dosage units) o 2.9.6 según formato; si es polvo a granel sin unidades individuales: homogeneidad del mix (Ph. Eur. 2.9.5)",
+      "especificacion": "RSD ≤6.0% (Aceptación 1: L1 ≤15; Aceptación 2: L2 ≤25 según valoración de contenido analítico por unidad)",
+      "frecuencia": "CADA_LOTE"
+    },
+    "microbiologia": {
+      "referencia_normativa": "Reglamento (CE) 2073/2005 y guías de criterios microbiológicos para suplementos alimenticios",
+      "criterios_microbiologicos": [
+        {
+          "parametro": "Recuento aerobios mesófilos (TAMC)",
+          "criterio": "≤1×10⁴ UFC/g (n=5, c=2, m=10⁴, M=10⁵)",
+          "frecuencia": "CADA_LOTE"
+        },
+        {
+          "parametro": "Recuento de levaduras y mohos (TYMC)",
+          "criterio": "≤1×10³ UFC/g (n=5, c=2, m=10³, M=10⁴)",
+          "frecuencia": "CADA_LOTE"
+        },
+        {
+          "parametro": "Escherichia coli",
+          "criterio": "Ausente en 10 g (n=5, c=0)",
+          "frecuencia": "CADA_LOTE"
+        },
+        {
+          "parametro": "Salmonella spp.",
+          "criterio": "Ausente en 25 g (n=5, c=0)",
+          "frecuencia": "CADA_LOTE"
+        }
+      ]
+    },
+    "metales_pesados": {
+      "metodo": "ICP-MS o ICP-OES (Ph. Eur. 2.4.20 / 2.2.22)",
+      "criterios": [
+        {
+          "elemento": "Plomo (Pb)",
+          "limite": "≤1.0 mg/kg"
+        },
+        {
+          "elemento": "Cadmio (Cd)",
+          "limite": "≤0.3 mg/kg"
+        },
+        {
+          "elemento": "Mercurio (Hg)",
+          "limite": "≤0.1 mg/kg"
+        },
+        {
+          "elemento": "Arsénico (As)",
+          "limite": "≤1.0 mg/kg"
+        }
+      ],
+      "frecuencia": "CADA_LOTE"
+    },
+    "humedad": {
+      "parametro": "Pérdida por desecación o contenido de agua",
+      "metodo": "Ph. Eur. 2.2.32 (Pérdida por desecación, 105°C hasta peso constante) o Karl Fischer (2.5.12) si es crítico",
+      "especificacion": "≤3.0% p/p",
+      "frecuencia": "CADA_LOTE"
+    }
+  },
+  "fase_7_plan_estabilidad": {
+    "normativa_base": "ICH Q1A(R2) y ICH Q1B (fotoestabilidad)",
+    "zona_climatica": "Zona II (25°C ± 2°C / 60% HR ± 5%)",
+    "numero_lotes": 3,
+    "vida_util_estimada": {
+      "objetivo_meses": 24,
+      "alcanzable": true,
+      "condiciones_almacenamiento": "Conservar en lugar fresco y seco (≤25°C); envase primario hermético opaco (protección frente a luz y humedad)"
+    },
+    "condiciones_estudio": [
+      {
+        "tipo": "Larga duración",
+        "temperatura": "25°C ± 2°C",
+        "humedad_relativa": "60% ± 5%",
+        "duracion": "24 meses",
+        "orientacion": "Envases primarios en posición vertical u horizontal según peor caso; protegidos de luz directa"
+      },
+      {
+        "tipo": "Acelerado",
+        "temperatura": "40°C ± 2°C",
+        "humedad_relativa": "75% ± 5%",
+        "duracion": "6 meses"
+      },
+      {
+        "tipo": "Fotodegradación",
+        "norma": "ICH Q1B",
+        "exposicion": "≥1.2 millones de lux·h y 200 Wh/m² en rango 320-400 nm",
+        "condicion": "Muestras expuestas directamente y con envase; comparación vs oscuridad"
+      }
+    ],
+    "cronograma_estudio": {
+      "puntos_tiempo": [
+        {
+          "tiempo": "T=0",
+          "condicion": "Larga duración y Acelerado",
+          "parametros_monitorizados": [
+            "Aspecto organoléptico",
+            "pH (suspensión 5%)",
+            "Humedad",
+            "Vitamina C (mg/dosis)",
+            "Zinc (mg/dosis)",
+            "Magnesio (mg/dosis)",
+            "Microbiología"
+          ]
+        },
+        {
+          "tiempo": "T=3m",
+          "condicion": "Larga duración y Acelerado",
+          "parametros_monitorizados": [
+            "Aspecto organoléptico",
+            "pH",
+            "Humedad",
+            "Vitamina C",
+            "Zinc",
+            "Magnesio"
+          ]
+        },
+        {
+          "tiempo": "T=6m",
+          "condicion": "Larga duración y Acelerado",
+          "parametros_monitorizados": [
+            "Aspecto organoléptico",
+            "pH",
+            "Humedad",
+            "Vitamina C",
+            "Zinc",
+            "Magnesio"
+          ]
+        },
+        {
+          "tiempo": "T=9m",
+          "condicion": "Larga duración",
+          "parametros_monitorizados": [
+            "Aspecto organoléptico",
+            "pH",
+            "Humedad",
+            "Vitamina C",
+            "Zinc",
+            "Magnesio"
+          ]
+        },
+        {
+          "tiempo": "T=12m",
+          "condicion": "Larga duración",
+          "parametros_monitorizados": [
+            "Aspecto organoléptico",
+            "pH",
+            "Humedad",
+            "Vitamina C",
+            "Zinc",
+            "Magnesio",
+            "Microbiología"
+          ]
+        },
+        {
+          "tiempo": "T=18m",
+          "condicion": "Larga duración",
+          "parametros_monitorizados": [
+            "Aspecto organoléptico",
+            "pH",
+            "Humedad",
+            "Vitamina C",
+            "Zinc",
+            "Magnesio"
+          ]
+        },
+        {
+          "tiempo": "T=24m",
+          "condicion": "Larga duración",
+          "parametros_monitorizados": [
+            "Aspecto organoléptico",
+            "pH",
+            "Humedad",
+            "Vitamina C",
+            "Zinc",
+            "Magnesio",
+            "Microbiología"
+          ]
+        }
+      ]
+    },
+    "criterios_fin_vida_util": [
+      {
+        "criterio": "Contenido de activos",
+        "descripcion": "Descenso por debajo del 90% del valor declarado en etiqueta para vitamina C, zinc o magnesio"
+      },
+      {
+        "criterio": "Cambio organoléptico",
+        "descripcion": "Decoloración amarillenta/naranja intensa, apelmazamiento superior al 10%, olor rancio o desviación táctil respecto a T=0"
+      },
+      {
+        "criterio": "Humedad",
+        "descripcion": "Incremento >3.0% p/p que favorece degradación química y crecimiento microbiológico"
+      },
+      {
+        "criterio": "Microbiología",
+        "descripcion": "Cualquier resultado fuera de especificación según Reglamento (CE) 2073/2005"
+      }
+    ]
+  },
+  "fase_8_resumen_ejecutivo": "El plan de control de calidad de Test Mineral Boost prioriza la verificación de identidad por FTIR-ATR de cada materia prima (magnesio bisglicinato, zinc gluconato y ácido ascórbico) y del mix final, asegurando la ausencia de adulteraciones con un índice de correlación ≥0,98. Se controlarán críticamente la granulometría (D50 50-150 µm, D90 <300 µm), los índices de fluidez (Carr <20%, Hausner <1,25) y el pH en suspensión al 5% (4,5-6,5), dado que la estabilidad de la vitamina C y la integridad de los minerales quelatos dependen de una matriz seca y de pH controlado. Todos los activos se cuantificarán analíticamente en cada lote (HPLC/titulación para vitamina C; ICP-OES/complejometría para Mg y Zn), junto con microbiología según CE 2073/2005, metales pesados y humedad ≤3%. El estudio de estabilidad ICH Q1A(R2) en 3 lotes (Zona II y acelerado 40°C/75% HR) confirmará los 24 meses de vida útil, monitorizando especialmente el descenso de vitamina C (termolábil y fotosensible) y el incremento de humedad. Se recomienda muestreo 100% de identidad para MP y análisis completo por lote de producto terminado, manteniendo la zona de mezcla a HR <40% y utilizando envases opacos herméticos para mitigar riesgos de oxidación y degradación fotoquímica.",
+  "fuentes_consultadas": [
+    {
+      "id": 1,
+      "fuente": "ICH Q1A(R2) Stability Testing of New Drug Substances and Products",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 2,
+      "fuente": "ICH Q1B Photostability Testing of New Drug Substances and Products",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 3,
+      "fuente": "Ph. Eur. 11.0 - Monografías Ácido ascórbico, Zinc gluconate, Magnesii bisglycinas; Capítulos 2.2.3, 2.2.22, 2.4.20, 2.5.11, 2.5.12, 2.9.6, 2.9.15, 2.9.34, 2.9.40",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 4,
+      "fuente": "Reglamento (CE) 2073/2005 del Parlamento Europeo y del Consejo, de 15 de noviembre de 2005, relativo a los criterios microbiológicos aplicables a los productos alimenticios",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 5,
+      "fuente": "ISO 13320:2020 Particle size analysis — Laser diffraction methods",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 6,
+      "fuente": "Conocimiento experto en control de calidad de complementos alimentarios y matrices sólidas",
+      "url": "",
+      "tipo": "conocimiento_experto"
+    }
+  ],
+  "metadata": {
+    "version": "2.0",
+    "disclaimer": "Este plan QC es orientativo y debe ser adaptado y validado por el laboratorio de control de calidad antes de su implementación comercial.",
+    "fecha_generacion": "2024-05-24",
+    "producto": "Test Mineral Boost"
+  },
+  "_trazabilidad": {
+    "prompt_version": "2.0.0",
+    "model": "moonshotai/kimi-k2.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "timestamp_utc": "2026-05-12T14:59:13+00:00",
+    "duration_s": 632.57,
+    "attempts": 1,
+    "transient_retries": 0,
+    "deterministic_retries": 0
+  }
+}

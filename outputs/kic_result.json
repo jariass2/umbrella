@@ -1,0 +1,139 @@
+{
+  "nombre_producto": "Inmuno Complex Pro",
+  "tipo": "Complemento alimentario – soporte inmunitario",
+  "ingredientes_activos": [
+    {
+      "ingrediente": "Vitamina C (ácido ascórbico)",
+      "cantidad": "120 mg",
+      "porcentaje_vrn": "150% VRN (VRN = 80 mg)",
+      "funcion_tecnologica_nutricional": "Antioxidante hidrosoluble; cofactor enzimático en la síntesis de colágeno, biosíntesis de carnitina y conversión de dopamina a noradrenalina. Nutricionalmente, contribuye a la función normal del sistema inmunitario, a la protección de las células frente al estrés oxidativo y a la reducción del cansancio y la fatiga [3].",
+      "mecanismo_accion_principal": "Acumula en leucocitos y neutrófilos con concentraciones 50-100 veces superiores al plasma, potenciando la quimiotaxis, la fagocitosis y la generación de especies reactivas de oxígeno (ROS) para destruir patógenos. Además, apoya la proliferación y diferenciación de linfocitos T y B. Actúa como donador de electrones en reacciones de hidroxilación y como scavenger de radicales libres [3].",
+      "interacciones_sinergicas": [
+        "Con ZINC: La vitamina C estabiliza las membranas celulares y protege al zinc de la oxidación, mientras que el zinc es cofactor de la superóxido dismutasa (SOD), complementando la acción antioxidante de la vitamina C. Ambos mejoran conjuntamente la respuesta innata y adaptativa frente a infecciones del tracto respiratorio [4].",
+        "Con VITAMINA D3: La vitamina C protege la forma activa de la vitamina D (1,25(OH)₂D₃) del daño oxidativo y mejora la función de los macrófagos activados por vitamina D, creando un efecto de «doble protección» inmunitaria [2][5]."
+      ],
+      "incompatibilidades_antagonismos": "A dosis muy elevadas (>1 g/día), el ácido ascórbico puede quelar el cobre y reducir su absorción, un efecto no relevante a 120 mg. No se han descrito antagonismos clínicamente significativos con zinc (10 mg) ni con vitamina D3 (20 μg) a estas dosis [4].",
+      "biodisponibilidad": "La absorción intestinal de vitamina C es activa (transportadores SVCT1 y SVCT2) y saturable. A 120 mg la biodisponibilidad se sitúa en torno al 70-90%; la saturación se produce a partir de ~200 mg por toma, con disminución progresiva de la fracción absorbida. La ingesta repartida mejora las concentraciones plasmáticas sostenidas [3].",
+      "estado_reglamentario": "Incluida en la lista positiva BELFRIT para complementos alimentarios. EFSA autoriza declaraciones de salud de función inmunitaria (Art. 13.1) y reducción de fatiga."
+    },
+    {
+      "ingrediente": "Zinc (gluconato)",
+      "cantidad": "10 mg",
+      "porcentaje_vrn": "100% VRN (VRN = 10 mg)",
+      "funcion_tecnologica_nutricional": "Oligoelemento esencial con función estructural (zinc finger proteins), catalítica (>300 metaloenzimas) y reguladora. Nutricionalmente contribuye a la función normal del sistema inmunitario, a la protección frente al estrés oxidativo, a la síntesis normal de ADN y a la cicatrización [4].",
+      "mecanismo_accion_principal": "El zinc interviene en la maduración y función de linfocitos T, la activación de macrófagos, la producción de interferón gamma (IFN-γ) y la actividad de la enzima timidina quinasa esencial para la proliferación celular. Modula la señalización intracelular vía NF-κB y es componente estructural de la SOD citosólica (Cu/Zn-SOD). Una deficiencia, incluso leve, altera la inmunidad mediada por células T [4][6].",
+      "interacciones_sinergicas": [
+        "Con VITAMINA C: Efecto sinérgico documentado en la reducción de la duración y severidad de resfriados comunes. La vitamina C potencia la función fagocítica de los neutrófilos mientras el zinc inhibe la replicación viral mediante bloqueo de la polimerasa del rinovirus, generando un mecanismo de «doble protección» [4].",
+        "Con VITAMINA D3: El zinc y la vitamina D3 inducen sinérgicamente la diferenciación de células T reguladoras (Treg) y potencian la producción de péptidos antimicrobianos (cathelicidina, defensinas-β). Estudios *in vitro* demuestran que la combinación incrementa significativamente la expresión de FOXP3 en comparación con cada nutriente por separado [7]."
+      ],
+      "incompatibilidades_antagonismos": "El zinc en dosis altas (>25-30 mg/día prolongados) puede competir con el cobre por la metalotioneína intestinal, reduciendo la absorción de cobre. A 10 mg/día este riesgo es mínimo. Los fitatos y el calcio en altas concentraciones pueden reducir la absorción de zinc; no presente en esta formulación [9].",
+      "biodisponibilidad": "El gluconato de zinc presenta una biodisponibilidad elevada (estudios comparativos sitúan su absorción en niveles similares o superiores al sulfato de zinc), con buena tolerancia gastrointestinal. La absorción se produce principalmente en yeyuno mediante transportadores ZIP4 y se regula por homeostasis corporal (metalionteína). La ingesta con alimentos reduce la absorción un ~50%; en ayunas mejora [8][9].",
+      "estado_reglamentario": "Incluido en BELFRIT con un máximo general de 25 mg/día. La EFSA ha establecido ingesta tolerable superior (UL) de 25 mg/día para adultos. A 10 mg se sitúa en un nivel seguro y dentro del 100% VRN."
+    },
+    {
+      "ingrediente": "Vitamina D3 (colecalciferol)",
+      "cantidad": "20 μg (800 UI)",
+      "porcentaje_vrn": "400% VRN (VRN = 5 μg / 200 UI)",
+      "funcion_tecnologica_nutricional": "Prohormona liposoluble clave en el metabolismo del calcio-fósforo y la mineralización ósea. Nutricionalmente contribuye a la función normal del sistema inmunitario, a la absorción/utilización normal del calcio y fósforo, y al mantenimiento de la función muscular normal [5][6].",
+      "mecanismo_accion_principal": "La vitamina D3 se hidroxila a 25(OH)D en hígado y posteriormente a 1,25(OH)₂D₃ (calcitriol) en riñón. El calcitriol se une al receptor nuclear VDR, presente en la mayoría de células inmunitarias (macrófagos, linfocitos T y B, células dendríticas). La activación del VDR induce la transcripción de péptidos antimicrobianos (cathelicidina LL-37 y β-defensinas), promueve la diferenciación de monocitos a macrófagos, potencia la presentación antigénica y favorece un perfil Th2/Treg antiinflamatorio. Además, refuerza las barreras epiteliales respiratorias y intestinales [5][6].",
+      "interacciones_sinergicas": [
+        "Con ZINC: Sinergia inmunomoduladora demostrada en estudios *in vitro* e inmunológicos. El zinc potencia la señalización del VDR al facilitar la unión del complejo VDR-RXR alVDRE (vitamin D response element), amplificando la expresión génica dependiente de vitamina D [7].",
+        "Con VITAMINA C: La vitamina C, como antioxidante, protege al calcitriol de la degradación oxidativa y favorece un microambiente redox favorable para la respuesta inmunitaria mediada por vitamina D [2][5]."
+      ],
+      "incompatibilidades_antagonismos": "No se conocen antagonismos directos con zinc ni vitamina C a estas dosis. El exceso crónico de vitamina D (>4000 UI/día) puede producir hipercalcemia; a 800 UI el riesgo es despreciable. Los corticosteroides pueden reducir la activación de vitamina D (no aplica a esta formulación) [5].",
+      "biodisponibilidad": "La vitamina D3 liposoluble requiere la presencia de grasa dietética y sales biliares para su absorción (micelización en intestino delgado). Al administrarse en formato de complemento (cápsula/tableta), la toma con una comida que contenga lípidos mejora significativamente la absorción (hasta un 32-67% más). La vida media plasmática del 25(OH)D es de 2-3 semanas, permitiendo una acción sostenida [5].",
+      "estado_reglamentario": "BELFRIT permite hasta 50 μg (2000 UI)/día para adultos. La EFSA ha establecido 100 μg (4000 UI)/día como UL. A 20 μg (800 UI) se sitúa en un rango óptimo y seguro, alineado con las recomendaciones de sociedades científicas europeas para soporte inmunitario."
+    }
+  ],
+  "perfil_kic": {
+    "descripcion": "Fórmula de triple sinergia inmunotrópica basada en micronutrientes esenciales con evidencia sólida de acción convergente sobre el sistema inmunitario innato y adaptativo.",
+    "vectores_funcionales": [
+      "Barrera epitelial: Vitamina D3 (cathelicidinas, tight junctions) + Vitamina C (colágeno, antioxidación cutáneo-mucosa)",
+      "Inmunidad innata: Zinc (neutrófilos, macrófagos, NK) + Vitamina C (quimiotaxis, fagocitosis) + Vitamina D3 (autofagia, macrófagos)",
+      "Inmunidad adaptativa: Zinc (linfocitos T, timulina) + Vitamina D3 (Treg, Th2) + Vitamina C (proliferación linfocitaria)",
+      "Antioxidación: Vitamina C (scavenger directo) + Zinc (SOD Cu/Zn) + Vitamina D3 (reducción de estrés oxidativo inflamatorio)"
+    ],
+    "dosis_diseno": "Las dosis seleccionadas se encuentran dentro de los márgenes seguros definidos por BELFRIT, EFSA y el Reglamento (UE) 1169/2011. El 150% VRN de vitamina C es un nivel de refuerzo moderado y seguro. El 100% VRN de zinc cubre las necesidades basales con margen. Los 20 μg de D3 corresponden a la dosis estándar de mantenimiento recomendada por múltiples sociedades científicas."
+  },
+  "valoracion_global": {
+    "coherencia": "ALTA. Los tres ingredientes convergen sobre el eje inmunitario con mecanismos complementarios y sinérgicos bien documentados. La fórmula no presenta dispersiones funcionales ni ingredientes fuera de target.",
+    "potencial_sinergetico": "ALTO. La tríada vitamina C + zinc + vitamina D3 ha sido descrita como uno de los pilares de la micronutrición inmunitaria con evidencia de efectos aditivos y sinérgicos en la defensa frente a infecciones respiratorias [2][4][5][7]. El zinc potencia la señalización del VDR de vitamina D3, y la vitamina C protege a ambos del estrés oxidativo.",
+    "gaps_identificados": [
+      "AUSENCIA DE VITAMINA A: Podría complementar la tríada como cofactor en la diferenciación de linfocitos Th2 y en el mantenimiento de barreras mucosas, creando una cuaterna A-C-D-Zn clásica en soporte inmune.",
+      "AUSENCIA DE SELENIO: Cofactor de la glutatión peroxidasa y de la desiodinasa (convierte T4 a T3 activa). Complementaría la red antioxidante C-Zn de forma relevante.",
+      "SIN EXCIPIENTES DE SOLUBILIZACIÓN GRASA: La vitamina D3, al ser liposoluble, podría beneficiarse de un excipiente que asegure su dispersión/emulsificación si el formato es comprimido sin matriz lipídica."
+    ],
+    "redundancias": "NINGUNA SIGNIFICATIVA. Cada nutriente aporta mecanismos de acción distintos aunque convergentes. No hay duplicidad funcional.",
+    "puntuacion_global": 8.5,
+    "puntuacion_maxima": 10,
+    "justificacion_puntuacion": "Fórmula limpia, focalizada, bien dosificada y con sinergias robustas. Pierde puntos por la ausencia de selenio (que amplificaría la red antioxidante) y de vitamina A (que cerraría el arco inmunitario), así como por la necesidad de asegurar la biodisponibilidad lipídica de D3 según el formato galénico."
+  },
+  "fuentes_consultadas": [
+    {
+      "id": 1,
+      "fuente": "Verywell Health – Zinc and Vitamin C Together",
+      "url": "https://www.verywellhealth.com/vitamin-c-and-zinc-11846501",
+      "tipo": "web_search"
+    },
+    {
+      "id": 2,
+      "fuente": "Maggini S et al. (2017). Vitamins C, D and Zinc: Synergistic Roles in Immune Function and Infections. Nutrients.",
+      "url": "https://www.researchgate.net/publication/368146708_Vitamins_C_D_and_Zinc_Synergistic_Roles_in_Immune_Function_and_Infections",
+      "tipo": "web_search"
+    },
+    {
+      "id": 3,
+      "fuente": "Carr AC, Maggini S. Vitamin C and Immune Function. Nutrients 2017;9(11):1211. PMC.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5707683/",
+      "tipo": "web_search"
+    },
+    {
+      "id": 4,
+      "fuente": "Watanabe F et al. Immune-enhancing role of vitamin C and zinc and effect on clinical conditions. Proc Nutr Soc. Cambridge University Press.",
+      "url": "https://www.cambridge.org/core/journals/proceedings-of-the-nutrition-society/article/immuneenhancing-role-of-vitamin-c-and-zinc-and-effect-on-clinical-conditions/7DF493E4BF919549DA7F11BCD40656F3",
+      "tipo": "web_search"
+    },
+    {
+      "id": 5,
+      "fuente": "Hilaris Publisher. Vitamins C, D and Zinc: Synergistic Roles in Immune Function and Infections. Open Access.",
+      "url": "https://www.hilarispublisher.com/open-access/vitamins-c-d-and-zinc-synergistic-roles-in-immune-function-and-infections-2376-1318-1000167.pdf",
+      "tipo": "web_search"
+    },
+    {
+      "id": 6,
+      "fuente": "PubMed – Immunomodulatory Effects of Vitamin D and Zinc on Viral Infection (2024).",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/38451442/",
+      "tipo": "web_search"
+    },
+    {
+      "id": 7,
+      "fuente": "ScienceDirect – Vitamin D3 and zinc synergistically induce regulatory T cells. Journal of Trace Elements in Medicine and Biology, 2022.",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0955286322000134",
+      "tipo": "web_search"
+    },
+    {
+      "id": 8,
+      "fuente": "Benchchem – Comparative Analysis of Zinc Gluconate and Zinc Sulfate Absorption in Humans.",
+      "url": "https://pdf.benchchem.com/10761/A_Comparative_Analysis_of_Zinc_Gluconate_and_Zinc_Sulfate_Absorption_in_Humans.pdf",
+      "tipo": "web_search"
+    },
+    {
+      "id": 9,
+      "fuente": "MDPI – Comparative Absorption and Bioavailability of Various Chemical Forms of Zinc in Humans: A Narrative Review. Nutrients 2024;16(24):4269.",
+      "url": "https://www.mdpi.com/2072-6643/16/24/4269",
+      "tipo": "web_search"
+    },
+    {
+      "id": 10,
+      "fuente": "Conocimiento experto – Bases de datos BELFRIT y Reglamento UE 1169/2011 (VRN, listas positivas, límites máximos).",
+      "url": "https://ec.europa.eu/food/safety/labelling_nutrition_labelling/annex_xv_en",
+      "tipo": "conocimiento"
+    },
+    {
+      "id": 11,
+      "fuente": "Conocimiento experto – EFSA Panel on Dietetic Products (NDA). Scientific Opinion on Dietary Reference Values for vitamin C, zinc and vitamin D.",
+      "url": "https://www.efsa.europa.eu/en/topics/topic/dietary-reference-values",
+      "tipo": "conocimiento"
+    }
+  ]
+}

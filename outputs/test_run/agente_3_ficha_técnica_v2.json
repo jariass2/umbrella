@@ -1,0 +1,197 @@
+{
+  "fase_1_identificacion": {
+    "denominacion_legal": "Complemento alimentario a base de magnesio, zinc y vitamina C",
+    "nombre_comercial": "Test Mineral Boost",
+    "tipo_producto": "complemento_alimentario",
+    "forma_presentacion": "cápsula vegetal",
+    "publico_objetivo": "Adultos como complemento a la dieta en magnesio, zinc y vitamina C, especialmente en contextos de actividad física o estrés oxidativo"
+  },
+  "fase_2_composicion": {
+    "ingredientes_activos": [
+      {
+        "nombre_ingrediente": "Magnesio",
+        "forma_quimica": "Bisglicinato de magnesio (quelato)",
+        "cantidad_por_dosis": "200 mg de magnesio elemental",
+        "cantidad_por_100g": "A determinar según peso total unitario de la cápsula",
+        "porcentaje_nrv": "53%",
+        "semaforo_regulatorio": "✅ PERMITIDO"
+      },
+      {
+        "nombre_ingrediente": "Zinc",
+        "forma_quimica": "Gluconato de zinc",
+        "cantidad_por_dosis": "10 mg de zinc elemental",
+        "cantidad_por_100g": "A determinar según peso total unitario de la cápsula",
+        "porcentaje_nrv": "100%",
+        "semaforo_regulatorio": "✅ PERMITIDO"
+      },
+      {
+        "nombre_ingrediente": "Vitamina C",
+        "forma_quimica": "Ácido L-ascórbico",
+        "cantidad_por_dosis": "80 mg",
+        "cantidad_por_100g": "A determinar según peso total unitario de la cápsula",
+        "porcentaje_nrv": "100%",
+        "semaforo_regulatorio": "✅ PERMITIDO"
+      }
+    ],
+    "lista_ingredientes_etiqueta": "Bisglicinato de magnesio, celulosa microcristalina (agente de carga), ácido L-ascórbico (vitamina C), gluconato de zinc, dióxido de silicio coloidal (anticonglomerante); envoltura de la cápsula: hipromelosa."
+  },
+  "fase_3_informacion_nutricional": {
+    "tabla_nutricional_por_dosis": {
+      "seccion_obligatoria": {
+        "valor_energetico_kj": 0,
+        "valor_energetico_kcal": 0,
+        "grasas_g": 0,
+        "acidos_grasos_saturados_g": 0,
+        "hidratos_de_carbono_g": 0,
+        "azucares_g": 0,
+        "fibra_g": 0,
+        "proteinas_g": 0,
+        "sal_g": 0
+      },
+      "vitaminas_minerales": {
+        "vitamina_c": {
+          "nombre_etiqueta": "Vitamina C",
+          "unidad": "mg",
+          "cantidad_por_dosis": "80",
+          "porcentaje_nrv": "100%"
+        },
+        "magnesio": {
+          "nombre_etiqueta": "Magnesio",
+          "unidad": "mg",
+          "cantidad_por_dosis": "200",
+          "porcentaje_nrv": "53%"
+        },
+        "zinc": {
+          "nombre_etiqueta": "Zinc",
+          "unidad": "mg",
+          "cantidad_por_dosis": "10",
+          "porcentaje_nrv": "100%"
+        }
+      }
+    }
+  },
+  "fase_4_alergenos": {
+    "presentes": [],
+    "trazas": [
+      "soja",
+      "leche",
+      "frutos_de_cascara",
+      "sésamo"
+    ],
+    "declaracion_etiqueta": "No contiene alérgenos intencionales entre sus ingredientes. Puede contener trazas de soja, leche, frutos de cáscara y sésamo debido a la contaminación cruzada en la cadena de suministro de excipientes o en instalaciones de fabricación."
+  },
+  "fase_5_especificaciones_tecnicas": {
+    "fisicoquimicas": {
+      "aspecto": "Cápsulas duras de color uniforme, sin grietas ni deformaciones",
+      "olor": "Inodoro o ligero olor característico de los componentes",
+      "color": "Blanco a crema",
+      "humedad_maxima_porcentaje": "≤ 5,0 % (valores orientativos, confirmar con análisis)",
+      "metodo_referencia_humedad": "Karl Fischer o gravimetría en estufa (105 °C)",
+      "disolucion_capsula_minutos": "≤ 45 min (zona I, 37 °C)",
+      "metodo_referencia_disolucion": "Ph. Eur. 2.9.3 o USP <711>"
+    },
+    "microbiologicas": {
+      "recuento_aerobios_mesofilos_ufc_g": "≤ 1.000 (valores orientativos, confirmar con análisis)",
+      "enterobacterias_ecoli_ufc_g": "≤ 10",
+      "mohos_y_levaduras_ufc_g": "≤ 100",
+      "salmonella": "Ausencia en 25 g",
+      "staphylococcus_aureus_ufc_g": "≤ 100 (valores orientativos, confirmar con análisis)",
+      "nota_metodologica": "Basado en criterios del Reglamento (CE) 2073/2005 y estándares habituales de la industria de complementos alimentarios en forma seca dosificada."
+    }
+  },
+  "fase_6_conservacion_vida_util": {
+    "condiciones_conservacion": "Conservar en lugar fresco y seco, a temperatura inferior a 25 °C, protegido de la luz solar directa y de fuentes de calor. Mantener el envase perfectamente cerrado.",
+    "vida_util_estimada": {
+      "meses": 24,
+      "justificacion": "Formulación seca en cápsulas vegetales con riesgo controlado de degradación oxidativa del ácido ascórbico; estabilidad orientativa de 24 meses en envase hermético y opaco con desecante, sujeta a validación por estudios de estabilidad acelerada ICH."
+    },
+    "condiciones_transporte": "Transporte en vehículos cubiertos, protegido de humedad y temperaturas extremas (< 30 °C). No apilar bajo luz solar directa.",
+    "texto_etiqueta_conservacion": "Conservar en lugar fresco y seco, a temperatura inferior a 25 °C. Mantener el envase bien cerrado. Proteger de la luz."
+  },
+  "fase_7_modo_empleo_advertencias": {
+    "modo_empleo": {
+      "dosis_diaria": "2 cápsulas al día",
+      "momento_ingesta": "Con el desayuno o una comida principal",
+      "modo_administracion": "Ingerir con un vaso de agua",
+      "poblacion_objetivo": "Adultos",
+      "duracion_recomendada": "Ciclos de uso de hasta 3 meses. Valorar pausa o seguimiento profesional para uso prolongado."
+    },
+    "dosis_maxima": "No superar las 2 cápsulas al día (dosis diaria expresamente recomendada).",
+    "advertencias_obligatorias": [
+      "No superar la dosis diaria expresamente recomendada.",
+      "Los complementos alimentarios no deben utilizarse como sustitutos de una dieta equilibrada y variada.",
+      "Mantener fuera del alcance de los niños pequeños."
+    ],
+    "advertencias_recomendadas": [
+      "Consultar a un médico antes de usar si está embarazada o en periodo de lactancia.",
+      "Se recomienda no combinar en la misma toma con altas cargas de calcio o hierro sin separación galénica o diferenciación de tomas.",
+      "En uso continuado superior a 3 meses se recomienda vigilar el balance Zn/Cu o valorar suplementación con cobre según criterio profesional."
+    ],
+    "advertencias_informativas": [
+      "El gluconato de zinc presenta biodisponibilidad inferior a quelatos como bisglicinato o picolinato.",
+      "Evitar almacenamiento en ambientes húmedos; el bisglicinato puede favorecer aglomeración en presencia de ácido ascórbico y humedad residual.",
+      "En personas con insuficiencia renal grave, consultar al médico antes de consumir magnesio."
+    ],
+    "contraindicaciones_poblacion": {
+      "embarazo_lactancia": "Consultar con un médico antes de su consumo.",
+      "menores_edad": "No dirigido a menores de 18 años.",
+      "interacciones_farmacologicas": "El zinc puede interferir con la absorción de antibióticos de las familias de las tetraciclinas y quinolonas; se recomienda separar la toma al menos 2 horas."
+    }
+  },
+  "fase_8_marco_normativo": {
+    "normativa_aplicable": [
+      "Reglamento (UE) nº 1169/2011 del Parlamento Europeo y del Consejo, de 25 de octubre de 2011, sobre la información alimentaria facilitada al consumidor.",
+      "Directiva 2002/46/CE del Parlamento Europeo y del Consejo, de 10 de junio de 2002, relativa a la aproximación de las legislaciones de los Estados miembros en materia de complementos alimentarios.",
+      "Real Decreto 1487/2009, de 26 de septiembre, por el que se regulan los complementos alimentarios en España.",
+      "Reglamento (CE) nº 1924/2006 del Parlamento Europeo y del Consejo, de 20 de diciembre de 2006, sobre las declaraciones nutricionales y de salud atribuidas a los alimentos.",
+      "Reglamento (CE) nº 2073/2005 de la Comisión, de 15 de noviembre de 2005, relativo a los criterios microbiológicos aplicables a los productos alimenticios.",
+      "Reglamento (CE) nº 1333/2008 del Parlamento Europeo y del Consejo, de 16 de diciembre de 2008, sobre aditivos alimentarios."
+    ]
+  },
+  "fuentes_consultadas": [
+    {
+      "id": 1,
+      "fuente": "Reglamento (UE) nº 1169/2011 (información alimentaria al consumidor)",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 2,
+      "fuente": "Directiva 2002/46/CE y Real Decreto 1487/2009 (complementos alimentarios)",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 3,
+      "fuente": "Reglamento (CE) nº 2073/2005 (criterios microbiológicos)",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 4,
+      "fuente": "Reglamento (CE) nº 1924/2006 (declaraciones nutricionales y de salud)",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 5,
+      "fuente": "Anexo XIII Parte A del Reglamento (UE) 1169/2011 (Valores de Referencia de Nutrientes)",
+      "url": "",
+      "tipo": "normativa"
+    }
+  ],
+  "metadata": {
+    "version": "2.0",
+    "disclaimer": "Ficha técnica orientativa. Debe ser revisada y validada por el departamento de calidad antes de su uso oficial."
+  },
+  "_trazabilidad": {
+    "prompt_version": "2.0.0",
+    "model": "moonshotai/kimi-k2.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "timestamp_utc": "2026-05-12T15:04:26+00:00",
+    "duration_s": 313.34,
+    "attempts": 1,
+    "transient_retries": 0,
+    "deterministic_retries": 0
+  }
+}

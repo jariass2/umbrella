@@ -1,0 +1,209 @@
+{
+  "fase_1_clasificacion": {
+    "tipo_producto": "complemento_alimentario",
+    "objetivo_funcional_principal": "Apoyo a la homeostasis hormonal (eje testosterona), función neuromuscular y metabolismo energético, con cobertura inmunitaria y antioxidante",
+    "objetivos_funcionales_secundarios": [
+      "Función neuromuscular y electrolítica",
+      "Defensa antioxidante y reparación tisular",
+      "Soporte inmunitario celular"
+    ]
+  },
+  "fase_2_ingredientes": [
+    {
+      "ingrediente": "Magnesio (bisglicinato)",
+      "tipologia": "MINERAL",
+      "dosis_formula_mg": 200,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "53%",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Activo funcional (cofactor mineral, regulador electrolítico y estructural)",
+        "rol_secundario": "Participa en relajación muscular, síntesis de ATP y modulación de SHBG [1]"
+      },
+      "mecanismo_accion": {
+        "descripcion": "Cofactor en más de 300 enzimas, incluyendo kinasas y fosfatasas implicadas en síntesis de ATP y transporte de calcio; como bisglicinato atraviesa la barrera intestinal mediante transporte de peptidos (ruta PEPT1), evitando interacción con inhibidores luminales [1]",
+        "nivel_evidencia": "fuerte"
+      },
+      "biodisponibilidad": {
+        "nivel": "ALTA",
+        "factores_mejora": [
+          "Quelación con glicina que evita precipitación con fitatos y fosfatos",
+          "Absorción por transporte de aminoácidos dipeptidos (PEPT1)",
+          "No requiere ionización ácida gástrica para su absorción"
+        ],
+        "factores_reduccion": [
+          "Altas dosis simultáneas de otros minerales divalentes (Zn, Fe, Ca) en el mismo momento de ingestión"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "adecuada"
+      },
+      "advertencias_formulacion": [
+        "Evitar almacenamiento en ambientes húmedos ya que el bisglicinato, aunque estable, puede favorecer aglomeración en presencia de ácido ascórbico y humedad residual",
+        "No combinar en la misma matriz con altas cargas de calcio o hierro sin separación galénica o diferenciación de tomas"
+      ]
+    },
+    {
+      "ingrediente": "Zinc (gluconato)",
+      "tipologia": "MINERAL",
+      "dosis_formula_mg": 10,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "100%",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Activo funcional (cofactor enzimático e inmunitario)",
+        "rol_secundario": "Interviene en síntesis proteica, reparación tisular y regulación de la aromatasa [1]"
+      },
+      "mecanismo_accion": {
+        "descripcion": "Componente estructural de más de 300 enzimas y proteínas con dedos de zinc; esencial para síntesis de ADN, maduración de linfocitos T, función de macrófagos y mantenimiento de niveles de testosterona en individuos con déficit [1]",
+        "nivel_evidencia": "fuerte"
+      },
+      "biodisponibilidad": {
+        "nivel": "MEDIA",
+        "factores_mejora": [
+          "Administración en ayunas o lejos de fuentes ricas en fitatos y calcio",
+          "pH gástrico ácido que mantiene Zn²⁺ soluble"
+        ],
+        "factores_reduccion": [
+          "Fitatos, fibras insolubles y fosfolípidos en la dieta",
+          "Competencia con cobre y hierro en suplementación combinada a dosis altas"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "adecuada"
+      },
+      "advertencias_formulacion": [
+        "A 10 mg/día la interferencia con cobre es generalmente mínima, pero en uso continuado >3 meses se recomienda vigilar el balance Zn/Cu o incorporar cobre si la formulación se rediseña a dosis más altas",
+        "El gluconato es bien tolerado gástricamente, aunque presenta biodisponibilidad inferior a quelatos como bisglicinato o picolinato"
+      ]
+    },
+    {
+      "ingrediente": "Vitamina C (ácido ascórbico)",
+      "tipologia": "VITAMINA",
+      "dosis_formula_mg": 80,
+      "dosis_formula_unidad": "mg",
+      "porcentaje_nrv": "100%",
+      "funcion_tecnologica_nutricional": {
+        "rol_primario": "Activo funcional (antioxidante hidrosoluble y cofactor de hidroxilasas)",
+        "rol_secundario": "Regeneración de vitamina E y glutatión reducido; coadyuvante de función inmunitaria [1]"
+      },
+      "mecanismo_accion": {
+        "descripcion": "Donante de electrones que neutraliza radicales libres y especies reactivas de oxígeno; cofactor de las hidroxilasas de prolina/lisina en síntesis de colágeno; favorece la maduración y función de neutrófilos y linfocitos; regenera el glutatión y la vitamina E [1]",
+        "nivel_evidencia": "fuerte"
+      },
+      "biodisponibilidad": {
+        "nivel": "ALTA",
+        "factores_mejora": [
+          "Dosis ≤200 mg presentan absorción intestinal casi completa por transporte activo (SVCT1/2)"
+        ],
+        "factores_reduccion": [
+          "Dosis >500 mg saturan los transportadores activos y aumentan la eliminación renal",
+          "Presencia de iones metálicos libres (Cu²⁺, Fe³⁺) que catalizan su oxidación en matriz húmeda"
+        ]
+      },
+      "dosificacion": {
+        "evaluacion": "adecuada"
+      },
+      "advertencias_formulacion": [
+        "Altamente sensible a oxidación catalizada por iones metálicos traza; en presencia de humedad residual puede degradarse rápidamente en dehidroascórbico",
+        "Requiere empaque hermético, opaco y ambiente seco durante el proceso; valorar recubrimiento o microencapsulación si el formato es comprimido o polvo abierto"
+      ]
+    }
+  ],
+  "fase_3_interacciones_cruzadas": [
+    {
+      "par_ingredientes": [
+        "Zinc (gluconato)",
+        "Vitamina C (ácido ascórbico)"
+      ],
+      "tipo_interaccion": "SINERGIA_MODERADA",
+      "relevancia_clinica": "media",
+      "descripcion": "Sinergia funcional inmunitaria y antioxidante: el zinc es cofactor de la superóxido dismutasa (Cu/Zn-SOD) y la vitamina C actúa como antioxidante hidrosoluble y regenerador del glutatión; combinadas potencian la respuesta ante estrés oxidativo. A las dosis presentes no existe competencia significativa por absorción [2]"
+    },
+    {
+      "par_ingredientes": [
+        "Magnesio (bisglicinato)",
+        "Zinc (gluconato)"
+      ],
+      "tipo_interaccion": "ANTAGONISMO_MODERADO",
+      "relevancia_clinica": "baja",
+      "descripcion": "Ambos son cationes divalentes que compiten parcialmente por transportadores intestinales comunes (DMT1, TRPM6/7); no obstante, a las dosis formuladas (200 mg Mg y 10 mg Zn) la competencia es mínima y no se espera impacto clínico relevante, salvo en individuos con déficits previos graves o ingestión simultánea de calcio/hierro [2]"
+    }
+  ],
+  "fase_4_valoracion_global": {
+    "coherencia_funcional": "ACEPTABLE",
+    "potencial_sinergetico": "El perfil se alinea parcialmente con el stack ZMA (zinc + magnesio), ampliado con vitamina C como soporte antioxidante e inmunitario. El potencial sinérgico es moderado para defensa celular y recuperación muscular, pero limitado para el posicionamiento hormonal explícito (‘Test’) por ausencia de moduladores endocrinos directos.",
+    "gaps_funcionales": [
+      {
+        "gap": "Ausencia de vitamina D3",
+        "detalle": "La vitamina D es un modulador endocrino clave de la síntesis de testosterona en células de Leydig; su ausencia reduce la coherencia con el posicionamiento ‘Test’ del producto",
+        "accion_sugerida": "Incorporar colecalciferol (vitamina D3) a 50 µg (2000 UI), verificando estabilidad en la matriz sólida"
+      },
+      {
+        "gap": "Ausencia de vitamina B6",
+        "detalle": "El complejo ZMA clásico incluye vitamina B6 por su rol en la absorción de magnesio y zinc, así como en la regulación de prolactina y cortisol",
+        "accion_sugerida": "Añadir piridoxal-5-fosfato (P-5-P) 1,4 mg (100% NRV) o piridoxina HCl para completar el perfil ZMA"
+      },
+      {
+        "gap": "Balance Zn/Cu no monitorizado",
+        "detalle": "El uso crónico de zinc, incluso a 10 mg, puede alterar levemente la homeostasis de cobre en sujetos sensibles; no existe cobertura de cobre en la fórmula",
+        "accion_sugerida": "Valorar la inclusión de 1 mg de cobre (100% NRV) o, al menos, una advertencia en etiqueta para uso prolongado"
+      }
+    ],
+    "riesgos_formulacion": [
+      {
+        "riesgo": "Degradación oxidativa del ácido ascórbico por trazas metálicas y humedad",
+        "detalle": "En presencia de iones metálicos (incluso Mg²⁺/Zn²⁺ en condiciones de humedad) y oxígeno, el ácido ascórbico puede oxidarse a dehidroascórbico, perdiendo actividad vitamínica",
+        "accion_sugerida": "Utilizar empaque con desecante, opaco y hermético; valorar microencapsulación de la vitamina C o uso de ascorbato mineral"
+      },
+      {
+        "riesgo": "Compatibilidad física en sólidos dosificados",
+        "detalle": "Tanto el bisglicinato de magnesio como el gluconato de zinc pueden presentar higroscopicidad dependiendo del grado de molienda y cristalinidad",
+        "accion_sugerida": "Incluir excipiente antiaglomerante (dióxido de silicio coloidal o estearato de magnesio) y garantizar HR<40% durante la fabricación y envasado"
+      }
+    ],
+    "sugerencias_mejora": [
+      {
+        "sugerencia": "Optimizar forma química del zinc",
+        "detalle": "El gluconato de zinc tiene biodisponibilidad media y menor afinidad tisular que las formas queladas; para un producto posicionado en eficacia hormonal, la forma importa",
+        "accion_sugerida": "Sustituir zinc gluconato por zinc bisglicinato o picolinato 10 mg elemental, manteniendo el NRV"
+      },
+      {
+        "sugerencia": "Completar perfil ZMA+D",
+        "detalle": "La fórmula se alinea parcialmente con el stack ZMA; la adición de vitamina D3 y B6 reforzaría el posicionamiento en salud hormonal y recuperación física",
+        "accion_sugerida": "Incorporar D3 50 µg y P-5-P 1,4 mg, realizando estudios de estabilidad acelerada de la mezcla"
+      },
+      {
+        "sugerencia": "Evaluar mineral-ascorbato para mayor estabilidad",
+        "detalle": "Utilizar ascorbato de magnesio o zinc (en lugar de ácido ascórbico libre + sales minerales) reduce el riesgo de oxidación metálica y aporta ambos nutrientes simultáneamente",
+        "accion_sugerida": "Evaluación técnica de sustitución parcial por ascorbato mineral; reajustar masas para conservar dosis elementales y NRV"
+      }
+    ]
+  },
+  "fuentes_consultadas": [
+    {
+      "id": 1,
+      "fuente": "Conocimiento experto - NRV Reglamento (UE) 1169/2011 y farmacocinética mineral/vitamínica",
+      "url": "",
+      "tipo": "conocimiento_experto"
+    },
+    {
+      "id": 2,
+      "fuente": "Conocimiento experto - Interacciones minerales divalentes y sinergias antioxidantes",
+      "url": "",
+      "tipo": "conocimiento_experto"
+    }
+  ],
+  "metadata": {
+    "version": "2.0",
+    "disclaimer": "Este análisis es orientativo y no sustituye la validación por un experto en formulación."
+  },
+  "_trazabilidad": {
+    "prompt_version": "2.0.0",
+    "model": "moonshotai/kimi-k2.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "timestamp_utc": "2026-05-12T14:53:45+00:00",
+    "duration_s": 304.08,
+    "attempts": 1,
+    "transient_retries": 0,
+    "deterministic_retries": 0
+  }
+}

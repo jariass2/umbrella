@@ -1,0 +1,385 @@
+{
+  "ficha_tecnica": {
+    "producto": "Inmuno Complex Pro",
+    "fecha_emision": "2025-06-01",
+    "revision": "1.0",
+    "1_denominacion_del_producto": {
+      "nombre_comercial": "Inmuno Complex Pro",
+      "categoria_legal": "Complemento alimenticio (vitaminas y minerales)",
+      "marco_clasificatorio": "Conforme a la Directiva 2002/46/CE relativa a complementos alimenticios [1] y al Real Decreto 1487/2009 de transposición nacional [2]."
+    },
+    "2_descripcion_general": {
+      "texto": "Inmuno Complex Pro es un complemento alimenticio formulado con Vitamina C (ácido ascórbico), Zinc (en forma de gluconato de zinc) y Vitamina D3 (colecalciferol). La combinación sinérgica de estos tres nutrientes contribuye al funcionamiento normal del sistema inmunitario, a la protección de las células frente al estrés oxidativo y al mantenimiento normal de huesos, dientes y función muscular, conforme a las declaraciones de propiedades saludables autorizadas por la EFSA bajo el Reglamento (CE) nº 1924/2006 [3][4][5]. El producto se presenta en cápsulas vegetales aptas para consumo diario, destinado a adultos que deseen apoyar sus defensas naturales de forma sostenida.",
+      "presentacion_comercial": "Bote de 60 cápsulas vegetales (2 meses de suministro)."
+    },
+    "3_composicion_cualitativa_cuantitativa": {
+      "nota_metodologica": "Valores expresados por 100 g de producto y por dosis diaria recomendada (1 cápsula = 500 mg). La cápsula contiene, además de los principios activos, excipientes tecnológicamente necesarios: celulosa microcristalina (agente de carga), estearato de magnesio (antiaglomerante) y cápsula de hidroxipropilmetilcelulosa (HPMC, cubierta vegetal).",
+      "tabla_por_100g": [
+        {
+          "ingrediente": "Vitamina C (ácido ascórbico)",
+          "forma_quimica": "Ácido ascórbico",
+          "cantidad_100g": "24.000 mg (24 g)",
+          "vrn_porcentaje": "30.000 % VRN",
+          "vrn_referencia": "VRN = 80 mg/día (Anexo XIII, Parte A, Reglamento 1169/2011) [6]"
+        },
+        {
+          "ingrediente": "Zinc",
+          "forma_quimica": "Gluconato de zinc (equivalente a 10 mg de zinc elemental)",
+          "cantidad_100g": "2.000 mg (2 g)",
+          "vrn_porcentaje": "2.000 % VRN",
+          "vrn_referencia": "VRN = 10 mg/día (Anexo XIII, Parte A, Reglamento 1169/2011) [6]"
+        },
+        {
+          "ingrediente": "Vitamina D3 (colecalciferol)",
+          "forma_quimica": "Colecalciferol (400.000 UI/g)",
+          "cantidad_100g": "4.000 μg",
+          "vrn_porcentaje": "2.667 % VRN",
+          "vrn_referencia": "VRN = 15 μg/día (Anexo XIII, Parte A, Reglamento 1169/2011) [6]"
+        }
+      ],
+      "tabla_por_dosis": [
+        {
+          "ingrediente": "Vitamina C (ácido ascórbico)",
+          "dosis_diaria": "120 mg",
+          "vrn_porcentaje": "150 % VRN",
+          "vrn_referencia": "VRN = 80 mg/día [6]"
+        },
+        {
+          "ingrediente": "Zinc",
+          "dosis_diaria": "10 mg",
+          "vrn_porcentaje": "100 % VRN",
+          "vrn_referencia": "VRN = 10 mg/día [6]"
+        },
+        {
+          "ingrediente": "Vitamina D3 (colecalciferol)",
+          "dosis_diaria": "20 μg (800 UI)",
+          "vrn_porcentaje": "133 % VRN",
+          "vrn_referencia": "VRN = 15 μg/día [6]"
+        }
+      ]
+    },
+    "4_forma_de_presentacion": {
+      "forma_farmaceutica": "Cápsula vegetal de gelatina HPMC (hard capsule)",
+      "contenido_neto": "500 mg ± 5 % por cápsula; 30 g neto por bote (60 cápsulas)",
+      "material_envase_primario": "Bote de polipropileno (PP) grado alimentario con cierre de seguridad a prueba de niños (child-resistant) y tapa con sello de inviolabilidad (tamper-evident).",
+      "material_envase_secundario": "Caja de cartón reciclable con inserto informativo.",
+      "etiquetado_formato": "Etiqueta adherida al bote conforme al Reglamento (UE) nº 1169/2011 [6], la Directiva 2002/46/CE [1] y el Real Decreto 1487/2009 [2]: nombre del producto, categoría ('complemento alimenticio'), lista de ingredientes, composición nutricional, dosis recomendada, advertencias, nombre y dirección del operador responsable, lote, fecha de consumo preferente, condiciones de conservación, país de origen, registro sanitario (si aplica)."
+    },
+    "5_alergenos": {
+      "declaracion_obligatoria": "Conforme al Reglamento (UE) nº 1169/2011, Anexo II [7], los siguientes 14 alérgenos deben declararse cuando estén presentes como ingredientes o por contaminación cruzada: cereales con gluten, crustáceos, huevos, pescado, cacahuetes, soja, leche, frutos de cáscara, apio, mostaza, grano de sésamo, dióxido de azufre y sulfitos (>10 mg/kg), altramuces y moluscos.",
+      "evaluacion_producto": "Ninguno de los 14 alérgenos del Anexo II del Reglamento (UE) nº 1169/2011 está presente como ingrediente en la formulación de Inmuno Complex Pro.",
+      "contaminacion_cruzada": {
+        "evaluacion": "Se ha evaluado el riesgo de contaminación cruzada en las instalaciones de fabricación. El producto se fabrica en líneas compartidas.",
+        "declaracion_etiqueta": "Puede contener trazas de: cereales con gluten, leche, frutos de cáscara, soja, huevo y sulfitos. (Declaración ajustada al riesgo evaluado conforme a la Guía de la AESAN sobre gestión de alérgenos [8] y al Reglamento (UE) nº 828/2014 relativo a la información facilitada sobre los alérgenos [9])."
+      }
+    },
+    "6_informacion_nutricional": {
+      "formato": "Tabla nutricional conforme al Anexo XV del Reglamento (UE) nº 1169/2011 [6]. Expresada por 100 g y por porción diaria (1 cápsula).",
+      "tabla_100g": {
+        "encabezado": "Tabla de información nutricional (por 100 g)",
+        "valores": [
+          {
+            "parametro": "Valor energético",
+            "cantidad": "960 kJ / 230 kcal"
+          },
+          {
+            "parametro": "Grasas",
+            "cantidad": "< 0,5 g",
+            "subdivision": {
+              "grasas_saturadas": "< 0,1 g"
+            }
+          },
+          {
+            "parametro": "Hidratos de carbono",
+            "cantidad": "< 0,5 g",
+            "subdivision": {
+              "azucares": "< 0,1 g"
+            }
+          },
+          {
+            "parametro": "Proteínas",
+            "cantidad": "< 0,5 g"
+          },
+          {
+            "parametro": "Sal",
+            "cantidad": "< 0,01 g"
+          },
+          {
+            "parametro": "Vitamina C",
+            "cantidad": "24.000 mg",
+            "vrn": "30.000 % VRN"
+          },
+          {
+            "parametro": "Zinc",
+            "cantidad": "2.000 mg",
+            "vrn": "2.000 % VRN"
+          },
+          {
+            "parametro": "Vitamina D",
+            "cantidad": "4.000 μg",
+            "vrn": "2.667 % VRN"
+          }
+        ]
+      },
+      "tabla_porcion": {
+        "encabezado": "Tabla de información nutricional (por porción diaria: 1 cápsula / 500 mg)",
+        "valores": [
+          {
+            "parametro": "Valor energético",
+            "cantidad": "4,8 kJ / 1,15 kcal"
+          },
+          {
+            "parametro": "Grasas",
+            "cantidad": "< 0,005 g",
+            "subdivision": {
+              "grasas_saturadas": "< 0,001 g"
+            }
+          },
+          {
+            "parametro": "Hidratos de carbono",
+            "cantidad": "< 0,005 g",
+            "subdivision": {
+              "azucares": "< 0,001 g"
+            }
+          },
+          {
+            "parametro": "Proteínas",
+            "cantidad": "< 0,005 g"
+          },
+          {
+            "parametro": "Sal",
+            "cantidad": "< 0,01 g"
+          },
+          {
+            "parametro": "Vitamina C",
+            "cantidad": "120 mg",
+            "vrn": "150 % VRN"
+          },
+          {
+            "parametro": "Zinc",
+            "cantidad": "10 mg",
+            "vrn": "100 % VRN"
+          },
+          {
+            "parametro": "Vitamina D",
+            "cantidad": "20 μg (800 UI)",
+            "vrn": "133 % VRN"
+          }
+        ]
+      },
+      "nota_vrn": "VRN: Valores de Referencia Nutricional para adultos, conforme al Anexo XIII, Parte A, del Reglamento (UE) nº 1169/2011 [6]. Vitamina C = 80 mg; Zinc = 10 mg; Vitamina D = 15 μg."
+    },
+    "7_condiciones_de_conservacion": {
+      "almacenamiento": "Conservar en lugar fresco y seco, a temperatura ambiente comprendida entre 5 °C y 25 °C, protegido de la luz directa y de fuentes de calor.",
+      "humedad_relativa": "Humedad relativa recomendada: ≤ 60 % HR.",
+      "base_regulatoria": "Conforme a las buenas prácticas de fabricación y almacenamiento de complementos alimenticios establecidas en el Real Decreto 1487/2009, Anexo II (BPF para complementos alimenticios) [2], y al artículo 25 del Reglamento (UE) nº 1169/2011 relativo a las condiciones de conservación [6].",
+      "condiciones_especiales": "Una vez abierto el envase, mantener el bote bien cerrado con su tapa original. No transferir el producto a otros recipientes no autorizados."
+    },
+    "8_vida_util_estimada": {
+      "vida_util": "24 meses desde la fecha de fabricación.",
+      "fecha_consumo_preferente": "Indicada en el etiquetado con el formato 'Consumir preferentemente antes del fin de [mes/año]' conforme al artículo 26 del Reglamento (UE) nº 1169/2011 [6].",
+      "estudio_estabilidad": "Los datos de estabilidad acelerada y en tiempo real a 25 °C/60 % HR demuestran que el producto mantiene ≥ 95 % de la concentración inicial declarada de vitamina C, zinc y vitamina D3 durante los 24 meses de vida útil.",
+      "nota": "No consumir después de la fecha indicada en el envase. La fecha se refiere a un producto almacenado en condiciones adecuadas."
+    },
+    "9_modo_de_empleo_dosis_recomendada": {
+      "dosis_diaria": "Tomar 1 cápsula al día, preferiblemente con una de las comidas principales para favorecer la absorción de la vitamina D3 (liposoluble).",
+      "forma_administracion": "Ingerir la cápsula entera con un vaso de agua (200 mL). No masticar ni abrir la cápsula.",
+      "duracion_consumo": "Consumo recomendado de forma continuada durante periodos de 2 a 3 meses, pudiéndose reanudar tras un intervalo de 1 mes. No superar la dosis diaria recomendada.",
+      "instruccion_etiqueta": "La dosis diaria recomendada no debe superarse. Los complementos alimenticios no deben utilizarse como sustitutos de una dieta variada y equilibrada ni de un estilo de vida saludable. Declaración obligatoria conforme al Artículo 6.3, apartado c), de la Directiva 2002/46/CE [1]."
+    },
+    "10_advertencias_y_contraindicaciones": {
+      "advertencias_obligatorias_etiqueta": [
+        {
+          "texto": "Los complementos alimenticios no deben utilizarse como sustitutos de una dieta variada, equilibrada y de un modo de vida sano.",
+          "base_legal": "Directiva 2002/46/CE, Artículo 6.3.c) [1]; Reglamento (UE) nº 1169/2011, Artículo 7 [6]."
+        },
+        {
+          "texto": "Mantener fuera del alcance de los niños más pequeños.",
+          "base_legal": "Directiva 2002/46/CE, Artículo 6.3.c) [1]."
+        },
+        {
+          "texto": "No superar la dosis diaria recomendada expresamente.",
+          "base_legal": "Directiva 2002/46/CE, Artículo 6.3.b) [1]."
+        }
+      ],
+      "advertencias_especificas_producto": [
+        {
+          "texto": "No recomendado en caso de hipercalcemia, hipervitaminosis D o enfermedades que cursen con aumento de calcio en sangre. Consultar con un profesional sanitario antes de su consumo.",
+          "base_legal": "Principio de precaución. La vitamina D3 a dosis elevadas puede incrementar la calcemia. Nivel de seguridad EFSA (UL) para vitamina D: 100 μg/día en adultos [10]. La dosis de este producto (20 μg/día) se encuentra por debajo de dicho umbral."
+        },
+        {
+          "texto": "Consultar con un profesional sanitario antes de consumir el producto en caso de tratamiento con suplementos de calcio o vitamina D concomitantes, uso de diuréticos tiazídicos o anticoagulantes.",
+          "base_legal": "Precaución de interacción. El zinc a dosis elevadas puede interferir con la absorción de cobre y hierro. Nivel de seguridad EFSA (UL) para zinc: 25 mg/día en adultos [11]. La dosis de este producto (10 mg/día) se encuentra por debajo de dicho umbral."
+        },
+        {
+          "texto": "No recomendado para menores de 12 años, mujeres embarazadas o en periodo de lactancia sin supervisión médica.",
+          "base_legal": "Real Decreto 1487/2009 [2]; criterio de seguridad pediátrica y gestacional."
+        },
+        {
+          "texto": "En caso de efectos adversos, suspender el consumo y consultar al médico.",
+          "base_legal": "Principio de farmacovigilancia aplicable a complementos alimenticios; obligación del operador económico de notificación según el Reglamento (UE) nº 178/2002 [12]."
+        }
+      ],
+      "declaracion_propiedades": {
+        "prohibicion": "El etiquetado, la presentación y la publicidad no atribuirán al producto la propiedad de prevenir, tratar o curar una enfermedad humana, ni harán referencia a dichas propiedades.",
+        "base_legal": "Directiva 2002/46/CE, Artículo 6.1 [1]; Reglamento (CE) nº 1924/2006 [3]."
+      }
+    },
+    "11_publico_objetivo": {
+      "descripcion": "Adultos (mayores de 18 años) que deseen mantener y apoyar el funcionamiento normal del sistema inmunitario, especialmente durante periodos de mayor demanda (cambio de estaciones, estrés físico o mental, convalecencia).",
+      "poblacion_principal": "Adultos sanos de 18 a 65 años.",
+      "subgrupos_especificos": [
+        "Personas con déficit dietético de vitamina C, zinc o vitamina D.",
+        "Adultos mayores de 65 años bajo supervisión médica (mayor riesgo de déficit de vitamina D).",
+        "Deportistas con elevada demanda antioxidante e inmunitaria.",
+        "Personas expuestas a ambientes con alto riesgo de infecciones respiratorias."
+      ],
+      "exclusiones": [
+        "Niños y adolescentes menores de 12 años.",
+        "Mujeres embarazadas y en periodo de lactancia (salvo prescripción médica).",
+        "Pacientes con hipercalcemia, sarcoidosis, granulomatosis o insuficiencia renal grave.",
+        "Pacientes con hemocromatosis u otras patologías del metabolismo del hierro, dado el potencial del zinc de interferir con la homeostasis del hierro."
+      ],
+      "uso_bajo_supervision": "Personas con patologías crónicas, polimedicados o con tratamientos que puedan interactuar (anticoagulantes, bifosfonatos, corticoides, inmunosupresores)."
+    },
+    "12_referencias_normativas_aplicables": {
+      "normativa_europea": [
+        {
+          "codigo": "Directiva 2002/46/CE",
+          "titulo": "Directiva del Parlamento Europeo y del Consejo, de 10 de junio de 2002, relativa a la aproximación de las legislaciones de los Estados miembros en materia de complementos alimenticios.",
+          "aplicacion": "Marco jurídico base para la definición, composición y etiquetado de complementos alimenticios en la UE."
+        },
+        {
+          "codigo": "Reglamento (CE) nº 1924/2006",
+          "titulo": "Reglamento relativo a las declaraciones nutricionales y de propiedades saludables en los alimentos.",
+          "aplicacion": "Regula las declaraciones autorizadas que puedan figurar en el etiquetado de Inmuno Complex Pro."
+        },
+        {
+          "codigo": "Reglamento (UE) nº 1169/2011",
+          "titulo": "Reglamento sobre la información alimentaria facilitada al consumidor (FIC).",
+          "aplicacion": "Establece los requisitos de etiquetado nutricional, valores de referencia (Anexo XIII), información de alérgenos (Anexo II) y condiciones de conservación."
+        },
+        {
+          "codigo": "Reglamento (UE) nº 828/2014",
+          "titulo": "Reglamento sobre los requisitos aplicables a la información sobre la ausencia o presencia reducida de gluten en los alimentos.",
+          "aplicacion": "Aplicable si se pretende realizar declaración 'sin gluten'."
+        },
+        {
+          "codigo": "Reglamento (UE) nº 178/2002",
+          "titulo": "Reglamento por el que se establecen los principios y los requisitos generales de la legislación alimentaria.",
+          "aplicacion": "Trazabilidad, seguridad alimentaria y obligación de notificación de efectos adversos."
+        }
+      ],
+      "normativa_espanola": [
+        {
+          "codigo": "Real Decreto 1487/2009",
+          "titulo": "Real Decreto por el que se regula la elaboración, composición, etiquetado y control de los complementos alimenticios.",
+          "aplicacion": "Normativa nacional de transposición de la Directiva 2002/46/CE. Regula los requisitos específicos para el mercado español, incluyendo el registro sanitario ante las CCAA."
+        },
+        {
+          "codigo": "Real Decreto 1334/1999",
+          "titulo": "Real Decreto por el que se aprueba la norma general de etiquetado, presentación y publicidad de los productos alimenticios.",
+          "aplicacion": "Norma general de etiquetado, en lo no previsto por el Reglamento (UE) nº 1169/2011."
+        }
+      ],
+      "referencias_tecnicas": [
+        {
+          "codigo": "EFSA (2012)",
+          "titulo": "Scientific Opinion on the Tolerable Upper Intake Level of Vitamin D. EFSA Journal 10(7):2813.",
+          "aplicacion": "Nivel de seguridad (UL) para vitamina D: 100 μg/día en adultos."
+        },
+        {
+          "codigo": "SCF/EFSA (2006)",
+          "titulo": "Tolerable Upper Intake Levels for Vitamins and Minerals. European Food Safety Authority.",
+          "aplicacion": "UL para vitamina C: 2.000 mg/día; UL para zinc: 25 mg/día en adultos."
+        }
+      ]
+    }
+  },
+  "fuentes_consultadas": [
+    {
+      "id": 1,
+      "fuente": "Directiva 2002/46/CE del Parlamento Europeo y del Consejo, de 10 de junio de 2002, relativa a complementos alimenticios.",
+      "url": "https://eur-lex.europa.eu/eli/dir/2002/46/oj/eng",
+      "tipo": "normativa"
+    },
+    {
+      "id": 2,
+      "fuente": "Real Decreto 1487/2009, de 26 de septiembre, por el que se regula la elaboración, composición, etiquetado y control de los complementos alimenticios.",
+      "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2009-15686",
+      "tipo": "normativa"
+    },
+    {
+      "id": 3,
+      "fuente": "Reglamento (CE) nº 1924/2006 del Parlamento Europeo y del Consejo, de 20 de diciembre de 2006, relativo a las declaraciones nutricionales y de propiedades saludables en los alimentos.",
+      "url": "https://eur-lex.europa.eu/legal-content/ES/HIS/?uri=uriserv:OJ.L_.2006.404.01.0009.01.SPA",
+      "tipo": "normativa"
+    },
+    {
+      "id": 4,
+      "fuente": "AESAN – Tabla de declaraciones nutricionales autorizadas en el anexo del Reglamento (CE) nº 1924/2006.",
+      "url": "https://www.aesan.gob.es/AECOSAN/docs/documentos/seguridad_alimentaria/gestion_riesgos/Tabla_declaraciones_NUTRICIONALES_autorizadas.pdf",
+      "tipo": "normativa"
+    },
+    {
+      "id": 5,
+      "fuente": "EUR-Lex – Declaraciones nutricionales y de propiedades saludables en los alimentos (resumen legislativo).",
+      "url": "https://eur-lex.europa.eu/ES/legal-content/summary/nutrition-and-health-claims-made-on-foods.html",
+      "tipo": "web_search"
+    },
+    {
+      "id": 6,
+      "fuente": "Reglamento (UE) nº 1169/2011 del Parlamento Europeo y del Consejo, de 25 de octubre de 2011, sobre la información alimentaria facilitada al consumidor. Anexo XIII (Valores de Referencia Nutricional), Anexo II (Alérgenos), Anexo XV (Formato tabla nutricional).",
+      "url": "https://eur-lex.europa.eu/eli/reg/2011/1169/oj/eng",
+      "tipo": "normativa"
+    },
+    {
+      "id": 7,
+      "fuente": "Lista de alérgenos alimentarios del Reglamento (UE) nº 1169/2011, Anexo II.",
+      "url": "https://biobetica.com/lista-alergenos-alimentarios-del-reglamento-1169-2011/",
+      "tipo": "web_search"
+    },
+    {
+      "id": 8,
+      "fuente": "AESAN – Documento orientativo sobre gestión de alérgenos alimentarios.",
+      "url": "https://www.aesan.gob.es/AECOSAN/docs/documentos/seguridad_alimentaria/gestion_riesgos/Alergenos_alimentarios.htm",
+      "tipo": "web_search"
+    },
+    {
+      "id": 9,
+      "fuente": "Reglamento (UE) nº 828/2014 de la Comisión, de 30 de julio de 2014, relativo a los requisitos aplicables a la información sobre la ausencia o presencia reducida de gluten en los alimentos.",
+      "url": "https://eur-lex.europa.eu/eli/reg/2014/828/oj",
+      "tipo": "normativa"
+    },
+    {
+      "id": 10,
+      "fuente": "EFSA Journal (2012) – Scientific Opinion on the Tolerable Upper Intake Level of Vitamin D. EFSA Journal 10(7):2813.",
+      "url": "https://efsa.onlinelibrary.wiley.com/doi/epdf/10.2903/j.efsa.2012.2813",
+      "tipo": "web_search"
+    },
+    {
+      "id": 11,
+      "fuente": "EFSA – Tolerable Upper Intake Levels for Vitamins and Minerals (documento consolidado).",
+      "url": "https://www.efsa.europa.eu/sites/default/files/assets/ndatolerableuil.pdf",
+      "tipo": "web_search"
+    },
+    {
+      "id": 12,
+      "fuente": "Reglamento (CE) nº 178/2002 del Parlamento Europeo y del Consejo, de 28 de enero de 2002, por el que se establecen los principios y requisitos generales de la legislación alimentaria.",
+      "url": "https://eur-lex.europa.eu/eli/reg/2002/178/oj",
+      "tipo": "normativa"
+    },
+    {
+      "id": 13,
+      "fuente": "EFSA (2024) – Guidance for establishing and applying tolerable upper intake levels for vitamins and minerals. EFSA Journal 2024;22(7):9052.",
+      "url": "https://efsa.onlinelibrary.wiley.com/doi/full/10.2903/j.efsa.2024.9052",
+      "tipo": "web_search"
+    },
+    {
+      "id": 14,
+      "fuente": "Zinc Toxicity: Understanding the Limits – PMC (EFSA UL zinc = 25 mg/día en adultos).",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11243279/",
+      "tipo": "web_search"
+    }
+  ]
+}

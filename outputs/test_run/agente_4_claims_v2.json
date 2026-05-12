@@ -1,0 +1,407 @@
+{
+  "parte_a_claims_regulatorios": {
+    "resumen_ejecutivo": "La fórmula contiene tres nutrientes con claims de salud generales (Art. 13.1) autorizados en el Reglamento (UE) 432/2012: magnesio, zinc y vitamina C. La aplicabilidad de los claims de magnesio y zinc depende críticamente de si las dosis declaradas (200 mg y 10 mg) se refieren a cantidad elemental o al peso de la sal mineral. Si son elementales, cubren ampliamente el umbral del 15% de la VRN; si son peso de sal, quedarían por debajo y los claims no serían legalmente aplicables. La vitamina C (80 mg) equivale al 100% de su VRN y todos sus claims aplican sin restricción.",
+    "claim_compuesto_sugerido": {
+      "texto_sugerido_etiqueta": "El magnesio, el zinc y la vitamina C contribuyen al metabolismo energético normal. El magnesio y la vitamina C contribuyen a la reducción del cansancio y la fatiga. El zinc contribuye a la síntesis proteica normal y al mantenimiento de niveles normales de testosterona en sangre. El zinc y la vitamina C contribuyen a la protección de las células frente al daño oxidativo. La vitamina C contribuye a la función normal del sistema inmunitario.",
+      "condiciones": "Cada nutriente debe aportarse en cantidad significativa, definida como al menos el 15% de la cantidad de referencia del nutriente (VRN) por dosis diaria recomendada: magnesio ≥56,25 mg elemental, zinc ≥1,5 mg elemental, vitamina C ≥12 mg. El producto debe incluir las advertencias obligatorias de complementos alimentarios y no puede presentarse como sustituto de una dieta equilibrada."
+    },
+    "claims_por_ingrediente": [
+      {
+        "ingrediente": "Magnesio (bisglicinato)",
+        "claims": [
+          {
+            "texto_claim": "Magnesium contributes to a reduction of tiredness and fatigue",
+            "texto_traduccion_es": "El magnesio contribuye a la reducción del cansancio y la fatiga",
+            "tipo": "SALUD_GENERAL",
+            "estado": "AUTORIZADO",
+            "condicion_uso": "El nutriente debe estar presente en cantidad significativa (mínimo 15% de la VRN: 56,25 mg de magnesio elemental por dosis diaria recomendada).",
+            "dosis_minima_requerida": "56,25 mg de magnesio elemental (15% de la VRN de 375 mg)",
+            "aplica_a_formula": false,
+            "aplica_explicacion": "Si los 200 mg se refieren a magnesio elemental, aplica (53% VRN). Si se refieren a peso de sal de bisglicinato (~12-14% elemental ≈ 24-28 mg), no alcanza el mínimo requerido y el claim no es aplicable.",
+            "referencia_efsa": "Reglamento (UE) 432/2012, Anexo I - Claims Art. 13.1 para magnesio"
+          },
+          {
+            "texto_claim": "Magnesium contributes to normal muscle function",
+            "texto_traduccion_es": "El magnesio contribuye a la función muscular normal",
+            "tipo": "SALUD_GENERAL",
+            "estado": "AUTORIZADO",
+            "condicion_uso": "Cantidad significativa (≥15% VRN = 56,25 mg elemental) por dosis diaria recomendada.",
+            "dosis_minima_requerida": "56,25 mg de magnesio elemental",
+            "aplica_a_formula": false,
+            "aplica_explicacion": "Aplicable únicamente si la declaración nutricional refleja 200 mg de magnesio elemental. Si la dosis corresponde a peso de sal (~24-28 mg elemental), no cumple el umbral del 15% de la VRN.",
+            "referencia_efsa": "Reglamento (UE) 432/2012, Anexo I - Claims Art. 13.1 para magnesio"
+          },
+          {
+            "texto_claim": "Magnesium contributes to normal energy-yielding metabolism",
+            "texto_traduccion_es": "El magnesio contribuye al metabolismo energético normal",
+            "tipo": "SALUD_GENERAL",
+            "estado": "AUTORIZADO",
+            "condicion_uso": "Cantidad significativa (≥15% VRN = 56,25 mg elemental) por dosis diaria recomendada.",
+            "dosis_minima_requerida": "56,25 mg de magnesio elemental",
+            "aplica_a_formula": false,
+            "aplica_explicacion": "Válido siempre que la dosis de 200 mg sea de magnesio elemental. En caso de referirse a la sal de bisglicinato, el aporte elemental (~24-28 mg) resulta insuficiente para sostener el claim.",
+            "referencia_efsa": "Reglamento (UE) 432/2012, Anexo I - Claims Art. 13.1 para magnesio"
+          }
+        ]
+      },
+      {
+        "ingrediente": "Zinc (gluconato)",
+        "claims": [
+          {
+            "texto_claim": "Zinc contributes to the maintenance of normal testosterone levels in the blood",
+            "texto_traduccion_es": "El zinc contribuye al mantenimiento de niveles normales de testosterona en sangre",
+            "tipo": "SALUD_GENERAL",
+            "estado": "AUTORIZADO",
+            "condicion_uso": "Cantidad significativa (≥15% VRN = 1,5 mg de zinc elemental por dosis diaria recomendada).",
+            "dosis_minima_requerida": "1,5 mg de zinc elemental",
+            "aplica_a_formula": false,
+            "aplica_explicacion": "Si los 10 mg son de zinc elemental, aplica ampliamente (100% VRN). Si se refieren a peso de gluconato (~13-14% elemental ≈ 1,3-1,4 mg), estaría marginalmente por debajo del umbral del 15% de la VRN (1,5 mg), por lo que el claim no resultaría aplicable.",
+            "referencia_efsa": "Reglamento (UE) 432/2012, Anexo I - Claims Art. 13.1 para zinc"
+          },
+          {
+            "texto_claim": "Zinc contributes to normal protein synthesis",
+            "texto_traduccion_es": "El zinc contribuye a la síntesis proteica normal",
+            "tipo": "SALUD_GENERAL",
+            "estado": "AUTORIZADO",
+            "condicion_uso": "Cantidad significativa (≥1,5 mg elemental) por dosis diaria recomendada.",
+            "dosis_minima_requerida": "1,5 mg de zinc elemental",
+            "aplica_a_formula": false,
+            "aplica_explicacion": "Aplicable si la dosis aporta al menos 1,5 mg de zinc elemental. Si la declaración de 10 mg corresponde al peso de gluconato, el aporte (~1,3-1,4 mg elemental) no alcanzaría el mínimo legal.",
+            "referencia_efsa": "Reglamento (UE) 432/2012, Anexo I - Claims Art. 13.1 para zinc"
+          },
+          {
+            "texto_claim": "Zinc contributes to the normal function of the immune system",
+            "texto_traduccion_es": "El zinc contribuye a la función normal del sistema inmunitario",
+            "tipo": "SALUD_GENERAL",
+            "estado": "AUTORIZADO",
+            "condicion_uso": "Cantidad significativa (≥1,5 mg elemental) por dosis diaria recomendada.",
+            "dosis_minima_requerida": "1,5 mg de zinc elemental",
+            "aplica_a_formula": false,
+            "aplica_explicacion": "Válido si los 10 mg declarados equivalen a zinc elemental. De tratarse de peso de sal de gluconato, el contenido elemental insuficiente invalidaría el claim.",
+            "referencia_efsa": "Reglamento (UE) 432/2012, Anexo I - Claims Art. 13.1 para zinc"
+          },
+          {
+            "texto_claim": "Zinc contributes to the protection of cells from oxidative stress",
+            "texto_traduccion_es": "El zinc contribuye a la protección de las células frente al daño oxidativo",
+            "tipo": "SALUD_GENERAL",
+            "estado": "AUTORIZADO",
+            "condicion_uso": "Cantidad significativa (≥1,5 mg elemental) por dosis diaria recomendada.",
+            "dosis_minima_requerida": "1,5 mg de zinc elemental",
+            "aplica_a_formula": false,
+            "aplica_explicacion": "Condicionado a que la dosis represente zinc elemental. Con 10 mg de gluconato (~1,3-1,4 mg elemental) no cumpliría el requisito de cantidad significativa.",
+            "referencia_efsa": "Reglamento (UE) 432/2012, Anexo I - Claims Art. 13.1 para zinc"
+          }
+        ]
+      },
+      {
+        "ingrediente": "Vitamina C (ácido ascórbico)",
+        "claims": [
+          {
+            "texto_claim": "Vitamin C contributes to the normal function of the immune system",
+            "texto_traduccion_es": "La vitamina C contribuye a la función normal del sistema inmunitario",
+            "tipo": "SALUD_GENERAL",
+            "estado": "AUTORIZADO",
+            "condicion_uso": "Cantidad significativa (≥15% VRN = 12 mg de vitamina C por dosis diaria recomendada).",
+            "dosis_minima_requerida": "12 mg de vitamina C",
+            "aplica_a_formula": true,
+            "aplica_explicacion": "Los 80 mg de ácido ascórbico equivalen a 100% de la VRN (80 mg), superando con creces el umbral del 15% requerido.",
+            "referencia_efsa": "Reglamento (UE) 432/2012, Anexo I - Claims Art. 13.1 para vitamina C"
+          },
+          {
+            "texto_claim": "Vitamin C contributes to the reduction of tiredness and fatigue",
+            "texto_traduccion_es": "La vitamina C contribuye a la reducción del cansancio y la fatiga",
+            "tipo": "SALUD_GENERAL",
+            "estado": "AUTORIZADO",
+            "condicion_uso": "Cantidad significativa (≥12 mg) por dosis diaria recomendada.",
+            "dosis_minima_requerida": "12 mg de vitamina C",
+            "aplica_a_formula": true,
+            "aplica_explicacion": "Con 80 mg de vitamina C activa, la fórmula cumple holgadamente el requisito de cantidad significativa.",
+            "referencia_efsa": "Reglamento (UE) 432/2012, Anexo I - Claims Art. 13.1 para vitamina C"
+          },
+          {
+            "texto_claim": "Vitamin C contributes to the protection of cells from oxidative stress",
+            "texto_traduccion_es": "La vitamina C contribuye a la protección de las células frente al daño oxidativo",
+            "tipo": "SALUD_GENERAL",
+            "estado": "AUTORIZADO",
+            "condicion_uso": "Cantidad significativa (≥12 mg) por dosis diaria recomendada.",
+            "dosis_minima_requerida": "12 mg de vitamina C",
+            "aplica_a_formula": true,
+            "aplica_explicacion": "La dosis de 80 mg representa el 100% de la VRN, satisfaciendo ampliamente la condición de uso del claim.",
+            "referencia_efsa": "Reglamento (UE) 432/2012, Anexo I - Claims Art. 13.1 para vitamina C"
+          },
+          {
+            "texto_claim": "Vitamin C contributes to normal collagen formation for the normal function of skin",
+            "texto_traduccion_es": "La vitamina C contribuye a la formación normal de colágeno para la función normal de la piel",
+            "tipo": "SALUD_GENERAL",
+            "estado": "AUTORIZADO",
+            "condicion_uso": "Cantidad significativa (≥12 mg) por dosis diaria recomendada.",
+            "dosis_minima_requerida": "12 mg de vitamina C",
+            "aplica_a_formula": true,
+            "aplica_explicacion": "Los 80 mg de ácido ascórbico aportados por la fórmula cumplen sobradamente el umbral del 15% de la VRN.",
+            "referencia_efsa": "Reglamento (UE) 432/2012, Anexo I - Claims Art. 13.1 para vitamina C"
+          }
+        ]
+      }
+    ]
+  },
+  "parte_b_selling_points_comerciales": {
+    "selling_points": [
+      {
+        "titular_corto_packaging": "Magnesio quelatado de alta afinidad",
+        "descripcion_ampliada": "Fórmula elaborada con bisglicinato de magnesio, una forma quelatada que vincula el mineral a un aminoácido. Esta estructura molecular lo diferencia de las sales inorgánicas tradicionales y es reconocida en formulación avanzada por su elevada calidad química y tolerancia funcional.",
+        "ingrediente_base": "Magnesio (bisglicinato)",
+        "argumento_cientifico": "En el tracto gastrointestinal, los quelatos aminoácido-mineral presentan menor competencia con aniones que forman precipitados insolubles (ej. fosfatos, fitatos) y pueden interactuar con transportadores de aminoácidos en la membrana intestinal, características que en formulación se asocian a formas de alta pureza.",
+        "canales_uso": [
+          "packaging",
+          "web",
+          "prescriptores"
+        ]
+      },
+      {
+        "titular_corto_packaging": "Apoyo sinérgico para el hombre activo",
+        "descripcion_ampliada": "Perfil mineral específicamente diseñado para hombres con alta exigencia física y mental. La combinación de zinc y magnesio acompaña las rutinas deportivas y los ritmos laborales intensos sin recurrir a estimulantes.",
+        "ingrediente_base": "Zinc (gluconato) y Magnesio (bisglicinato)",
+        "argumento_cientifico": "El zinc interviene como cofactor de metaloproteinasas y en la expresión génica relacionada con la diferenciación celular, mientras que el magnesio regula la homeostasis de calcio en el músculo y participa en más de 300 reacciones enzimáticas del metabolismo energético.",
+        "canales_uso": [
+          "web",
+          "redes_sociales",
+          "prescriptores"
+        ]
+      },
+      {
+        "titular_corto_packaging": "Recuperación y energía diaria",
+        "descripcion_ampliada": "Dosis equilibrada de magnesio, zinc y vitamina C que actúan en sinergia para acompañar los procesos metabólicos celulares en agendas exigentes y periodos de mayor desgaste físico.",
+        "ingrediente_base": "Combinación Mg + Zn + Vitamina C",
+        "argumento_cientifico": "El magnesio es cofactor de ATPasas y cinasas, el zinc participa en el metabolismo de macronutrientes y ácidos grasos, y la vitamina C es cofactor hidrosoluble con actividad redox conocida; juntos cubren rutinas enzimáticas complementarias del metabolismo basal.",
+        "canales_uso": [
+          "packaging",
+          "web",
+          "prescriptores"
+        ]
+      },
+      {
+        "titular_corto_packaging": "Una cápsula, tres nutrientes clave",
+        "descripcion_ampliada": "Formato de dosis única que aporta magnesio, zinc y vitamina C sin necesidad de combinar múltiples complementos. Practicidad pensada para usuarios exigentes que valoran la adherencia y la simplicidad.",
+        "ingrediente_base": "Fórmula completa Mg / Zn / Vit C",
+        "argumento_cientifico": "La combinación en una sola toma diaria mejora la adherencia al tratamiento y asegura la ingesta simultánea de nutrientes que comparten vías de regulación homeostática, evitando olvidos puntuales en ciclos de suplementación.",
+        "canales_uso": [
+          "packaging",
+          "web"
+        ]
+      },
+      {
+        "titular_corto_packaging": "Refuerzo diario frente al desgaste",
+        "descripcion_ampliada": "Vitamina C junto a zinc y magnesio para acompañar las necesidades nutricionales en situaciones de desgaste físico, ambiental o de alta demanda metabólica.",
+        "ingrediente_base": "Vitamina C (ácido ascórbico) + Zinc",
+        "argumento_cientifico": "La vitamina C regula la regeneración del glutatión y la forma reducida de la vitamina E en el entorno hidrosoluble, mientras que el zinc estabiliza estructuras proteicas mediante la coordinación de grupos sulfhidrilo, contribuyendo al mantenimiento de la homeostasis redox celular.",
+        "canales_uso": [
+          "web",
+          "redes_sociales",
+          "prescriptores"
+        ]
+      },
+      {
+        "titular_corto_packaging": "Apoyo nocturno para ritmos deportivos",
+        "descripcion_ampliada": "Diseñado para tomarse antes del descanso nocturno, cuando el cuerpo prioriza la reparación tisular y el recambio de electrolitos tras la actividad física diaria.",
+        "ingrediente_base": "Magnesio (bisglicinato)",
+        "argumento_cientifico": "Durante el sueño se acentúa la secreción de hormonas anabólicas y disminuye la degradación proteica; el magnesio actúa como cofactor de enzimas implicadas en la síntesis proteica y en la regulación de canales de calcio, procesos fisiológicos relevantes en la fase nocturna de recuperación.",
+        "canales_uso": [
+          "web",
+          "redes_sociales",
+          "prescriptores"
+        ]
+      }
+    ]
+  },
+  "parte_c_estructura_ppt": {
+    "slides": [
+      {
+        "numero": 1,
+        "titulo": "Test Mineral Boost — Mineralidad avanzada para el hombre activo",
+        "bullets": [
+          "Complemento alimentario de magnesio, zinc y vitamina C en dosis única",
+          "Formas quelatadas y altamente puras: bisglicinato y gluconato",
+          "Posicionamiento premium en nutrición masculina deportiva y ejecutiva"
+        ],
+        "dato_destacado": "3 nutrientes esenciales | 1 cápsula | 100% VRN de Vitamina C y Zinc",
+        "notas_presentador": "Abrir enfatizando la simplicidad de la fórmula y la calidad de las formas químicas. No mencionar efectos médicos. Test Mineral Boost nace como propuesta de adherencia y precisión formulativa."
+      },
+      {
+        "numero": 2,
+        "titulo": "El problema: déficits silenciosos en la población activa",
+        "bullets": [
+          "El 60-70% de los adultos no cubre la IDR de magnesio mediante dieta (datos epidemiológicos generales EFSA e instituciones nacionales)",
+          "La pérdida de zinc por sudoración en deportistas puede alcanzar hasta 1-2 mg/día",
+          "El estrés oxidativo metabólico se acelera con horarios laborales irregulares y escasa ingesta de fruta"
+        ],
+        "dato_destacado": "Hasta un 60% de hombres adultos presentan ingestas de magnesio por debajo de las recomendaciones",
+        "notas_presentador": "Usar este slide para contextualizar la necesidad. Citar que son datos epidemiológicos generales, no diagnóstico de la población española específica si no se tiene estudio local. El mensaje es: hay una brecha nutricional objetivable."
+      },
+      {
+        "numero": 3,
+        "titulo": "La solución: perfil funcional Test Mineral Boost",
+        "bullets": [
+          "Magnesio 200 mg como bisglicinato: forma quelatada diferenciada del óxido estándar",
+          "Zinc 10 mg como gluconato: sal orgánica de alta tolerancia gastrointestinal",
+          "Vitamina C 80 mg: cobertura íntegra de la VRN como ácido ascórbico puro"
+        ],
+        "dato_destacado": "Fórmula sinérgica 3 en 1: energía, inmunidad y recuperación (en referencia a claims autorizados correspondientes)",
+        "notas_presentador": "Este slide introduce el producto. Destacar que la combinación permite usar claims regulatorios de salud generales de los tres nutrientes. Recordar verbalmente que las dosis de Mg y Zn deben verificarse como elementales en la ficha técnica antes de imprimir."
+      },
+      {
+        "numero": 4,
+        "titulo": "Ciencia de los ingredientes: mecanismos de acción",
+        "bullets": [
+          "Magnesio: cofactor de >300 enzimas, incluyendo ATPasas y proteínas quinasas implicadas en contracción y relajación muscular",
+          "Zinc: metalo-cofactor en la síntesis de DNA, metabolismo de vitaminas A y ácidos grasos, y regulación de metaloproteinasas",
+          "Vitamina C: cofactor obligado de las hidroxilasas de prolina y lisina en la formación de colágeno, y regenerador del glutatión reducido"
+        ],
+        "dato_destacado": "El bisglicinato de magnesio presenta una estructura di-péptida quelante que minimiza la interacción con fitatos intestinales",
+        "notas_presentador": "Explicar los mecanismos enzimáticos sin caer en claims no autorizados. Por ejemplo, no decir 'mejora la absorción' respecto a otras formas; sí describir la estructura quelatada. Enfatizar evidencia bioquímica, no farmacológica."
+      },
+      {
+        "numero": 5,
+        "titulo": "Respaldo normativo: claims autorizados UE",
+        "bullets": [
+          "Magnesio: contribuye a la reducción del cansancio, función muscular y metabolismo energético normal (Reg. 432/2012)",
+          "Zinc: contribuye a la síntesis proteica normal, función inmunitaria y mantenimiento de niveles normales de testosterona en sangre",
+          "Vitamina C: contribuye a la función inmunitaria, protección frente a daño oxidativo y formación normal de colágeno"
+        ],
+        "dato_destacado": "Claims Art. 13.1 del Reglamento (UE) 432/2012 aplicables si Mg y Zn se declaran como cantidad elemental significativa (≥15% VRN)",
+        "notas_presentador": "Este slide es clave para farmacias y prescriptores. Mostrar que los mensajes están en el registro comunitario. Advertir verbalmente que la aplicabilidad depende de que las dosis en etiqueta sean elementales. Mostrar el claim compuesto sugerido."
+      },
+      {
+        "numero": 6,
+        "titulo": "Diferenciadores frente a la competencia",
+        "bullets": [
+          "Bisglicinato vs. óxido/citrato: forma quelatada evita el efecto laxante asociado a altas dosis de sales inorgánicas",
+          "Sinergia Mg-Zn-VitC exclusiva; la competencia suele ofrecer ZMA (sin vit C) o multivitamínicos genéricos con dosis bajas",
+          "Dosis de 200 mg Mg: punto óptimo de eficacia/tolerancia sin bloquear la absorción de calcio ni provocar diarrea osmótica"
+        ],
+        "dato_destacado": "Diferenciación por forma química: quelatos aminoácido-mineral vs. minerales inorgánicos de precio medio",
+        "notas_presentador": "Comparar sin desprestigiar marcas. Enfatizar que el bisglicinato es la elección formulativa para quienes no toleran el óxido. La vitamina C añade un pilar antioxidante que el clásico ZMA no tiene."
+      },
+      {
+        "numero": 7,
+        "titulo": "Target, momento de consumo y pauta",
+        "bullets": [
+          "Target principal: hombres 25-45 años, deportistas amateur, ejecutivos con alta demanda física/mental",
+          "Target secundario: mujeres activas y personas mayores con necesidades de soporte mineral compacto",
+          "Momento óptimo: 1 cápsula al acostarse, aprovechando la fase nocturna de recuperación y evitando interacciones con café o calcio"
+        ],
+        "dato_destacado": "1 cápsula nocturna = adherencia simplificada y sinergia con los ciclos circadianos de reparación tisular",
+        "notas_presentador": "La recomendación nocturna es estratégica: evita que el calcio de la cena interfiera (aunque no hay evidencia sólida de bloqueo masivo, es una recomendación comercial sensata) y potencia el mensaje de 'recuperación nocturna'. Resaltar que no es un producto para tomar por la mañana con café."
+      },
+      {
+        "numero": 8,
+        "titulo": "Call to Action — Próximos pasos comerciales",
+        "bullets": [
+          "Disponibilidad en formato de 30 y 60 cápsulas para canal farmacia, parafarmacia y e-commerce",
+          "Margen recomendado para farmacia: entre el 35-45% PVP según posicionamiento premium de la categoría",
+          "Material de punto de venta: display con claims validados, fichas técnicas para prescriptor y contenido digital para redes"
+        ],
+        "dato_destacado": "Lanzamiento inmediato con registro como complemento alimentario conforme a Directiva 2002/46/CE",
+        "notas_presentador": "Cerrar con la viabilidad regulatoria confirmada. Ofrecer el dossier completo de claims y la revisión de etiqueta por el departamento regulatorio antes de imprenta. Recordar que se debe incluir la advertencia obligatoria: 'Los complementos alimentarios no deben utilizarse como sustitutos de una dieta equilibrada'."
+      }
+    ]
+  },
+  "parte_d_diferenciadores": {
+    "vs_competencia": [
+      "Competencia habitual basada en óxido de magnesio (bajo coste, alto efecto laxante) vs. bisglicinato quelatado de este producto",
+      "Multivitamínicos genéricos con minerales a dosis homeopáticas (<5% VRN) vs. fórmula con dosis plenas de Mg, Zn y Vit C",
+      "ZMA clásico (zinc, magnesio, B6) sin cobertura antioxidante directa vs. triple acción con vitamina C a VRN completa"
+    ],
+    "formas_quimicas_superiores": [
+      "Bisglicinato de magnesio (quelato aminoácido-mineral) frente a óxido, hidróxido o carbonato de magnesio estándar",
+      "Gluconato de zinc (sal orgánica) frente a sulfato de zinc, tradicionalmente asociado a mayor irritación gastrointestinal",
+      "Ácido ascórbico puro como fuente de vitamina C frente a derivados encapsulados genéricos de menor pureza declarada"
+    ],
+    "sinergias_exclusivas": [
+      "Combinación Mg-Zn con Vit C al 100% VRN: mientras Mg y Zn cubren rutas estructurales y enzimáticas, la Vit C aporta soporte redox y regeneración de antioxidantes liposolubles",
+      "Perfil formulado para administración nocturna: el magnesio quelatado sin efecto ácido permite toma vespertina sin molestias digestivas, acompañando los ciclos de recuperación"
+    ],
+    "publico_objetivo_principal": "Hombres entre 25 y 45 años con alta actividad física (gimnasio, running, ciclismo) o mental (ejecutivos, turnos rotativos), conscientes de la nutrición deportiva y buscando apoyo mineral específico sin estimulantes.",
+    "publico_objetivo_secundario": "Mujeres activas con elevada pérdida mineral por sudoración, y población adulta mayor que busca una formulación mineral compacta de fácil adherencia y buena tolerancia digestiva.",
+    "momento_consumo": "Una cápsula diaria preferentemente antes de acostarse, con un vaso de agua. La toma nocturna maximiza la adherencia (hábito vinculado al descanso), minimiza la competencia con calcio o cafeína de la ingesta matutina, y potencia el posicionamiento en recuperación nocturna asociado al magnesio.",
+    "posicionamiento_precio_valor": "Segmento medio-premium (PVP recomendado entre 18-25 € para envase de 30 cápsulas). La justificación se basa en el uso de formas quelatadas (bisglicinato), la dosificación eficaz no laxante y la triple combinación sinérgica, evitando la necesidad de comprar tres complementos separados."
+  },
+  "parte_e_advertencias_legales": {
+    "claims_no_aplicables": [
+      {
+        "claim": "El magnesio ayuda a dormir o mejora la calidad del sueño",
+        "razon": "No existe un claim autorizado específico para el sueño. Los claims aplicables son 'función psicológica normal' y 'función del sistema nervioso normal', pero no se puede inferir una mejora del sueño."
+      },
+      {
+        "claim": "El zinc aumenta los niveles de testosterona",
+        "razon": "El único claim autorizado es 'contribuye al mantenimiento de niveles normales de testosterona en sangre'. Verbos como 'aumentar', 'elevar' o 'potenciar' distorsionan el claim autorizado y constituyen una afirmación médica/no autorizada."
+      },
+      {
+        "claim": "La vitamina C previene o trata resfriados y gripe",
+        "razon": "Claims no autorizados. Solo están autorizados claims relacionados con la función inmunitaria normal y la protección frente al daño oxidativo, nunca la prevención o tratamiento de infecciones."
+      },
+      {
+        "claim": "Magnesio bisglicinato de mayor biodisponibilidad que otras formas",
+        "razon": "Claim de biodisponibilidad/comparativa no autorizado por EFSA. No puede afirmarse superioridad de absorción respecto a otras formas sin un claim específico aprobado en la lista UE."
+      },
+      {
+        "claim": "Zinc contribuye al mantenimiento de niveles normales de testosterona (aplicado sin verificar dosis elemental)",
+        "razon": "Este claim SÍ está autorizado, pero NO es aplicable a la fórmula si los 10 mg de 'Zinc (gluconato)' se refieren a peso de sal (~1,3-1,4 mg elemental < 15% VRN). Solo sería aplicable si la dosis aporta ≥1,5 mg de zinc elemental."
+      }
+    ],
+    "mensajes_prohibidos": [
+      "No utilizar términos médicos como 'tratamiento', 'cura', 'prevención de enfermedades', 'regula el colesterol' o 'antiinflamatorio'.",
+      "No presentar el producto como sustituto de una dieta equilibrada; la frase legal obligatoria es que 'no debe utilizarse como sustituto', lo cual no puede contradecirse.",
+      "No combinar en la misma frase un selling point comercial con un claim regulado (ej. 'Magnesio bisglicinato de alta absorción que reduce el cansancio'), ya que confunde el mensaje comercial con el claim autorizado y puede invalidar ambos.",
+      "Evitar afirmaciones absolutas de seguridad como 'sin efectos secundarios' o '100% seguro'; solo están permitidas las advertencias obligatorias reguladas."
+    ],
+    "ingredientes_sin_claim": [
+      "Ninguno de los ingredientes carece de claims autorizados; sin embargo, el magnesio y el zinc no podrán ostentar claims si finalmente se confirma que las dosis en fórmula (200 mg y 10 mg) corresponden al peso de la sal y no a la cantidad elemental, quedando por debajo del umbral del 15% de la VRN."
+    ]
+  },
+  "fuentes_consultadas": [
+    {
+      "id": 1,
+      "fuente": "Reglamento (CE) nº 1924/2006 del Parlamento Europeo y del Consejo",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 2,
+      "fuente": "Reglamento (UE) nº 432/2012 por el que se establece la lista de declaraciones de propiedades saludables autorizadas",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 3,
+      "fuente": "Reglamento (UE) nº 1169/2011 sobre la información alimentaria (VRN)",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 4,
+      "fuente": "Directiva 2002/46/CE relativa a la aproximación de las legislaciones de los Estados Miembros en materia de complementos alimentarios",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 5,
+      "fuente": "Conocimiento experto del consultor regulatorio en claims nutricionales y de propiedades saludables",
+      "url": "",
+      "tipo": "conocimiento_experto"
+    }
+  ],
+  "metadata": {
+    "version": "2.0",
+    "disclaimer": "Los claims regulatorios deben verificarse con el texto oficial vigente del Reglamento UE 432/2012 antes de su uso comercial."
+  },
+  "_trazabilidad": {
+    "prompt_version": "2.0.0",
+    "model": "moonshotai/kimi-k2.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "timestamp_utc": "2026-05-12T15:08:44+00:00",
+    "duration_s": 570.84,
+    "attempts": 1,
+    "transient_retries": 0,
+    "deterministic_retries": 0
+  }
+}

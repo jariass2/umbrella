@@ -1,0 +1,125 @@
+Voy a consultar las fuentes regulatorias actualizadas para validar cada ingrediente con precisión.Ahora tengo toda la información necesaria para emitir el análisis regulatorio completo.
+
+---
+
+# 📋 INFORME REGULATORIO — «INMUNO COMPLEX PRO»
+
+##Marco normativo aplicable
+| Norma | Ámbito |
+|---|---|
+| Directiva 2002/46/CE | Definición y marco general de complementos alimentarios |
+| Real Decreto 1487/2009 | Transposición española de la Directiva 2002/46/CE |
+| Reglamento (CE) 1170/2009 | Modificación Anexos I y II de la Dir. 2002/46/CE (lista vitaminas/minerales y formas autorizadas) |
+| Reglamento (CE) 1924/2006 | Declaraciones nutricionales y de salud |
+| EFSA (2006/2023) | Tolerable Upper Intake Levels (UL) para vitaminas y minerales |
+| AESAN (nov. 2024) | Actualización de niveles máximos de ingesta admisible basados en EFSA |
+
+---
+
+## 🔍 ANÁLISIS INGREDIENTE POR INGREDIENTE
+
+---
+
+### 1. VITAMINA C — Ácido ascórbico — 120 mg (150% VRN)
+
+| Aspecto | Detalle |
+|---|---|
+| **Inclusión en lista positiva** | ✅ Anexo II de la Directiva 2002/46/CE (modif. por Reg. CE 1170/2009) |
+| **Forma química** | ✅ **Ácido ascórbico** expresamente autorizada en el Anexo II de la Dir. 2002/46/CE |
+| **Dosis formulada** | 120 mg/día |
+| **UL EFSA (adultos)** | **2.000 mg/día** (SCF, 2003 — EFSA reafirmado) |
+| **VRN (Reg. UE 1169/2011)** | 80 mg/día → 120 mg = **150% VRN** |
+| **Estado semáforo** | ✅ **PERMITIDO** |
+
+**Comentarios:**
+- La dosis de 120 mg está muy por debajo del UL de 2.000 mg/día establecido por EFSA (margen de seguridad >16×).
+- El 150% del VRN es perfectamente admisible para un complemento alimentario. No existe en la normativa europea un límite máximo legal armonizado para vitaminas en complementos, pero el RD 1487/2009 exige que las dosis no supongan un riesgo para la salud (art. 6.1), criterio cumplido sobradamente.
+- **Declaraciones de salud autorizadas (Reg. 1924/2006, art. 13.1):**
+  - *"La vitamina C contribuye al funcionamiento normal del sistema inmunitario."* ✅
+  - *"La vitamina C contribuye a la protección de las células frente al daño oxidativo."* ✅
+  - *"La vitamina C contribuye a la reducción del cansancio y la fatiga."* ✅
+
+---
+
+### 2. ZINC — Gluconato de zinc — 10 mg
+
+| Aspecto | Detalle |
+|---|---|
+| **Inclusión en lista positiva** | ✅ Anexo II de la Directiva 2002/46/CE |
+| **Forma química** | ✅ **Gluconato de zinc** expresamente autorizado en el Anexo II de la Dir. 2002/46/CE |
+| **Dosis formulada** | 10 mg/día |
+| **UL EFSA (adultos)** | **25 mg/día** (EFSA Journal 2014;12(10):3844) |
+| **VRN (Reg. UE 1169/2011)** | 10 mg/día → 10 mg = **100% VRN** |
+| **Estado semáforo** | ✅ **PERMITIDO** |
+
+**Comentarios:**
+- La dosis de 10 mg se sitúa exactamente en el VRN y representa un 40% del UL de EFSA (25 mg/día), con un margen de seguridad adecuado.
+- La AESAN en su actualización de noviembre de 2024 confirma el UL de 25 mg/día como referencia para complementos alimentarios en España.
+- Algunos estados miembros (ej. Alemania/BfR) recomiendan un máximo de 6,5 mg por producto individual para contemplar uso múltiple de suplementos, pero **este valor es orientativo y no vincula en España**.
+- **Declaraciones de salud autorizadas (Reg. 1924/2006, art. 13.1):**
+  - *"El zinc contribuye al funcionamiento normal del sistema inmunitario."* ✅
+  - *"El zinc contribuye a la protección de las células frente al daño oxidativo."* ✅
+  - *"El zinc contribuye al metabolismo normal de los macronutrientes."* ✅
+
+---
+
+### 3. VITAMINA D3 — Colecalciferol — 20 μg
+
+| Aspecto | Detalle |
+|---|---|
+| **Inclusión en lista positiva** | ✅ Anexo II de la Directiva 2002/46/CE |
+| **Forma química** | ✅ **Colecalciferol (D3)** expresamente autorizado en el Anexo II de la Dir. 2002/46/CE |
+| **Dosis formulada** | 20 μg/día (= 800 UI/día) |
+| **UL EFSA 2023 actualizado (adultos)** | **100 μg/día** (= 4.000 UI/día). **Re-confirmado en 2023** (EFSA Journal 2023;e8145) |
+| **VRN (Reg. UE 1169/2011)** | 20 μg/día → 20 μg = **100% VRN** (equivalente a 800 UI) |
+| **Estado semáforo** | ✅ **PERMITIDO** |
+
+**Comentarios:**
+- La dosis de 20 μg (800 UI) es el **VRN estándar** para adultos y se sitúa en apenas un **20% del UL** de EFSA (100 μg/día). Margen de seguridad amplio.
+- EFSA re-evaluó el UL en 2023 y lo mantuvo en 100 μg/día para adultos, confirmando la seguridad de esta dosis.
+- Esta dosis está en consonancia con las recomendaciones de AESAN para la suplementación de vitamina D en la población general.
+- **Declaraciones de salud autorizadas (Reg. 1924/2006, art. 13.1):**
+  - *"La vitamina D contribuye al funcionamiento normal del sistema inmunitario."* ✅
+  - *"La vitamina D contribuye a la absorción y utilización normal del calcio y el fósforo."* ✅
+  - *"La vitamina D contribuye al mantenimiento de huesos y dientes normales."* ✅
+  - *"La vitamina D contribuye a la función muscular normal."* ✅
+
+---
+
+## 📊 RESUMEN DE SEMÁFOROS
+
+| Ingrediente | Forma | Dosis | VRN | UL EFSA | Semáforo |
+|---|---|---|---|---|---|
+| Vitamina C | Ácido ascórbico | 120 mg | 150% | 2.000 mg | ✅ PERMITIDO |
+| Zinc | Gluconato de zinc | 10 mg | 100% | 25 mg | ✅ PERMITIDO |
+| Vitamina D3 | Colecalciferol | 20 μg (800 UI) | 100% | 100 μg | ✅ PERMITIDO |
+
+---
+
+## 📝 RESUMEN EJECUTIVO DE VIABILIDAD REGULATORIA
+
+### Veredicto: ✅ PRODUCTO VIABLE — Sin incidencias regulatorias
+
+**«Inmuno Complex Pro»** es una formulación de **baja complejidad regulatoria** que cumple íntegramente con la normativa española y europea vigente:
+
+1. **Los tres ingredientes** (vitamina C, zinc, vitamina D3) están incluidos en la **lista positiva del Anexo II de la Directiva 2002/46/CE**, modificada por el Reglamento (CE) 1170/2009.
+
+2. **Las tres formas químicas** empleadas (ácido ascórbico, gluconato de zinc, colecalciferol) están **expresamente autorizadas** en dicha lista.
+
+3. **Las dosis** se encuentran dentro de los márgenes seguros definidos por EFSA:
+   - Vitamina C: 120 mg (**6% del UL**)
+   - Zinc: 10 mg (**40% del UL**)
+   - Vitamina D3: 20 μg (**20% del UL**)
+
+4. No se identifican sustancias que requieran evaluación bajo el Reglamento (UE) 2015/2283 (Novel Foods), ni aditivos ni aromas sujetos a los Reglamentos (CE) 1333/2008 o (CE) 1334/2008.
+
+5. **Declaraciones de salud disponibles:** Los tres ingredientes cuentan con declaraciones de salud **autorizadas** en el Registro UE (Reg. 1924/2006, art. 13.1) relacionadas con el funcionamiento normal del sistema inmunitario, lo cual es coherente con el posicionamiento del producto ("Inmuno").
+
+### Acciones recomendadas para la comercialización:
+- 📌 Registrar el producto en la comunidad autónoma correspondiente (comunicación previa conforme al RD 1487/2009).
+- 📌 Etiquetado conforme al Reglamento (UE) 1169/2011: lista de ingredientes, tabla nutricional, dosis diaria recomendada, modo de empleo, advertencia de no superar la dosis diaria indicada.
+- 📌 Utilizar exclusivamente las declaraciones de salud autorizadas del Registro UE (sin modificaciones del texto).
+- 📌 Incluir la declaración obligatoria: *"Los complementos alimenticios no deben utilizarse como sustitutos de una dieta variada y equilibrada y un modo de vida sano."*
+- 📌 Mantener documentación técnica (especificaciones de materia prima, certificados de análisis, trazabilidad) a disposición de las autoridades sanitarias.
+
+> **Fecha de referencia normativa:** julio 2025. Este análisis se basa en la legislación vigente a la fecha. Se recomienda verificar posibles actualizaciones normativas antes del lanzamiento.

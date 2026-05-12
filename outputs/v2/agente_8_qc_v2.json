@@ -1,0 +1,794 @@
+{
+  "fase_1_ftir": {
+    "objetivo": "Identificación de materias primas y control de identidad del mix final mediante comparación espectral",
+    "metodologia_general": {
+      "nombre": "FTIR-ATR",
+      "tecnica": "Espectroscopía infrarroja por transformada de Fourier con reflectancia total atenuada",
+      "equipo": "FTIR con cristal ATR de diamante, resolución 4 cm⁻¹, rango 4000-600 cm⁻¹, 32 escaneos promediados"
+    },
+    "control_mix_final": {
+      "criterio_aceptacion": "Índice de correlación espectral ≥0,98 vs espectro de referencia del mix final certificado",
+      "deteccion_adulteraciones": "Cualquier pico adicional no atribuible a los ingredientes declarados con intensidad relativa >5% será investigado como posible adulteración o sustitución",
+      "metodo_comparacion": "Primer derivada + coeficiente de correlación de Pearson sobre la región 1800-800 cm⁻¹"
+    },
+    "espectros_referencia": {
+      "Péptidos de Colágeno": {
+        "picos_principales": [
+          {
+            "numero_onda": "1650",
+            "asignacion": "Amida I (C=O estiramiento)"
+          },
+          {
+            "numero_onda": "1550",
+            "asignacion": "Amida II (N-H flexión + C-N estiramiento)"
+          },
+          {
+            "numero_onda": "1240",
+            "asignacion": "Amida III (C-N estiramiento + N-H flexión)"
+          },
+          {
+            "numero_onda": "3400",
+            "asignacion": "OH/NH estiramiento (amplio)"
+          }
+        ],
+        "criterio_aceptacion": "Concordancia ≥95% en posición de picos Amida I, II y III"
+      },
+      "L-Glicina": {
+        "picos_principales": [
+          {
+            "numero_onda": "3160",
+            "asignacion": "NH₃⁺ estiramiento asimétrico"
+          },
+          {
+            "numero_onda": "1610",
+            "asignacion": "COO⁻ estiramiento asimétrico"
+          },
+          {
+            "numero_onda": "1410",
+            "asignacion": "COO⁻ estiramiento simétrico"
+          },
+          {
+            "numero_onda": "1505",
+            "asignacion": "NH₃⁺ flexión"
+          }
+        ],
+        "criterio_aceptacion": "Concordancia ≥95% en los 4 picos característicos"
+      },
+      "Ácido Hialurónico": {
+        "picos_principales": [
+          {
+            "numero_onda": "3420",
+            "asignacion": "OH estiramiento (puente de hidrógeno)"
+          },
+          {
+            "numero_onda": "1630",
+            "asignacion": "C=O carboxilato asimétrico"
+          },
+          {
+            "numero_onda": "1410",
+            "asignacion": "COO⁻ simétrico"
+          },
+          {
+            "numero_onda": "1150",
+            "asignacion": "C-O-C puente glucosídico"
+          }
+        ],
+        "criterio_aceptacion": "Concordancia ≥95% en posición de picos"
+      },
+      "Astaxantina": {
+        "picos_principales": [
+          {
+            "numero_onda": "1660",
+            "asignacion": "C=O cetona conjugada"
+          },
+          {
+            "numero_onda": "1570",
+            "asignacion": "C=C polieno conjugado"
+          },
+          {
+            "numero_onda": "2960",
+            "asignacion": "C-H metilo"
+          },
+          {
+            "numero_onda": "960",
+            "asignacion": "C-H fuera del plano (trans)"
+          }
+        ],
+        "criterio_aceptacion": "Concordancia ≥95% en pico C=O y C=C conjugado"
+      },
+      "AKBA (Boswellia serrata extracto 30%)": {
+        "picos_principales": [
+          {
+            "numero_onda": "1705",
+            "asignacion": "C=O ácido carboxílico"
+          },
+          {
+            "numero_onda": "1610",
+            "asignacion": "C=C olefínico"
+          },
+          {
+            "numero_onda": "1470",
+            "asignacion": "CH₂ flexión"
+          },
+          {
+            "numero_onda": "1240",
+            "asignacion": "C-O ácido carboxílico"
+          }
+        ],
+        "criterio_aceptacion": "Concordancia ≥95% en los 4 picos principales"
+      }
+    }
+  },
+  "fase_2_granulometria": {
+    "objetivo": "Control del tamaño de partícula para garantizar fluidez, homogeneidad del mix, ausencia de segregación y correcta dosificación del polvo",
+    "metodo_primario": {
+      "nombre": "Difracción láser",
+      "equipo": "ISO 13320 (dispersión en seco, presión 2-3 bar)",
+      "metodo_alternativo": "Tamizado en seco según ISO 3310-1 (serie de tamices 45-500 μm)"
+    },
+    "especificaciones_por_ingrediente": {
+      "Péptidos de Colágeno": {
+        "D10": "20-50 μm",
+        "D50": "80-150 μm",
+        "D90": "180-300 μm",
+        "observacion": "Ingrediente mayoritario, define la granulometría base del mix"
+      },
+      "L-Glicina": {
+        "D10": "15-40 μm",
+        "D50": "60-120 μm",
+        "D90": "150-250 μm",
+        "observacion": "Granulometría fina, compatible con mezcla por orden decreciente"
+      },
+      "AKBA (Boswellia extracto)": {
+        "D10": "5-20 μm",
+        "D50": "30-80 μm",
+        "D90": "100-180 μm",
+        "observacion": "Ingrediente minoritario, verificar dispersión homogénea"
+      }
+    },
+    "especificaciones_mix_final": {
+      "D10": "15-45 μm",
+      "D50": "70-140 μm",
+      "D90": "180-280 μm",
+      "criterio_homogeneidad": "RSD ≤5% en D50 medido en 10 puntos de muestreo aleatorios del lote (ISO 3951)",
+      "orden_incorporacion": "Incorporación por orden de tamaño decreciente: colágeno primero (mayor D50), seguido de glicina, minerales y finalmente micropartículas (AKBA, vitaminas) con pre-mezcla previa"
+    },
+    "frecuencia": "CADA_LOTE"
+  },
+  "fase_3_densidad": {
+    "objetivo": "Control de fluidez y compresibilidad del polvo para asegurar comportamiento adecuado en dosificación y envasado",
+    "metodos": {
+      "densidad_aparente": {
+        "nombre": "Densidad aparente (bulk density)",
+        "tecnica": "Ph. Eur. 2.9.15 — cilindro graduado de 100 mL, sin compactación"
+      },
+      "densidad_compactada": {
+        "nombre": "Densidad compactada (tapped density)",
+        "tecnica": "Ph. Eur. 2.9.34 — 1250 golpes en aparato de compactación (tap density tester)"
+      }
+    },
+    "especificaciones_numericas": {
+      "densidad_aparente": {
+        "rango": "0,40-0,65 g/cm³",
+        "justificacion": "Los péptidos de colágeno hidrolizado presentan densidades aparentes en este rango; la glicina tiende a aumentar ligeramente la densidad"
+      },
+      "densidad_compactada": {
+        "rango": "0,50-0,78 g/cm³"
+      }
+    },
+    "indices_reologia": {
+      "indice_carr": {
+        "rango_especificacion": "<18%",
+        "formula": "((ρcompactada - ρaparente) / ρcompactada) × 100",
+        "interpretacion": "<15% excelente fluidez; 15-18% buena fluidez; >20% fluidez deficiente (riesgo de bridges en dosificadora)"
+      },
+      "indice_hausner": {
+        "rango_especificacion": "<1,20",
+        "formula": "ρcompactada / ρaparente",
+        "interpretacion": "<1,25 libre flujo aceptable; <1,20 óptimo para polvos de complementos"
+      }
+    },
+    "frecuencia": "CADA_LOTE"
+  },
+  "fase_4_ph": {
+    "objetivo": "Control del pH del mix en suspensión para garantizar estabilidad química de todos los activos, especialmente vitaminas K2, folato y astaxantina",
+    "rango_esperado": {
+      "ph_esperado": "4,5-6,5",
+      "justificacion": "El colágeno hidrolizado aporta pH ligeramente ácido (4,0-5,5); el ácido hialurónico es ácido (pKa 3-4); los minerales (Mg, Fe, Zn) pueden elevar ligeramente el pH; el AKBA aporta acidez residual"
+    },
+    "especificacion_aceptacion": "pH 4,5-6,5 en suspensión al 5% (p/v) en agua destilada",
+    "metodo": {
+      "nombre": "Potenciometría",
+      "tecnica": "pH metro calibrado con buffers pH 4,0 y 7,0 (Ph. Eur. 2.2.3); suspensión al 5% p/v, agitación magnética 10 min, medición a 20±2°C; reposo 2 min antes de lectura",
+      "preparacion_muestra": "5,0 g de polvo + 95 mL de agua destilada Tipo II (ISO 3696), agitar 10 min"
+    },
+    "impacto_ph_fuera_rango": {
+      "pH_menor_4_0": "Riesgo de hidrólisis acelerada de péptidos de colágeno; posible desnaturalización del ácido hialurónico; inestabilidad del enlace glucosídico",
+      "pH_mayor_7_0": "Degradación oxidativa de astaxantina (muy sensible a pH alcalino); isomerización de Vitamina K2 (MK-7); degradación del folato (ácido fólico inestable a pH alcalino); oxidación acelerada de AKBA",
+      "pH_optimo_astaxantina": "Estable en rango ácido-neutro (pH 3-7); vida media reducida drásticamente a pH >7",
+      "pH_optimo_vitamina_K2": "Máxima estabilidad en medio neutro-ligeramente ácido (pH 5-7); descomposición por hidrólisis a pH alcalino",
+      "pH_optimo_folato": "Estable a pH 4-6; degradación a pH >7 con apertura del anillo pteridina"
+    },
+    "frecuencia": "CADA_LOTE"
+  },
+  "fase_5_aspecto_organoleptico": {
+    "descripcion_producto": "Polvo fino y homogéneo de color blanco a blanco-amarillento, con posible leve tonalidad anaranjada por presencia de astaxantina a baja concentración",
+    "criterios_aceptacion": {
+      "polvo": {
+        "color": "Blanco a blanco-amarillento, con leve tono anaranjado homogéneo aceptable",
+        "olor": "Característico suave a colágeno, ligeramente amaderado por Boswellia serrata; sin olores extraños",
+        "textura": "Polvo fino, homogéneo, libre-fluente, sin grumos ni aglomerados duros",
+        "criterio_rechazo": "Presencia de apelmazamiento >10% de la muestra; decoloración visible (pardeamiento, manchas); olor rancio, a humedad o químico extraño; presencia de cuerpos extraños; textura pegajosa o compactada"
+      }
+    },
+    "metodo_inspeccion": {
+      "nombre": "Inspección visual y olfatométrica",
+      "tecnica": "Personal entrenado bajo iluminación D65 (ISO 3664); muestra sobre superficie blanca nitrurada; comparación con patron de referencia aprobado; evaluación olfativa a 10-15 cm de distancia"
+    },
+    "frecuencia": "CADA_LOTE"
+  },
+  "fase_6_ensayos_analiticos_adicionales": {
+    "cuantificacion_activos": [
+      {
+        "parametro": "Péptidos de Colágeno",
+        "justificacion": "Ingrediente principal (5g/dosis); la cuantificación por hidroxiprolina es el método de referencia para proteínas colagénicas",
+        "especificacion": "90-110% del valor declarado (4,50-5,50 g/dosis)",
+        "metodo": "Espectrofotometría UV-Vis tras hidrólisis ácida y reacción con cloramina-T / ácido perclórico (basado en Ph. Eur. monografía de colágeno; AOAC 990.26 modificado); λ=560 nm",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "L-Glicina",
+        "justificacion": "Ingrediente principal (5g/dosis); la glicina es el aminoácido más abundante en el colágeno y se adiciona libremente, requiere control individual",
+        "especificacion": "90-110% del valor declarado (4,50-5,50 g/dosis)",
+        "metodo": "HPLC-UV con derivatización pre-columna OPA/FMOC (Ph. Eur. 2.2.56); detector UV λ=338 nm; columna C18; cuantificación vs estándar de L-glicina",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "Ácido Hialurónico",
+        "justificacion": "Ingrediente funcional (100 mg/dosis); susceptibilidad a degradación hidrolítica",
+        "especificacion": "90-110% del valor declarado (90-110 mg/dosis)",
+        "metodo": "HPLC-SEC con detector de índice de refracción (RI); columna de exclusión por tamaño acuosa (ej: TSKgel G3000PWxl); fase móvil: NaCl 0,1M; cuantificación vs estándar de AH de PM conocido",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "AKBA (ácido 11-ceto-β-boswélico)",
+        "justificacion": "Marcador cualitativo y cuantitativo del extracto de Boswellia serrata 30% AKBA; concentración baja (10 mg/dosis), requiere método sensible",
+        "especificacion": "≥90% del valor declarado (≥9,0 mg/dosis de AKBA; equivalente a ≥30 mg/dosis de extracto)",
+        "metodo": "HPLC-UV; columna C18 (150×4,6 mm, 3 μm); fase móvil: Acetonitrilo/água con ácido fosfórico 0,1% (gradiente); λ=254 nm; patrón de referencia AKBA certificado",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "Astaxantina",
+        "justificacion": "Altamente fotosensible y oxidable; concentración muy baja (1 mg/dosis); requiere método específico y protección de la muestra",
+        "especificacion": "≥90% del valor declarado (≥0,90 mg/dosis)",
+        "metodo": "HPLC-UV-Vis; columna C30 o C18 especial para carotenoides; fase móvil: metanol/MTBE/água (gradiente); λ=476 nm; extracción previa con hexano:acetona (1:1) bajo luz amber; patrón de astaxantina trans",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "Magnesio",
+        "justificacion": "Mineral en concentración relevante (75 mg/dosis); control de sobredosificación",
+        "especificacion": "90-110% del valor declarado (67,5-82,5 mg/dosis)",
+        "metodo": "ICP-OES (ISO 17053) o AAS de llama (Ph. Eur. 2.2.23); digestión ácida previa con HNO₃/HCl; λ=285,2 nm (AAS) o 279,6 nm (ICP)",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "Hierro",
+        "justificacion": "Mineral traza (3,5 mg/dosis); control crítico por toxicidad potencial en sobredosis y compatibilidad con colágeno",
+        "especificacion": "90-110% del valor declarado (3,15-3,85 mg/dosis)",
+        "metodo": "ICP-OES o AAS de llama; digestión ácida; λ=248,3 nm (AAS) o 238,2 nm (ICP)",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "Zinc",
+        "justificacion": "Mineral traza (2,5 mg/dosis); posible interacción con absorción de hierro",
+        "especificacion": "90-110% del valor declarado (2,25-2,75 mg/dosis)",
+        "metodo": "ICP-OES o AAS de llama; digestión ácida; λ=213,9 nm (AAS) o 206,2 nm (ICP)",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "Vitamina K2 (MK-7)",
+        "justificacion": "Concentración muy baja (25 μg/dosis); altamente fotosensible y termolábil; requiere método sensible",
+        "especificacion": "≥90% del valor declarado (≥22,5 μg/dosis)",
+        "metodo": "HPLC-FLD (fluorescencia) pos-columna con reducción química (Zn) o LC-MS/MS; columna C18; extracción con hexano; λ_ex=248 nm, λ_em=430 nm (post-reducción); patrón MK-7 all-trans certificado",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "Vitamina B12 (cianocobalamina)",
+        "justificacion": "Concentración traza (0,63 μg/dosis); la deficiencia más crítica en formulaciones multivitamínicas",
+        "especificacion": "≥90% del valor declarado (≥0,57 μg/dosis)",
+        "metodo": "HPLC-UV o LC-MS/MS; columna C18; λ=361 nm; extracción con tampón acetato pH 4,0; límite de cuantificación <0,1 μg/dosis",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "Vitamina B2 (riboflavina)",
+        "justificacion": "Fotosensible; concentración baja (0,35 mg/dosis)",
+        "especificacion": "90-110% del valor declarado (0,315-0,385 mg/dosis)",
+        "metodo": "HPLC-FLD; λ_ex=445 nm, λ_em=525 nm; columna C18; tampón fosfato pH 6,0/metanol; protección de muestra de la luz",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "Vitamina B6 (piridoxina clorhidrato)",
+        "justificacion": "Concentración baja (0,35 mg/dosis)",
+        "especificacion": "90-110% del valor declarado (0,315-0,385 mg/dosis)",
+        "metodo": "HPLC-UV; λ=290 nm; columna C18; tampón hexanosulfonato sódico pH 3,0/metanol (isocrático)",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "Vitamina B5 (ácido pantoténico)",
+        "justificacion": "Concentración baja (1,5 mg/dosis)",
+        "especificacion": "90-110% del valor declarado (1,35-1,65 mg/dosis)",
+        "metodo": "HPLC-UV; λ=210 nm; columna C18; tampón fosfato pH 3,0/metanol",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "Vitamina B1 (tiamina clorhidrato)",
+        "justificacion": "Concentración baja (0,275 mg/dosis); termolábil",
+        "especificacion": "90-110% del valor declarado (0,248-0,303 mg/dosis)",
+        "metodo": "HPLC-UV post-columna con oxidación a tioflavina (Ph. Eur.); λ_ex=375 nm, λ_em=435 nm; o HPLC-UV directo λ=254 nm",
+        "frecuencia": "CADA_LOTE"
+      },
+      {
+        "parametro": "Folato (ácido fólico)",
+        "justificacion": "Concentración traza (50 μg/dosis); inestable a pH alcalino y luz",
+        "especificacion": "≥90% del valor declarado (≥45 μg/dosis)",
+        "metodo": "HPLC-UV; λ=280 nm; columna C18; tampón fosfato pH 6,5/metanol; protección de la luz",
+        "frecuencia": "CADA_LOTE"
+      }
+    ],
+    "uniformidad_contenido": {
+      "parametro": "Uniformidad de contenido por dosis",
+      "justificacion": "El producto contiene ingredientes en concentraciones muy bajas (Vitamina K2: 25 μg, B12: 0,63 μg, Folato: 50 μg) donde la homogeneidad es crítica",
+      "especificacion": "RSD ≤6% en 10 unidades de dosificación individuales para los marcadores críticos (K2, B12, AKBA, astaxantina); valor medio dentro de 90-110%",
+      "metodo": "Muestreo de 10 dosis individuales (ej: 10 sobres o porciones de 12,8 g); análisis por HPLC de los marcadores de bajo contenido",
+      "frecuencia": "CADA_LOTE",
+      "referencia": "Inspired by USP <905> Uniformity of Dosage Units, adaptado a complementos alimentarios con trazas"
+    },
+    "humedad": {
+      "parametro": "Pérdida por desecación",
+      "justificacion": "El colágeno es higroscópico; humedad excesiva favorece reacciones de Maillard (colágeno + azúcares), degradación de vitaminas y apelmazamiento",
+      "especificacion": "≤5,0% (p/p)",
+      "metodo": "Ph. Eur. 2.2.32 — Termobalanza a 105°C hasta peso constante, o Ph. Eur. 2.2.35 (Karl Fischer) si se requiere mayor precisión",
+      "frecuencia": "CADA_LOTE"
+    },
+    "metales_pesados": {
+      "parametro": "Plomo, Cadmio, Mercurio, Arsénico total",
+      "justificacion": "Requisito reglamentario obligatorio (Reglamento UE 2023/915); el colágeno bovino/porcino/marino es una fuente potencial de metales pesados",
+      "especificacion": {
+        "Plomo": "<3,0 mg/kg (límite Reg. UE 2023/915 para suplementos alimenticios)",
+        "Cadmio": "<1,0 mg/kg",
+        "Mercurio": "<0,10 mg/kg",
+        "Arsenico_total": "<1,0 mg/kg"
+      },
+      "metodo": "ICP-MS (ISO 17294-2) tras digestión microondas con HNO₃/H₂O₂; cuantificación por calibración externa con patrón interno (Ge, In, Bi)",
+      "frecuencia": "CADA_LOTE_MATERIA_PRIMA_COLAGENO + CADA_3_LOTES_PRODUCTO_FINAL"
+    },
+    "microbiologia": {
+      "criterios_microbiologicos": [
+        {
+          "parametro": "Recuento total de aerobios mesófilos",
+          "criterio": "m=1000 UFC/g, M=10000 UFC/g (n=5, c=2)",
+          "metodo": "ISO 4833-1:2013 — Siembra en profundidad en PCA, 30°C, 72 h",
+          "frecuencia": "CADA_LOTE"
+        },
+        {
+          "parametro": "Levaduras y mohos",
+          "criterio": "m=100 UFC/g, M=1000 UFC/g (n=5, c=2)",
+          "metodo": "ISO 21527-1:2008 — DG18, 25°C, 5 días",
+          "frecuencia": "CADA_LOTE"
+        },
+        {
+          "parametro": "Enterobacteriaceae",
+          "criterio": "m=10 UFC/g, M=100 UFC/g (n=5, c=2)",
+          "metodo": "ISO 21528-2:2017 — VBGA, 37°C, 24 h",
+          "frecuencia": "CADA_LOTE"
+        },
+        {
+          "parametro": "Escherichia coli",
+          "criterio": "Ausencia en 1 g",
+          "metodo": "ISO 16649-3:2015 — TBX, 44°C, 24 h",
+          "frecuencia": "CADA_LOTE"
+        },
+        {
+          "parametro": "Salmonella spp.",
+          "criterio": "Ausencia en 25 g",
+          "metodo": "ISO 6579-1:2017 — Pre-enriquecimiento en BPW, enriquecimiento selectivo en RVS/TTB, aislamiento en XLD/BSA",
+          "frecuencia": "CADA_LOTE"
+        },
+        {
+          "parametro": "Bacillus cereus",
+          "criterio": "m=100 UFC/g, M=1000 UFC/g (n=5, c=2)",
+          "metodo": "ISO 7932:2004 — MYP, 30°C, 24 h",
+          "frecuencia": "CADA_LOTE",
+          "justificacion": "Relevante en polvos de proteínas por riesgo de formación de esporas"
+        },
+        {
+          "parametro": "Clostridium perfringens",
+          "criterio": "Ausencia en 1 g",
+          "metodo": "ISO 7937:2004 — TSC, 37°C, anaerobiosis, 24 h",
+          "frecuencia": "CADA_5_LOTES",
+          "justificacion": "Relevante si el colágeno es de origen bovino/porcino"
+        }
+      ],
+      "referencia_normativa": "Reglamento CE 2073/2005 y sus modificaciones; categorías aplicables: 1.24 (suplementos alimenticios) y criterios adicionales según AP de origen"
+    }
+  },
+  "fase_7_plan_estabilidad": {
+    "zona_climatica": "II (25°C/60% HR según clasificación ICH Q1A(R2))",
+    "numero_lotes": 3,
+    "vida_util_estimada": {
+      "objetivo_meses": 24,
+      "alcanzable": true,
+      "condiciones_para_alcanzabilidad": "Requiere envase opaco con barrera a humedad (PET/PE con EVOH o aluminio interior); almacenamiento en lugar fresco y seco; posible sobreformulación del 10-15% en vitaminas más lábiles (K2, B12, B1, astaxantina, folato)"
+    },
+    "formato_envase_recomendado": "Sobres monodosis termosellados (PET/Al/PE) o bote con desecante integrado y cierre hermético (HDPE con liner de aluminio); barrera WVTR <0,5 g/m²/24h",
+    "condiciones_estudio": [
+      {
+        "tipo": "Larga duración",
+        "temperatura": "25°C ± 2°C",
+        "humedad_relativa": "60% ± 5%",
+        "duracion": "24 meses",
+        "envase": "Envase comercial final cerrado"
+      },
+      {
+        "tipo": "Acelerado",
+        "temperatura": "40°C ± 2°C",
+        "humedad_relativa": "75% ± 5%",
+        "duracion": "6 meses",
+        "envase": "Envase comercial final cerrado"
+      },
+      {
+        "tipo": "Fotodegradación",
+        "temperatura": "25°C",
+        "humedad_relativa": "Ambiente",
+        "duracion": "1,2 millones de lux·horas luz visible + 200 W·h/m² luz UV",
+        "envase": "Producto expuesto (sin envase) y en envase final para evaluar protección",
+        "justificacion": "OBLIGATORIO: la astaxantina, vitamina K2 (MK-7), vitamina B2 (riboflavina) y AKBA son fotosensibles. ICH Q1B requiere estudio de fotodegradación para confirming la necesidad de protección lumínica del envase"
+      }
+    ],
+    "cronograma_estudio": {
+      "puntos_tiempo": [
+        {
+          "tiempo": "T=0",
+          "condicion": "Todas las condiciones",
+          "parametros_monitorizados": [
+            "Aspecto, color, olor",
+            "pH (suspensión 5%)",
+            "Pérdida por desecación",
+            "Péptidos de colágeno (hidroxiprolina)",
+            "L-Glicina (HPLC)",
+            "AKBA (HPLC-UV)",
+            "Astaxantina (HPLC-UV-Vis)",
+            "Vitamina K2 MK-7 (HPLC-FLD)",
+            "Vitamina B12 (HPLC-UV)",
+            "Folato (HPLC-UV)",
+            "Vitamina B1 (HPLC-UV)",
+            "Vitamina B2 (HPLC-FLD)",
+            "Magnesio, Hierro, Zinc (ICP-OES)",
+            "Recuento total aerobios mesófilos",
+            "Levaduras/mohos",
+            "Salmonella spp.",
+            "E. coli"
+          ]
+        },
+        {
+          "tiempo": "T=1m",
+          "condicion": "Acelerado",
+          "parametros_monitorizados": [
+            "Aspecto, color, olor",
+            "pH",
+            "Pérdida por desecación",
+            "Astaxantina",
+            "Vitamina K2",
+            "AKBA",
+            "Vitamina B12",
+            "Folato"
+          ]
+        },
+        {
+          "tiempo": "T=2m",
+          "condicion": "Acelerado",
+          "parametros_monitorizados": [
+            "Aspecto, color, olor",
+            "pH",
+            "Pérdida por desecación",
+            "Astaxantina",
+            "Vitamina K2",
+            "AKBA",
+            "Vitamina B12",
+            "Folato"
+          ]
+        },
+        {
+          "tiempo": "T=3m",
+          "condicion": "Larga duración + Acelerado",
+          "parametros_monitorizados": [
+            "Aspecto, color, olor",
+            "pH",
+            "Pérdida por desecación",
+            "Colágeno",
+            "Glicina",
+            "AKBA",
+            "Astaxantina",
+            "Vitamina K2",
+            "Vitamina B12",
+            "Folato",
+            "Vitamina B1",
+            "Vitamina B2",
+            "Mg, Fe, Zn"
+          ]
+        },
+        {
+          "tiempo": "T=6m",
+          "condicion": "Larga duración + Acelerado",
+          "parametros_monitorizados": [
+            "Aspecto, color, olor",
+            "pH",
+            "Pérdida por desecación",
+            "Colágeno",
+            "Glicina",
+            "Ácido Hialurónico",
+            "AKBA",
+            "Astaxantina",
+            "Vitamina K2",
+            "Vitamina B12",
+            "Folato",
+            "Vitamina B1",
+            "Vitamina B2",
+            "Vitamina B5",
+            "Vitamina B6",
+            "Mg, Fe, Zn",
+            "Microbiología completa"
+          ]
+        },
+        {
+          "tiempo": "T=9m",
+          "condicion": "Larga duración",
+          "parametros_monitorizados": [
+            "Aspecto, color, olor",
+            "pH",
+            "Pérdida por desecación",
+            "Colágeno",
+            "Glicina",
+            "AKBA",
+            "Astaxantina",
+            "Vitamina K2",
+            "Vitamina B12",
+            "Folato",
+            "Mg, Fe, Zn"
+          ]
+        },
+        {
+          "tiempo": "T=12m",
+          "condicion": "Larga duración",
+          "parametros_monitorizados": [
+            "Aspecto, color, olor",
+            "pH",
+            "Pérdida por desecación",
+            "Colágeno",
+            "Glicina",
+            "Ácido Hialurónico",
+            "AKBA",
+            "Astaxantina",
+            "Vitamina K2",
+            "Vitamina B12",
+            "Folato",
+            "Vitamina B1",
+            "Vitamina B2",
+            "Vitamina B5",
+            "Vitamina B6",
+            "Mg, Fe, Zn",
+            "Microbiología completa"
+          ]
+        },
+        {
+          "tiempo": "T=18m",
+          "condicion": "Larga duración",
+          "parametros_monitorizados": [
+            "Aspecto, color, olor",
+            "pH",
+            "Pérdida por desecación",
+            "Colágeno",
+            "Glicina",
+            "AKBA",
+            "Astaxantina",
+            "Vitamina K2",
+            "Vitamina B12",
+            "Folato",
+            "Mg, Fe, Zn"
+          ]
+        },
+        {
+          "tiempo": "T=24m",
+          "condicion": "Larga duración",
+          "parametros_monitorizados": [
+            "Aspecto, color, olor",
+            "pH",
+            "Pérdida por desecación",
+            "Colágeno",
+            "Glicina",
+            "Ácido Hialurónico",
+            "AKBA",
+            "Astaxantina",
+            "Vitamina K2",
+            "Vitamina B12",
+            "Folato",
+            "Vitamina B1",
+            "Vitamina B2",
+            "Vitamina B5",
+            "Vitamina B6",
+            "Mg, Fe, Zn",
+            "Microbiología completa"
+          ]
+        },
+        {
+          "tiempo": "Fin estudio fotodegradación",
+          "condicion": "Fotodegradación ICH Q1B",
+          "parametros_monitorizados": [
+            "Aspecto, color",
+            "Astaxantina",
+            "Vitamina K2",
+            "Vitamina B2",
+            "AKBA",
+            "Colágeno"
+          ]
+        }
+      ]
+    },
+    "criterios_fin_vida_util": [
+      {
+        "criterio": "Contenido de activos - Vitaminas y trazas",
+        "descripcion": "Descenso por debajo del 90% del valor declarado en etiqueta para: Vitamina K2, B12, folato, B1, B2, B5, B6, astaxantina, AKBA"
+      },
+      {
+        "criterio": "Contenido de activos - Principales",
+        "descripcion": "Descenso por debajo del 90% del valor declarado para péptidos de colágeno, L-glicina, ácido hialurónico"
+      },
+      {
+        "criterio": "Contenido de minerales",
+        "descripcion": "Descenso por debajo del 90% del valor declarado para Mg, Fe, Zn (inusual pero posible por migración o interacción con envase)"
+      },
+      {
+        "criterio": "Cambio organoléptico",
+        "descripcion": "Decoloración significativa (pardeamiento por reacción de Maillard), olor rancio, apelmazamiento que impida dosificación correcta"
+      },
+      {
+        "criterio": "pH fuera de especificación",
+        "descripcion": "pH fuera del rango 4,5-6,5, indicando degradación ácido-base de componentes"
+      },
+      {
+        "criterio": "Humedad excesiva",
+        "descripcion": "Pérdida por desecación >7,0% (indicador de fallo de barrera del envase o problemas de almacenamiento)"
+      },
+      {
+        "criterio": "Contaminación microbiológica",
+        "descripcion": "Cualquier resultado fuera de especificación según CE 2073/2005 en los puntos de control microbiológico"
+      },
+      {
+        "criterio": "Cambio significativo en condición acelerada",
+        "descripcion": "Si a T=6m en condición acelerada (40°C/75% HR) se observa cambio significativo (>5% degradación de cualquier activo), la vida útil debe ser reducida y justificada con datos de larga duración"
+      }
+    ],
+    "ingredientes_criticos_estabilidad": [
+      {
+        "ingrediente": "Astaxantina",
+        "riesgo": "ALTO - Fotosensibilidad extrema y oxidación; degradación acelerada por calor, luz y oxígeno",
+        "mitigacion": "Envase opaco, atmósfera protectora (N₂), antioxidante en formulación si es posible, sobreformulación 15-20%"
+      },
+      {
+        "ingrediente": "Vitamina K2 (MK-7)",
+        "riesgo": "ALTO - Fotosensible, termolábil, sensible a pH alcalino y oxidación",
+        "mitigacion": "Envase opaco, sobreformulación 15%, matriz de colágeno puede ejercer efecto protector por encapsulación física"
+      },
+      {
+        "ingrediente": "Vitamina B12",
+        "riesgo": "MEDIO-ALTO - Fotosensible, termolábil a pH alcalino; degradación a cobinamida y análogos inactivos",
+        "mitigacion": "Control estricto de pH, sobreformulación 10-15%"
+      },
+      {
+        "ingrediente": "Folato (ácido fólico)",
+        "riesgo": "MEDIO - Inestable a pH alcalino y luz UV; degradación por apertura del anillo pteridina",
+        "mitigacion": "Mantener pH <6,5, sobreformulación 10%, protección lumínica"
+      },
+      {
+        "ingrediente": "Vitamina B1 (tiamina)",
+        "riesgo": "MEDIO - Termolábil; degradación por reacción de Maillard con azúcares reductores; pH óptimo 3-4",
+        "mitigacion": "Evitar azúcares reductores en formulación, sobreformulación 10%"
+      },
+      {
+        "ingrediente": "AKBA",
+        "riesgo": "MEDIO - Oxidación del grupo 11-ceto; termolabilidad moderada",
+        "mitigacion": "Protección de oxígeno, sobreformulación 10%"
+      },
+      {
+        "ingrediente": "Ácido Hialurónico",
+        "riesgo": "BAJO-MEDIO - Hidrólisis del enlace glucosídico por humedad y temperatura",
+        "mitigacion": "Control de humedad <5%, envase con barrera a humedad"
+      }
+    ]
+  },
+  "fase_8_resumen_ejecutivo": "El plan de control de calidad para Collagen Complex Pro se centra en tres ejes críticos: (1) Homogeneidad del mix, dada la enorme disparidad de concentraciones entre ingredientes (desde 5 g de colágeno hasta 0,63 μg de vitamina B12), lo que hace obligatorio el ensayo de uniformidad de contenido por dosis con RSD ≤6% en los marcadores de bajo contenido (K2, B12, folato, AKBA, astaxantina), requiriendo pre-mezcla certificada de los micronutrientes antes de su incorporación al colágeno; (2) Protección de la estabilidad de los activos fotosensibles y termolábiles, siendo la astaxantina y la vitamina K2 los ingredientes de mayor riesgo, lo que impone envase opaco con barrera a humedad y oxígeno (PET/Al/PE o HDPE con liner), control estricto de pH en rango 4,5-6,5 para evitar degradación alcalina del folato y la K2, y estudio de fotodegradación ICH Q1B obligatorio; (3) Control microbiológico riguroso, especialmente por la naturaleza proteica del colágeno (riesgo de B. cereus por esporulación) y el origen animal potencial (C. perfringens en T=0 cada 5 lotes). La frecuencia de muestreo recomendada por lote incluye: controles físicos (FTIR, granulometría, densidad, aspecto, pH, humedad) en 100% de lotes; cuantificación completa de todos los activos por HPLC/ICP en 100% de lotes dado el perfil multicomponente; microbiología completa en 100% de lotes; y metales pesados en 100% de lotes de materia prima de colágeno y cada 3 lotes de producto final. Puntos de atención especial para producción: realizar la mezcla por orden de tamaño de partícula decreciente, verificar que el Índice de Carr sea <18% antes del envasado, proteger las zonas de mezcla y envasado de luz UV directa, y considerar sobreformulación del 10-20% en astaxantina, K2, B12, B1 y folato para compensar la degradación esperada durante la vida útil de 24 meses.",
+  "fuentes_consultadas": [
+    {
+      "id": 1,
+      "fuente": "ICH Q1A(R2) - Stability Testing of New Drug Substances and Products",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 2,
+      "fuente": "ICH Q1B - Photostability Testing of New Drug Substances and Products",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 3,
+      "fuente": "ICH Q2(R1) - Validation of Analytical Procedures",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 4,
+      "fuente": "Farmacopea Europea (Ph. Eur.) - Monografías de Colágeno, Tiamina, Riboflavina, Piridoxina, Cianocobalamina, Ácido Fólico; Capítulos 2.2.32, 2.2.35, 2.9.15, 2.9.34, 2.2.3, 2.2.23, 2.2.56",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 5,
+      "fuente": "Reglamento (CE) 2073/2005 relativo a los criterios microbiológicos aplicables a los productos alimenticios (modificaciones posteriores incluidas)",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 6,
+      "fuente": "Reglamento (UE) 2023/915 sobre contenidos máximos de ciertos contaminantes en los alimentos (metales pesados)",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 7,
+      "fuente": "ISO 13320 - Análisis granulométrico por difracción láser",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 8,
+      "fuente": "ISO 3310-1 - Tamices de ensayo - Requisitos técnicos y verificación",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 9,
+      "fuente": "AOAC 990.26 - Hydroxyproline in Collagen (modificado para péptidos de colágeno)",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 10,
+      "fuente": "ISO 17053 - Determinación de elementos traza por ICP-OES",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 11,
+      "fuente": "USP <905> Uniformity of Dosage Units (referencia metodológica adaptada)",
+      "url": "",
+      "tipo": "normativa"
+    },
+    {
+      "id": 12,
+      "fuente": "Conocimiento experto en espectroscopía FTIR de péptidos, aminoácidos, carotenoides y triterpenos",
+      "url": "",
+      "tipo": "conocimiento_experto"
+    },
+    {
+      "id": 13,
+      "fuente": "Conocimiento experto en estabilidad de vitaminas liposolubles (K2, astaxantina) y vitaminas del grupo B en matrices de polvo",
+      "url": "",
+      "tipo": "conocimiento_experto"
+    }
+  ],
+  "metadata": {
+    "version": "2.0",
+    "disclaimer": "Este plan QC es orientativo. Los métodos y criterios deben validarse internamente antes de su implementación. Las sobreformulaciones sugeridas deben verificarse con datos de estabilidad reales. La clasificación del producto como complemento alimentario debe confirmarse con la legislación nacional aplicable."
+  }
+}

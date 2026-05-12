@@ -1,0 +1,300 @@
+{
+  "fase_1_lista_materiales_navision": [
+    {
+      "orden_incorporacion": 1,
+      "denominacion_navision": "Maltodextrina aglomerada",
+      "codigo_referencia": "PENDIENTE_PROVEEDOR",
+      "cantidad_por_unidad_mg": 421,
+      "cantidad_lote_con_merma_g": 4294.2,
+      "estado_material": "HOMOLOGADO"
+    },
+    {
+      "orden_incorporacion": 2,
+      "denominacion_navision": "Bisglicinato de magnesio",
+      "codigo_referencia": "PENDIENTE_PROVEEDOR",
+      "cantidad_por_unidad_mg": 1429,
+      "cantidad_lote_con_merma_g": 14575.8,
+      "estado_material": "HOMOLOGADO"
+    },
+    {
+      "orden_incorporacion": 3,
+      "denominacion_navision": "Ácido ascórbico",
+      "codigo_referencia": "PENDIENTE_PROVEEDOR",
+      "cantidad_por_unidad_mg": 80,
+      "cantidad_lote_con_merma_g": 816,
+      "estado_material": "HOMOLOGADO"
+    },
+    {
+      "orden_incorporacion": 4,
+      "denominacion_navision": "Gluconato de zinc",
+      "codigo_referencia": "PENDIENTE_PROVEEDOR",
+      "cantidad_por_unidad_mg": 70,
+      "cantidad_lote_con_merma_g": 714,
+      "estado_material": "HOMOLOGADO"
+    }
+  ],
+  "fase_2_formula_cuantitativa": {
+    "total_capsula_mg": 2000,
+    "subtotales": {
+      "activos_mg": 1579,
+      "excipientes_mg": 421,
+      "total_mg": 2000
+    },
+    "composicion": {
+      "Bisglicinato de magnesio": {
+        "cantidad_mg": 1429,
+        "porcentaje": "71.45%"
+      },
+      "Maltodextrina aglomerada": {
+        "cantidad_mg": 421,
+        "porcentaje": "21.05%"
+      },
+      "Ácido ascórbico": {
+        "cantidad_mg": 80,
+        "porcentaje": "4.00%"
+      },
+      "Gluconato de zinc": {
+        "cantidad_mg": 70,
+        "porcentaje": "3.50%"
+      }
+    }
+  },
+  "fase_2b_proceso_fabricacion": {
+    "pasos": [
+      {
+        "paso": 1,
+        "operacion": "Pesada de materiales",
+        "descripcion": "Pesar cada componente en balanza calibrada siguiendo orden decreciente de cantidad (maltodextrina, bisglicinato de magnesio, ácido ascórbico, gluconato de zinc). Verificar identidad y pureza por etiqueta/certificado de análisis. Registrar lotes de materia prima.",
+        "punto_critico": true,
+        "condiciones": {
+          "tiempo": "Según rendimiento",
+          "temperatura": "<25°C",
+          "humedad_relativa": "<45%"
+        }
+      },
+      {
+        "paso": 2,
+        "operacion": "Tamizado individual",
+        "descripcion": "Tamizar cada material por separado mediante malla 40-60 para eliminar grumos, aglomerados y homogeneizar tamaño de partícula antes de la mezcla.",
+        "punto_critico": false,
+        "condiciones": {
+          "tiempo": "Continuo",
+          "temperatura": "Ambiente",
+          "humedad_relativa": "<45%"
+        }
+      },
+      {
+        "paso": 3,
+        "operacion": "Premix de activos minoritarios",
+        "descripcion": "En contenedor auxiliar, mezclar el ácido ascórbico y el gluconato de zinc con aproximadamente el 10% de la maltodextrina total (geometric dilution) para garantizar la distribución uniforme de las trazas antes de incorporar al bulk.",
+        "punto_critico": true,
+        "condiciones": {
+          "tiempo": "5 min",
+          "temperatura": "<25°C",
+          "humedad_relativa": "<40%"
+        }
+      },
+      {
+        "paso": 4,
+        "operacion": "Mezcla principal en V-blender",
+        "descripcion": "Cargar en mezcladora de doble cono o V-blender la maltodextrina restante, el bisglicinato de magnesio y el premix de activos minoritarios. Mezclar hasta obtener distribución homogénea. El bisglicinato de magnesio actúa como matriz de mayor densidad; la maltodextrina como diluyente ligero.",
+        "punto_critico": true,
+        "condiciones": {
+          "tiempo": "15-20 min",
+          "velocidad": "Media (según equipo)",
+          "temperatura": "<25°C",
+          "humedad_relativa": "<45%"
+        }
+      },
+      {
+        "paso": 5,
+        "operacion": "Comprobación de homogeneidad",
+        "descripcion": "Extraer muestras representativas en 3 puntos (superior, medio e inferior) del tambor. Analizar contenido de zinc como marcador de traza (dosis minoritaria). Coefficient of Variation (CV) objetivo <5%. Si falla, extender mezcla 5 min adicionales y reanalizar.",
+        "punto_critico": true,
+        "condiciones": {
+          "tiempo": "Según laboratorio",
+          "temperatura": "Ambiente controlado"
+        }
+      },
+      {
+        "paso": 6,
+        "operacion": "Envasado en stick aluminio monodosis",
+        "descripcion": "Dosificar el polvo en stick de aluminio termosellable mediante sistema de sinfín o báscula de pérdida de peso. Peso dosis objetivo 2000 mg. Realizar sellado longitudinal y transversal por calor controlado. Incluir opcionalmente sobrecito desecante en bobinado previo.",
+        "punto_critico": false,
+        "condiciones": {
+          "tiempo": "Continuo",
+          "temperatura": "<25°C",
+          "humedad_relativa": "<45%"
+        }
+      },
+      {
+        "paso": 7,
+        "operacion": "Control en proceso y peso de dosis",
+        "descripcion": "Verificar peso neto de stick cada 15 min (n=10), integridad de sellado por presión manual, apariencia del polvo (blanco a crema, sin decoloración) y hermeticidad por inmersión. Rechazar lotes de envasado con desviación >±5% en peso.",
+        "punto_critico": true,
+        "condiciones": {
+          "tiempo": "Cada 15 min",
+          "temperatura": "Ambiente",
+          "humedad_relativa": "<45%"
+        }
+      }
+    ]
+  },
+  "fase_3_mapa_reactividad": [
+    {
+      "formato": "Stick de aluminio monodosis",
+      "caducidad_estimada": "36 meses (óptima); 18 meses (subóptima >30°C o HR>60%)",
+      "riesgo_global": "MEDIO",
+      "parametros": [
+        {
+          "parametro": "Humedad (>40% HR)",
+          "nivel_riesgo": "BAJO",
+          "ingredientes_afectados": [
+            "Ácido ascórbico",
+            "Gluconato de zinc"
+          ],
+          "medida_preventiva": "Barrera de aluminio termosellado; HR de proceso <45%; desecante opcional en bobinado"
+        },
+        {
+          "parametro": "Luz UV",
+          "nivel_riesgo": "BAJO",
+          "ingredientes_afectados": [
+            "Ácido ascórbico"
+          ],
+          "medida_preventiva": "Opacidad total del laminado de aluminio; almacenaje en ausencia de luz"
+        },
+        {
+          "parametro": "Temperatura (>25°C)",
+          "nivel_riesgo": "MEDIO",
+          "ingredientes_afectados": [
+            "Ácido ascórbico"
+          ],
+          "medida_preventiva": "Almacenaje y transporte refrigerado o entre 15-25°C; evitar picos térmicos"
+        },
+        {
+          "parametro": "Oxígeno",
+          "nivel_riesgo": "MEDIO",
+          "ingredientes_afectados": [
+            "Ácido ascórbico"
+          ],
+          "medida_preventiva": "Sellado hermético; posible enriquecimiento con N2 durante mezcla/llenado"
+        },
+        {
+          "parametro": "pH del medio",
+          "nivel_riesgo": "BAJO",
+          "ingredientes_afectados": [],
+          "medida_preventiva": "No aplica en formulación sólida seca"
+        }
+      ]
+    },
+    {
+      "formato": "Cápsula vegetal (HPMC) en blister",
+      "caducidad_estimada": "24 meses (óptima); 12 meses (subóptima)",
+      "riesgo_global": "MEDIO",
+      "parametros": [
+        {
+          "parametro": "Humedad (>40% HR)",
+          "nivel_riesgo": "MEDIO",
+          "ingredientes_afectados": [
+            "Ácido ascórbico",
+            "Gluconato de zinc"
+          ],
+          "medida_preventiva": "Blister aluminio/PVC con desecante en envase secundario; HR almacén <60%"
+        },
+        {
+          "parametro": "Luz UV",
+          "nivel_riesgo": "BAJO",
+          "ingredientes_afectados": [
+            "Ácido ascórbico"
+          ],
+          "medida_preventiva": "Blister opaco o cartucho de cartón"
+        },
+        {
+          "parametro": "Temperatura (>25°C)",
+          "nivel_riesgo": "MEDIO",
+          "ingredientes_afectados": [
+            "Ácido ascórbico"
+          ],
+          "medida_preventiva": "Cadena de frío 15-25°C"
+        },
+        {
+          "parametro": "Oxígeno",
+          "nivel_riesgo": "MEDIO",
+          "ingredientes_afectados": [
+            "Ácido ascórbico"
+          ],
+          "medida_preventiva": "Blister con barrera de aluminio"
+        },
+        {
+          "parametro": "pH del medio",
+          "nivel_riesgo": "BAJO",
+          "ingredientes_afectados": [],
+          "medida_preventiva": "No aplica"
+        }
+      ]
+    },
+    {
+      "formato": "Bote polvo HDPE con doble tapón",
+      "caducidad_estimada": "18 meses (óptima); 9 meses (subóptima)",
+      "riesgo_global": "ALTO",
+      "parametros": [
+        {
+          "parametro": "Humedad (>40% HR)",
+          "nivel_riesgo": "ALTO",
+          "ingredientes_afectados": [
+            "Ácido ascórbico",
+            "Gluconato de zinc",
+            "Bisglicinato de magnesio"
+          ],
+          "medida_preventiva": "Bote con rosca hermética, sello de inducción y dos desecantes; instrucciones de cierre inmediato"
+        },
+        {
+          "parametro": "Luz UV",
+          "nivel_riesgo": "MEDIO",
+          "ingredientes_afectados": [
+            "Ácido ascórbico"
+          ],
+          "medida_preventiva": "Envase opaco o ámbar; almacenaje en oscuridad"
+        },
+        {
+          "parametro": "Temperatura (>25°C)",
+          "nivel_riesgo": "MEDIO",
+          "ingredientes_afectados": [
+            "Ácido ascórbico"
+          ],
+          "medida_preventiva": "Almacén refrigerado"
+        },
+        {
+          "parametro": "Oxígeno",
+          "nivel_riesgo": "MEDIO",
+          "ingredientes_afectados": [
+            "Ácido ascórbico"
+          ],
+          "medida_preventiva": "Atmósfera modificada con N2 al envasar; cierre hermético"
+        },
+        {
+          "parametro": "pH del medio",
+          "nivel_riesgo": "BAJO",
+          "ingredientes_afectados": [],
+          "medida_preventiva": "No aplica"
+        }
+      ]
+    }
+  ],
+  "fase_4_alertas_navision": [],
+  "fuentes_consultadas": [],
+  "metadata": {
+    "version": "2.0",
+    "disclaimer": "Este documento es un borrador técnico. Las referencias NAVISION deben verificarse con el equipo de compras de Umbrella Group."
+  },
+  "_trazabilidad": {
+    "prompt_version": "2.0.0",
+    "model": "moonshotai/kimi-k2.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "timestamp_utc": "2026-05-12T14:53:05+00:00",
+    "duration_s": 264.82,
+    "attempts": 1,
+    "transient_retries": 0,
+    "deterministic_retries": 0
+  }
+}
