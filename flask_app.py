@@ -266,9 +266,16 @@ def load_run(run_id):
     return render_template("partials/main_content.html", **ctx)
 
 
+_DEJAVU_SANS = str(Path(__file__).resolve().parent / "dashboard" / "static" / "fonts" / "DejaVuSans.ttf")
+_DEJAVU_SANS_BOLD = str(Path(__file__).resolve().parent / "dashboard" / "static" / "fonts" / "DejaVuSans-Bold.ttf")
+
+
 @app.route("/download/<int:run_id>")
 def download_report(run_id):
+    import markdown as md_lib
+    from fpdf import FPDF
     from flask import Response
+
     run_data = get_run(run_id)
     if not run_data:
         return "Run not found", 404
@@ -280,12 +287,37 @@ def download_report(run_id):
         if r.get("output_md"):
             md_contents[r["agent_name"]] = r["output_md"]
 
-    md = _build_report_markdown(run_data["product_name"], results, md_contents)
-    filename = f"{run_data['product_name'] or 'informe'}_report.md"
+    md_text = _build_report_markdown(run_data["product_name"], results, md_contents)
+    body_html = md_lib.markdown(md_text, extensions=["tables", "fenced_code"])
+
+    class PDF(FPDF):
+        def header(self):
+            self.set_font("DejaVu", "", 8)
+            self.set_text_color(156, 163, 175)
+            self.cell(0, 8, "Umbrella — Análisis Regulatorio", align="L")
+            self.ln(2)
+
+        def footer(self):
+            self.set_y(-15)
+            self.set_font("DejaVu", "", 8)
+            self.set_text_color(156, 163, 175)
+            self.cell(0, 10, f"Página {self.page_no()}", align="C")
+
+    pdf = PDF(orientation="P", unit="mm", format="A4")
+    pdf.add_font("DejaVu", "", _DEJAVU_SANS)
+    pdf.add_font("DejaVu", "B", _DEJAVU_SANS_BOLD)
+    pdf.set_margins(left=22, top=20, right=22)
+    pdf.set_auto_page_break(auto=True, margin=18)
+    pdf.add_page()
+    pdf.write_html(body_html)
+
+    pdf_bytes = bytes(pdf.output())
+    product = run_data["product_name"] or "informe"
+    filename = f"{product}_informe_regulatorio.pdf"
     return Response(
-        md,
-        mimetype="text/markdown",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        pdf_bytes,
+        mimetype="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=\"{filename}\""},
     )
 
 

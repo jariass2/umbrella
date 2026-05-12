@@ -101,10 +101,16 @@
 </div>
 
 <!-- Download bar -->
-{% if all_completed and agent_results %}
+{% if not pipeline_running and agent_results %}
 <div class="download-bar">
-  <div class="download-label"><span class="download-check">✓</span> Informe completo generado</div>
-  <a href="/download/{{ run_id }}" class="btn-download">Descargar Informe (Markdown)</a>
+  <div class="download-label">
+    {% if all_completed %}
+    <span class="download-check">✓</span> Informe completo generado
+    {% else %}
+    <span class="download-check" style="color:var(--warn)">!</span> Informe parcial (algunos agentes fallaron)
+    {% endif %}
+  </div>
+  <a href="/download/{{ run_id }}" class="btn-download">Descargar Informe (PDF)</a>
 </div>
 {% endif %}
 
