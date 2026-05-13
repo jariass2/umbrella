@@ -259,8 +259,10 @@ def analyze():
     )
     thread.start()
 
-    ctx = _get_main_context(run_id, pipeline_running=True)
-    return render_template("partials/main_content.html", **ctx)
+    from flask import make_response
+    resp = make_response("", 204)
+    resp.headers["HX-Redirect"] = f"/?run_id={run_id}"
+    return resp
 
 
 @app.route("/pipeline-status/<int:run_id>")
