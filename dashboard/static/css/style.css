@@ -282,25 +282,58 @@ body {
 }
 
 /* === PIPELINE STRIP === */
-.pipeline {
+/* === PIPELINE DAG === */
+.pipeline-dag {
   display: flex;
-  gap: 0;
+  align-items: flex-start;
+  gap: 4px;
   margin-bottom: 24px;
   overflow-x: auto;
-  padding-bottom: 2px;
+  padding: 16px 14px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
 }
-.pipeline::-webkit-scrollbar { height: 3px; }
-.pipeline::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.pipeline-dag::-webkit-scrollbar { height: 3px; }
+.pipeline-dag::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.wave-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.wave-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+.wave-agents {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.wave-arrow {
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+  color: var(--text-muted);
+  margin-top: 26px;
+  flex-shrink: 0;
+}
 
 .agent-card {
-  flex: 1;
-  min-width: 95px;
-  padding: 14px 8px 12px;
+  min-width: 82px;
+  max-width: 110px;
+  padding: 12px 8px 10px;
   border-top: 2px solid transparent;
   border-right: 1px solid var(--border-dim);
   position: relative;

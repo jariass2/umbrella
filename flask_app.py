@@ -41,6 +41,14 @@ AGENT_LABELS = {
     "QC": "QC — Plan de Control de Calidad",
 }
 
+# DAG wave structure — mirrors pipeline/orchestrator.py execution order
+AGENT_WAVES = [
+    ["KIC", "Formatos", "Docs Internos", "QC"],  # Wave 1: parallel, no deps
+    ["Regulatorio"],                               # Wave 2: after KIC
+    ["Ficha Técnica", "Claims"],                   # Wave 3: parallel, after Regulatorio
+    ["Etiqueta"],                                  # Wave 4: after Ficha Técnica + Claims
+]
+
 # Pipeline state: run_id -> Queue
 _pipeline_queues: dict[int, Queue] = {}
 
@@ -120,6 +128,7 @@ def _get_main_context(run_id: int | None = None, pipeline_running: bool = False)
 
     return {
         "agent_order": AGENT_ORDER,
+        "agent_waves": AGENT_WAVES,
         "agent_statuses": agent_statuses,
         "agent_results": agent_results,
         "md_contents": md_contents,
