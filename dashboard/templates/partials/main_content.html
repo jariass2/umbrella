@@ -48,11 +48,15 @@
   {% set data = agent_results.get(agent) %}
 
   {% if status == 'completed' and data %}
-  <div class="result-card card-done expanded">
+  {% set headline = data | agent_headline(agent) %}
+  <div class="result-card card-done" data-agent="{{ agent }}">
     <div class="result-header" onclick="toggleCard(this)">
       <div class="result-header-left">
         <span class="result-num">{{ loop.index }}</span>
-        <div><div class="result-title">{{ agent_labels[agent] }}</div></div>
+        <div>
+          <div class="result-title">{{ agent_labels[agent] }}</div>
+          {% if headline %}<div class="result-headline">{{ headline }}</div>{% endif %}
+        </div>
       </div>
       <div class="result-header-right">
         {% set warnings = data.get('avisos') or data.get('warnings') or data.get('advertencias') %}
@@ -64,11 +68,16 @@
         <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
       </div>
     </div>
-    <div class="result-body">
-      <div class="md-content{% if md_contents.get(agent) %} md-body{% endif %}"
-           {% if md_contents.get(agent) %}data-md="{{ md_contents[agent] | e }}"{% endif %}>
-        {% if not md_contents.get(agent) %}{{ data | summarize }}{% endif %}
+    <div class="result-body collapsed">
+      <div class="summary-content">
+        {{ data | summary_html(agent) }}
       </div>
+      {% if md_contents.get(agent) %}
+      <details class="md-details">
+        <summary>Ver informe completo</summary>
+        <div class="md-content md-body" data-md="{{ md_contents[agent] | e }}"></div>
+      </details>
+      {% endif %}
     </div>
   </div>
 
@@ -128,8 +137,13 @@
 </div>
 {% endif %}
 
-<!-- Auto-poll when pipeline is running -->
-{% if pipeline_running %}
-<div hx-get="/pipeline-status/{{ run_id }}" hx-trigger="every 2s" hx-target="#main-content" hx-swap="innerHTML">
+<!-- Stop control + auto-poll when pipeline is running -->
+{% if pipeline_running and run_id %}
+<div class="stop-bar">
+  <span class="stop-label">Análisis en curso...</span>
+  <button class="btn-stop"
+          hx-post="/stop/{{ run_id }}"
+          hx-swap="none">Detener análisis</button>
 </div>
+<div hx-get="/pipeline-status/{{ run_id }}" hx-trigger="every 2s" hx-target="#main-content" hx-swap="innerHTML"></div>
 {% endif %}

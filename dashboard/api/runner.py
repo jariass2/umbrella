@@ -74,13 +74,22 @@ def run_pipeline(formula_text: str, output_dir: str, status_queue: Queue):
         cwd=PROJECT_ROOT,
         env={**os.environ, "PYTHONUNBUFFERED": "1"},
     )
+    status_queue.put({"type": "process", "pid": proc.pid})
 
-    # Thread para leer stdout sin bloquear
+    # Thread para leer stdout sin bloquear.
+    # Cada línea se duplica a la Queue (para el dashboard) y a pipeline.log
+    # (para diagnóstico — incluye stderr porque el Popen lo mergea en stdout).
     stdout_lines: Queue[str] = Queue()
+    log_path = os.path.join(output_dir, "pipeline.log")
 
     def _reader():
-        for line in proc.stdout:
-            stdout_lines.put(line)
+        with open(log_path, "w", encoding="utf-8", buffering=1) as logf:
+            for line in proc.stdout:
+                stdout_lines.put(line)
+                try:
+                    logf.write(line)
+                except OSError:
+                    pass
 
     reader = threading.Thread(target=_reader, daemon=True)
     reader.start()
@@ -123,6 +132,9 @@ def run_pipeline(formula_text: str, output_dir: str, status_queue: Queue):
                         data = json.load(f)
                 except (json.JSONDecodeError, OSError):
                     continue
+
+                if not isinstance(data, dict):
+                    data = {"_payload": data}
 
                 md_content = None
                 if os.path.exists(md_path):

@@ -1,8 +1,46 @@
 """Convierte filas estructuradas de ingredientes al formato de texto del pipeline."""
 
 from __future__ import annotations
+import re
 
 VALID_UNITS = ["mg", "g", "µg", "mcg", "% VRN", "UI"]
+
+
+def parse_formula(formula_text: str) -> tuple[str, list[dict]]:
+    """Parsea el texto de fórmula devolviendo (product_name, ingredients)."""
+    lines = formula_text.strip().splitlines()
+    product_name = lines[0].strip() if lines else ""
+    ingredients = []
+    for line in lines[1:]:
+        line = line.strip()
+        if not line.startswith("- "):
+            continue
+        line = line[2:]
+        # Extraer notas entre paréntesis al final
+        notes = ""
+        m = re.search(r'\(([^)]+)\)\s*$', line)
+        if m:
+            notes = m.group(1)
+            line = line[:m.start()].strip()
+        if ":" not in line:
+            continue
+        name, rest = line.split(":", 1)
+        rest = rest.strip()
+        # Detectar unidad (de mayor a menor longitud para evitar coincidencias parciales)
+        unit = "mg"
+        dosage = rest
+        for u in sorted(VALID_UNITS, key=len, reverse=True):
+            if rest.endswith(u):
+                dosage = rest[:-len(u)].strip()
+                unit = u
+                break
+        else:
+            # fallback: separar número de texto
+            fm = re.match(r'^([0-9.,]+)\s*(.*)$', rest)
+            if fm:
+                dosage, unit = fm.group(1), fm.group(2).strip() or "mg"
+        ingredients.append({"name": name.strip(), "dosage": dosage, "unit": unit, "notes": notes})
+    return product_name, ingredients
 
 
 def rows_to_formula(product_name: str, ingredients: list[dict]) -> str:

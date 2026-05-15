@@ -97,6 +97,13 @@ def get_agent_results(run_id: int) -> list[dict]:
         return [dict(r) for r in rows]
 
 
+def delete_run(run_id: int):
+    with _conn() as conn:
+        conn.execute("DELETE FROM agent_results WHERE run_id = ?", (run_id,))
+        conn.execute("DELETE FROM runs WHERE id = ?", (run_id,))
+        conn.commit()
+
+
 def list_runs(limit: int = 20) -> list[dict]:
     """Returns runs with completed_count pre-computed (single query)."""
     with _conn() as conn:

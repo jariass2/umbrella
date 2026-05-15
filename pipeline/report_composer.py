@@ -69,7 +69,12 @@ def _load(filename: str, output_dir: str) -> dict:
     path = os.path.join(output_dir, f"{filename}.json")
     if os.path.exists(path):
         with open(path, encoding="utf-8") as f:
-            return json.load(f)
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                return {}
+        if isinstance(data, dict):
+            return data
     return {}
 
 

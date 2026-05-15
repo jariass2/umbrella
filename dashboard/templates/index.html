@@ -27,7 +27,7 @@
     </div>
 
     <form id="analyze-form" hx-post="/analyze" hx-target="#main-content" hx-swap="innerHTML">
-      <div class="form-body">
+      <div id="product-name-field" class="form-body">
         <div class="field">
           <input type="text" name="product_name" placeholder="Nombre del producto" value="{{ product_name or '' }}">
         </div>
@@ -54,7 +54,7 @@
         </div>
 
         <button type="button" class="btn-add" id="add-ingredient-btn">+ Añadir ingrediente</button>
-        <button type="submit" class="btn-run" {{ 'disabled' if pipeline_running else '' }}>
+        <button type="submit" class="btn-run" id="btn-run" {{ 'disabled' if pipeline_running else '' }}>
           {{ 'Analizando...' if pipeline_running else 'Analizar Fórmula' }}
         </button>
       </div>
@@ -68,11 +68,18 @@
       {% for run in runs %}
       <div class="history-item {{ 'active' if run.id == selected_run_id else '' }}"
            hx-get="/run/{{ run.id }}" hx-target="#main-content" hx-swap="innerHTML">
-        <div class="history-dot {% if run.status == 'completed' %}done{% elif run.status == 'running' %}running{% elif run.status == 'error' %}error{% else %}other{% endif %}"></div>
+        <div class="history-dot {% if run.status == 'completed' %}done{% elif run.status == 'running' %}running{% elif run.status == 'error' %}error{% elif run.status == 'cancelled' %}cancelled{% else %}other{% endif %}"></div>
         <div class="history-info">
           <div class="history-name">{{ run.product_name or 'Sin nombre' }}</div>
           <div class="history-meta">#{{ run.id }} — {{ run.completed_count }}/{{ run.total_agents }} agentes</div>
         </div>
+        <button class="history-delete"
+                title="Eliminar análisis"
+                hx-delete="/run/{{ run.id }}?current={{ selected_run_id or 0 }}"
+                hx-target="closest .history-item"
+                hx-swap="outerHTML"
+                hx-confirm="¿Eliminar &quot;{{ run.product_name or 'Sin nombre' }}&quot;? Esta acción no se puede deshacer."
+                onclick="event.stopPropagation()">×</button>
       </div>
       {% endfor %}
       {% if not runs %}
@@ -84,6 +91,18 @@
   <!-- Main Content -->
   <div class="main" id="main-content">
     {% include 'partials/main_content.html' %}
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div id="confirm-modal" class="modal-backdrop" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+    <div class="modal-title" id="confirm-modal-title">Confirmar acción</div>
+    <div class="modal-body" id="confirm-modal-body"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" id="confirm-modal-cancel">Cancelar</button>
+      <button type="button" class="btn-danger" id="confirm-modal-ok">Eliminar</button>
+    </div>
   </div>
 </div>
 
@@ -111,16 +130,68 @@ function renderMarkdown() {
   });
 }
 
+const expandedAgents = new Set();
+
 function toggleCard(header) {
   const card = header.closest('.result-card');
   const body = card.querySelector('.result-body');
   if (!body) return;
-  card.classList.toggle('expanded');
-  body.classList.toggle('collapsed');
+  const expanded = body.classList.toggle('collapsed') === false;
+  card.classList.toggle('expanded', expanded);
+  const agent = card.dataset.agent;
+  if (agent) {
+    if (expanded) expandedAgents.add(agent); else expandedAgents.delete(agent);
+  }
 }
 
-document.addEventListener('DOMContentLoaded', () => { renderMarkdown(); });
-document.body.addEventListener('htmx:afterSwap', () => { renderMarkdown(); });
+function restoreExpanded() {
+  document.querySelectorAll('.result-card[data-agent]').forEach(card => {
+    if (expandedAgents.has(card.dataset.agent)) {
+      const body = card.querySelector('.result-body');
+      if (body) {
+        body.classList.remove('collapsed');
+        card.classList.add('expanded');
+      }
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => { renderMarkdown(); restoreExpanded(); });
+document.body.addEventListener('htmx:afterSwap', () => { renderMarkdown(); restoreExpanded(); });
+
+// Custom confirm modal — replaces the native window.confirm used by hx-confirm.
+(function() {
+  const modal = document.getElementById('confirm-modal');
+  const body = document.getElementById('confirm-modal-body');
+  const btnOk = document.getElementById('confirm-modal-ok');
+  const btnCancel = document.getElementById('confirm-modal-cancel');
+  let pendingIssue = null;
+
+  function close() {
+    modal.hidden = true;
+    pendingIssue = null;
+  }
+
+  btnCancel.addEventListener('click', close);
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', (e) => {
+    if (!modal.hidden && e.key === 'Escape') close();
+  });
+  btnOk.addEventListener('click', () => {
+    const issue = pendingIssue;
+    close();
+    if (issue) issue(true);
+  });
+
+  document.body.addEventListener('htmx:confirm', (evt) => {
+    if (!evt.detail.question) return;
+    evt.preventDefault();
+    body.textContent = evt.detail.question;
+    pendingIssue = evt.detail.issueRequest;
+    modal.hidden = false;
+    setTimeout(() => btnOk.focus(), 0);
+  });
+})();
 </script>
 
 </body>

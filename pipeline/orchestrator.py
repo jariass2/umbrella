@@ -380,6 +380,25 @@ def run_agent(agent: Agent, prompt: str, label: str,
             else:
                 raise ValueError(f"Respuesta inesperada del agente: type={type(content).__name__}")
 
+            if not isinstance(data, dict):
+                if isinstance(data, list):
+                    dicts = [x for x in data if isinstance(x, dict) and x]
+                    if len(dicts) == 1:
+                        print(f"⚠️  [{label}] respuesta top-level era lista; se extrae el único dict")
+                        data = dicts[0]
+                    elif len(dicts) > 1:
+                        print(f"⚠️  [{label}] respuesta top-level era lista con {len(dicts)} dicts; se fusionan")
+                        merged = {}
+                        for d in dicts:
+                            merged.update(d)
+                        data = merged
+                    else:
+                        print(f"⚠️  [{label}] respuesta top-level no es dict ({type(data).__name__}); se envuelve en _payload")
+                        data = {"_payload": data}
+                else:
+                    print(f"⚠️  [{label}] respuesta top-level no es dict ({type(data).__name__}); se envuelve en _payload")
+                    data = {"_payload": data}
+
             elapsed = time.time() - t0
             monitor_agent_end(label, success=True, duration_s=elapsed)
 
@@ -388,12 +407,19 @@ def run_agent(agent: Agent, prompt: str, label: str,
             _validate_defensively(data, output_model, label)
 
             # Capturar tokens del modelo antes de inyectar trazabilidad
+            # response.metrics es un Dict[str, list] (Agno agrega valores por mensaje),
+            # no un objeto. Hay que sumar las listas.
             input_tokens = 0
             output_tokens = 0
             if hasattr(response, "metrics") and response.metrics:
                 m = response.metrics
-                input_tokens = getattr(m, "input_tokens", 0) or 0
-                output_tokens = getattr(m, "output_tokens", 0) or 0
+                def _sum_metric(key: str) -> int:
+                    v = m.get(key) if isinstance(m, dict) else getattr(m, key, 0)
+                    if isinstance(v, list):
+                        return sum(int(x or 0) for x in v)
+                    return int(v or 0)
+                input_tokens = _sum_metric("input_tokens")
+                output_tokens = _sum_metric("output_tokens")
                 total_tokens = input_tokens + output_tokens
                 print(f"📊 Tokens: {input_tokens} in + {output_tokens} out = {total_tokens} total | ⏱️ {elapsed:.1f}s")
 
@@ -578,7 +604,8 @@ def ctx_etiqueta(results: dict) -> str:
 
 
 def _run_step(key: str, label: str, env_prefix: int,
-               instructions: str, prompt: str):
+               instructions: str, prompt: str,
+               started_event: threading.Event | None = None):
     """Ejecuta un agente individual (para usar dentro de ThreadPoolExecutor)."""
     use_search = key in AGENTS_WITH_SEARCH
     agent = make_agent(label, AGENT_PREFIXES[env_prefix], use_search=use_search)
@@ -590,6 +617,8 @@ def _run_step(key: str, label: str, env_prefix: int,
     sem = _get_semaphore(base_url)
     print(f"⏳ [{label}] esperando slot en endpoint ({base_url})...")
     with sem:
+        if started_event is not None:
+            started_event.set()
         print(f"🔓 [{label}] slot adquirido")
         data = run_agent(agent, prompt, label,
                          output_model=output_model,
@@ -647,15 +676,21 @@ def main(argv: list[str] | None = None):
 
     with ThreadPoolExecutor(max_workers=4) as pool:
 
-        # Wave 1: agentes sin dependencias — arrancan todos en paralelo
+        # Wave 1: KIC arranca primero (path crítico → Regulatorio lo espera).
+        # Los demás se lanzan solo después de que KIC haya adquirido su slot
+        # en el semáforo del endpoint, garantizando que no le ganen la plaza.
         monitor_wave(1, "KIC + Formatos + Docs Internos + QC (paralelo)")
         print(f"\n{'─'*60}")
         print("  WAVE 1: KIC + Formatos + Docs Internos + QC (paralelo)")
         print(f"{'─'*60}")
 
+        kic_slot_acquired = threading.Event()
         fut_kic = pool.submit(
             _run_step, "KIC", "Agente 1: KIC v2", 1, KIC_INSTRUCTIONS,
-            f"Analiza la siguiente fórmula:\n\n{F}")
+            f"Analiza la siguiente fórmula:\n\n{F}", kic_slot_acquired)
+
+        # Esperar a que KIC tenga su slot (máx. 60 s por si el endpoint tarda)
+        kic_slot_acquired.wait(timeout=60)
 
         fut_formatos = pool.submit(
             _run_step, "Formatos", "Agente 6: Formatos v2", 6, FORMATOS_INSTRUCTIONS,
