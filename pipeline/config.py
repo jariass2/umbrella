@@ -39,10 +39,11 @@ class AgentConfig:
     model: str
     api_key: str
     base_url: str
+    temperature: float = 0.1
 
     def __str__(self) -> str:
         key_preview = self.api_key[:8] + "..." if self.api_key else "(no key)"
-        return f"model={self.model} | base_url={self.base_url} | key={key_preview}"
+        return f"model={self.model} | base_url={self.base_url} | key={key_preview} | temperature={self.temperature}"
 
 
 def get_agent_config(prefix: str) -> AgentConfig:
@@ -73,7 +74,14 @@ def get_agent_config(prefix: str) -> AgentConfig:
             f"Define {prefix}_API_KEY, DEFAULT_API_KEY o ZAI_API_KEY en .env"
         )
 
-    return AgentConfig(model=model, api_key=api_key, base_url=base_url)
+    temperature = float(
+        os.getenv(f"{prefix}_TEMPERATURE")
+        or os.getenv("DEFAULT_TEMPERATURE")
+        or "0.1"
+    )
+
+    return AgentConfig(model=model, api_key=api_key, base_url=base_url,
+                       temperature=temperature)
 
 
 def print_pipeline_config() -> None:
