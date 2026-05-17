@@ -5,6 +5,11 @@ import re
 
 VALID_UNITS = ["mg", "g", "µg", "mcg", "% VRN", "UI"]
 
+MAX_PRODUCT_NAME_LEN = 200
+MAX_INGREDIENT_NAME_LEN = 120
+MAX_INGREDIENTS = 50
+MAX_DOSAGE_LEN = 20
+
 
 def parse_formula(formula_text: str) -> tuple[str, list[dict]]:
     """Parsea el texto de fórmula devolviendo (product_name, ingredients)."""
@@ -62,6 +67,10 @@ def validate_ingredient(name: str, dosage: str, unit: str) -> str | None:
     """Valida un ingrediente. Devuelve mensaje de error o None si es válido."""
     if not name.strip():
         return "Nombre vacío"
+    if len(name) > MAX_INGREDIENT_NAME_LEN:
+        return f"Nombre demasiado largo (máx. {MAX_INGREDIENT_NAME_LEN})"
+    if len(dosage or "") > MAX_DOSAGE_LEN:
+        return f"Dosis demasiado larga (máx. {MAX_DOSAGE_LEN} caracteres)"
     try:
         float(dosage.replace(",", "."))
     except (ValueError, AttributeError):

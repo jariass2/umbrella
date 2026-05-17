@@ -6,10 +6,13 @@ Se usa como alternativa cuando DuckDuckGo no devuelve resultados.
 from __future__ import annotations
 
 import json
+import logging
 import os
 
 from agno.tools import Toolkit
 from tools.monitor import monitor_search, monitor_search_result
+
+log = logging.getLogger(__name__)
 
 
 def _get_api_key() -> str:
@@ -19,6 +22,22 @@ def _get_api_key() -> str:
             "TAVILY_API_KEY no está definida. Añádela al .env o a las variables de entorno."
         )
     return key
+
+
+# Optional specific exception classes from tavily-python — fall back to a
+# tuple containing only Exception when the package version doesn't expose
+# them, so the code keeps working regardless of upstream churn.
+try:
+    from tavily.errors import (  # type: ignore
+        UsageLimitExceededError,
+        InvalidAPIKeyError,
+        MissingAPIKeyError,
+    )
+    _AUTH_ERRORS = (InvalidAPIKeyError, MissingAPIKeyError)
+    _QUOTA_ERRORS = (UsageLimitExceededError,)
+except Exception:  # pragma: no cover — older / restructured tavily
+    _AUTH_ERRORS = ()
+    _QUOTA_ERRORS = ()
 
 
 class TavilySearchTools(Toolkit):
@@ -49,6 +68,18 @@ class TavilySearchTools(Toolkit):
         ]
         return json.dumps(slim, ensure_ascii=False)
 
+    def _safe_search(self, label: str, **kwargs) -> dict | None:
+        """Wrap Tavily client call; log and downgrade errors to None."""
+        try:
+            return self._client.search(**kwargs)
+        except _AUTH_ERRORS as e:
+            log.error("[%s] Tavily auth error: %s", label, e)
+        except _QUOTA_ERRORS as e:
+            log.warning("[%s] Tavily quota exceeded: %s", label, e)
+        except Exception as e:  # network, timeout, malformed response
+            log.warning("[%s] Tavily search failed (%s): %s", label, type(e).__name__, e)
+        return None
+
     def web_search(self, query: str, max_results: int = 3) -> str:
         """Use this function to search the web for a query.
 
@@ -57,7 +88,7 @@ class TavilySearchTools(Toolkit):
             max_results: The maximum number of results to return.
         """
         monitor_search("Tavily", query)
-        results = self._client.search(query=query, max_results=max_results)
+        results = self._safe_search("Tavily", query=query, max_results=max_results)
 
         if not results or not results.get("results"):
             monitor_search_result("Tavily", 0)
@@ -75,7 +106,9 @@ class TavilySearchTools(Toolkit):
             max_results: The maximum number of results to return.
         """
         monitor_search("Tavily/News", query)
-        results = self._client.search(query=query, max_results=max_results, topic="news")
+        results = self._safe_search(
+            "Tavily/News", query=query, max_results=max_results, topic="news"
+        )
 
         if not results or not results.get("results"):
             monitor_search_result("Tavily/News", 0)

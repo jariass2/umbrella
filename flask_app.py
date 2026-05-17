@@ -19,7 +19,10 @@ from dashboard.api.store import (
     get_run, list_runs, get_agent_results, load_run_results,
     set_run_output_dir, delete_run,
 )
-from dashboard.utils.formula_parser import VALID_UNITS, validate_ingredient, rows_to_formula, parse_formula
+from dashboard.utils.formula_parser import (
+    VALID_UNITS, validate_ingredient, rows_to_formula, parse_formula,
+    MAX_PRODUCT_NAME_LEN, MAX_INGREDIENTS,
+)
 
 THIS_DIR = Path(__file__).resolve().parent
 app = Flask(
@@ -829,21 +832,34 @@ def analyze():
     units = request.form.getlist("ing_unit")
 
     errors = []
+    if not product_name:
+        errors.append("Falta el nombre del producto.")
+    elif len(product_name) > MAX_PRODUCT_NAME_LEN:
+        errors.append(f"Nombre de producto demasiado largo (máx. {MAX_PRODUCT_NAME_LEN}).")
+
+    rows = list(zip(names, dosages, units))
+    if len(rows) > MAX_INGREDIENTS:
+        return (
+            f'<div class="error-msg">Demasiados ingredientes ({len(rows)} > {MAX_INGREDIENTS}).</div>',
+            400,
+        )
+
     valid_ingredients = []
-    for name, dosage, unit in zip(names, dosages, units):
+    for name, dosage, unit in rows:
         if not name.strip():
             continue
         err = validate_ingredient(name, dosage, unit)
         if err:
-            errors.append(f"{name}: {err}")
+            errors.append(f"{name[:60]}: {err}")
         else:
-            valid_ingredients.append({"name": name, "dosage": dosage, "unit": unit})
+            valid_ingredients.append({"name": name.strip(), "dosage": dosage.strip(), "unit": unit})
 
     if errors:
-        return f'<div class="error-msg">{"<br>".join(errors)}</div>'
+        safe = Markup("<br>").join(errors)
+        return f'<div class="error-msg">{safe}</div>', 400
 
     if not valid_ingredients:
-        return '<div class="warning-msg">Añade al menos un ingrediente.</div>'
+        return '<div class="warning-msg">Añade al menos un ingrediente.</div>', 400
 
     formula_text = rows_to_formula(product_name, valid_ingredients)
     run_id = create_run(product_name, formula_text)

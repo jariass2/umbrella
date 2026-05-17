@@ -675,7 +675,8 @@ def main(argv: list[str] | None = None):
     #   Claims → Regulatorio
     #   Etiqueta → Claims + Ficha Técnica
 
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    max_workers = max(1, int(os.environ.get("PIPELINE_MAX_WORKERS", "4")))
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
 
         # Wave 1: KIC arranca primero (path crítico → Regulatorio lo espera).
         # Los demás se lanzan solo después de que KIC haya adquirido su slot
