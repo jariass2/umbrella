@@ -1,6 +1,29 @@
+# Secrets / env
 .env
+
+# Python
 .venv/
 __pycache__/
 *.pyc
+
+# OS
 .DS_Store
+
+# Tooling
 .gstack/
+.claude/
+
+# Local databases (SQLite + WAL)
+dashboard.db
+dashboard.db-shm
+dashboard.db-wal
+*.db
+*.db-shm
+*.db-wal
+
+# Pipeline run artifacts
+outputs/
+
+# Local scratch
+Test
+docs/

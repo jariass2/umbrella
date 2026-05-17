@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import secrets
 import threading
 from datetime import datetime
 from pathlib import Path
@@ -26,7 +27,12 @@ app = Flask(
     template_folder=str(THIS_DIR / "dashboard" / "templates"),
     static_folder=str(THIS_DIR / "dashboard" / "static"),
 )
-app.secret_key = os.environ.get("FLASK_SECRET", "umbrella-dev-key")
+_secret = os.environ.get("FLASK_SECRET")
+if not _secret:
+    if os.environ.get("FLASK_ENV") == "production":
+        raise RuntimeError("FLASK_SECRET must be set in production")
+    _secret = secrets.token_hex(32)
+app.secret_key = _secret
 
 PROJECT_ROOT = str(Path(__file__).resolve().parent)
 
@@ -1322,4 +1328,6 @@ def summary_html_filter(data, agent):
 
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True, port=8503)
+    debug = os.environ.get("FLASK_DEBUG", "0") == "1"
+    port = int(os.environ.get("FLASK_PORT", "8503"))
+    app.run(debug=debug, port=port)
