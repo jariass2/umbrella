@@ -180,16 +180,18 @@ Para cada formato analiza:
 Asigna una puntuación global 0-10 a cada formato.
 
 ## FASE 2 — Análisis de competencia y tendencias
-Usa web_search para investigar:
-- ¿Cuál es el formato predominante para productos inmunitarios (vitamina C + zinc + D3)?
-- ¿Qué marcas líderes existen y qué formato usan?
-- ¿Cuál es la tendencia emergente en este segmento (2023-2025)?
+Apóyate en tu conocimiento del mercado de complementos alimentarios en España y UE \
+hasta tu fecha de corte para identificar:
+- Formato predominante en la categoría del producto (ej: inmunidad → stick/sobre vs cápsula)
+- Marcas líderes referenciales y formato que usan
+- Tendencias estructurales del segmento (no efímeras): personalización, monodosis, \
+  formatos clean-label, premiumización en farmacia, etc.
 - Oportunidades de diferenciación por formato
 
-Consultas sugeridas:
-- "immune supplement vitamin C zinc D3 format market trends 2024"
-- "complemento inmunidad vitamina C zinc formato mercado España"
-- "immune complex supplement stick sachets capsules market Spain pharmacy"
+Importante: este agente NO tiene web_search. No cites datos de mercado que requieran \
+verificación en tiempo real (cuotas exactas, lanzamientos del último trimestre, precios). \
+Si una afirmación necesitaría verificación de mercado actualizada, márcala como supuesto \
+("a confirmar con estudio de mercado") en lugar de presentarla como un dato cerrado.
 
 ## FASE 3 — Innovación de ingredientes
 Analiza cómo esta fórmula se diferencia de productos similares en el mercado:
@@ -205,9 +207,10 @@ Con toda la información anterior:
 3. Indica condiciones para cambiar de formato en el futuro (ej: si se amplía la gama)
 
 # USO DE WEB_SEARCH
-Usa web_search con moderación. Límite: MÁXIMO 1 búsqueda en total.
-Solo busca tendencias de mercado si necesitas datos actualizados de 2024-2025 para la Fase 2. \
-NO busques estabilidad de ingredientes por formato — usa tu conocimiento técnico.
+NO uses web_search. Este agente no tiene acceso a herramientas externas. Toda la \
+evaluación se apoya en tu conocimiento del mercado y del comportamiento técnico de los \
+formatos. Las afirmaciones que requieran verificación de mercado en tiempo real deben \
+declararse explícitamente como supuestos a confirmar.
 
 # FORMATO DE SALIDA
 Responde SIEMPRE como JSON válido, sin fences markdown, sin texto antes ni después.
@@ -225,6 +228,14 @@ Usa EXACTAMENTE estas claves de nivel superior:
         "desventajas_clave": ["desventaja 1"]
       }
     ]
+  },
+  "fase_2_analisis_competencia": {
+    "formato_predominante": "Formato dominante en la categoría",
+    "marcas_lideres": [
+      {"marca": "Marca referencial", "formato": "stick / cápsula / vial", "posicionamiento": "premium farmacia / lifestyle"}
+    ],
+    "tendencias_2024_2025": ["tendencia estructural 1", "tendencia estructural 2"],
+    "oportunidades_diferenciacion": "Síntesis de oportunidades de diferenciación por formato"
   },
   "fase_3_innovacion_ingredientes": {
     "propuesta_innovacion": "Narrativa de innovación para el producto",

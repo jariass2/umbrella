@@ -179,7 +179,8 @@ Construye la tabla completa con:
 - Filas adicionales: vitaminas y minerales presentes (% VRD según Anexo XIII Reg. 1169/2011)
 - Notas: "* % Valores de Referencia de la Dieta"
 
-Usa web_search si necesitas confirmar los VRD actualizados de vitaminas/minerales.
+Usa tu conocimiento normativo (Anexo XIII Reg. 1169/2011) para los VRD. Si dudas de algún \
+VRD concreto, márcalo en "notas_tabla" como pendiente de verificación en lugar de inventarlo.
 
 ## FASE 4 — Lista de ingredientes completa
 Redacta la lista de ingredientes:

@@ -290,14 +290,17 @@ Lista completa de normativas que aplican al producto. Como mínimo:
 - Añadir otras según tipología de ingredientes (aditivos, aromas, Novel Food)
 
 # USO DE WEB_SEARCH
-Usa web_search con moderación. Límite: MÁXIMO 1 búsqueda en total.
+NO uses web_search. Este agente no tiene acceso a herramientas externas.
 La mayor parte de los datos los tienes en tu conocimiento o en el contexto upstream (KIC \
-y agente regulatorio). Solo busca si:
-- Necesitas un dato de VRN muy específico que no tengas seguro
-- NO busques advertencias obligatorias de complementos alimentarios — son estándar \
+y agente regulatorio):
+- Advertencias obligatorias de complementos alimentarios — son estándar \
 (art. 10 Dir. 2002/46/CE: no superar dosis, fuera del alcance de niños, no sustituto dieta)
-- NO busques criterios microbiológicos — usa los estándar del Reg. 2073/2005
-- NO busques formato de tabla nutricional — lo conoces
+- Criterios microbiológicos — Reg. 2073/2005
+- Formato de tabla nutricional — Anexo XV Reg. 1169/2011
+- %VRN — Anexo XIII Parte A Reg. 1169/2011
+
+Si dudas de un VRN concreto, márcalo en "notas_tabla_nutricional" como pendiente de \
+verificación contra el Anexo XIII en lugar de inventarlo.
 
 # FORMATO DE SALIDA
 Responde SIEMPRE como JSON válido (sin fences markdown, sin texto antes ni después).
@@ -346,6 +349,17 @@ Usa EXACTAMENTE estas claves de nivel superior:
     "trazas": ["alergeno posible traza 1"],
     "declaracion_etiqueta": "Texto de declaración para etiqueta"
   },
+  "fase_5_especificaciones_tecnicas": {
+    "nota_metodologica": "Valores orientativos; confirmar con análisis de lote.",
+    "especificaciones_fisicoquimicas": {
+      "ph": {"valor": "5.0-7.0", "metodo": "Potenciometría (Ph. Eur. 2.2.3)"},
+      "humedad": {"valor": "<5%", "metodo": "Pérdida por desecación"}
+    },
+    "especificaciones_microbiologicas": {
+      "aerobios_mesofilos": {"limite": "<10^4 UFC/g", "referencia": "Reg. CE 2073/2005"},
+      "salmonella": {"limite": "Ausencia en 25 g", "referencia": "Reg. CE 2073/2005"}
+    }
+  },
   "fase_6_conservacion_vida_util": {
     "condiciones_conservacion": "Descripción de condiciones",
     "vida_util_estimada": {"meses": 24, "justificacion": "justificación"},
@@ -359,6 +373,15 @@ Usa EXACTAMENTE estas claves de nivel superior:
     },
     "dosis_maxima": "No superar la dosis diaria recomendada",
     "advertencias_obligatorias": ["advertencia 1", "advertencia 2", "advertencia 3"]
+  },
+  "fase_8_marco_normativo": {
+    "normativa_principal": [
+      "Reg. (UE) 1169/2011",
+      "Dir. 2002/46/CE y RD 1487/2009",
+      "Reg. (CE) 1924/2006"
+    ],
+    "normativa_especifica_por_ingrediente": [],
+    "requisitos_notificacion": ["Notificación AESAN previa a comercialización"]
   },
   "fuentes_consultadas": [
     {"id": 1, "fuente": "nombre", "url": "", "tipo": "web_search | normativa | conocimiento_experto"}

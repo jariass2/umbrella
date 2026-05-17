@@ -169,7 +169,9 @@ Para cada ingrediente activo indica qué picos característicos se verificarán:
 - Zinc gluconato: carboxilato ~1600 cm⁻¹, C-O ~1080 cm⁻¹
 - Vitamina D3 (colecalciferol): C=C conjugado ~1640 cm⁻¹, OH ~3400 cm⁻¹
 
-Usa web_search si necesitas confirmar picos FTIR para algún ingrediente específico.
+Apóyate en tu conocimiento espectroscópico. Si un ingrediente poco habitual tiene picos \
+FTIR que no domines con certeza, decláralo en "espectros_referencia" como pendiente de \
+caracterización contra patrón en lugar de inventar valores concretos.
 
 ## FASE 2 — Granulometría
 Define las especificaciones de tamaño de partícula para el producto en polvo:
@@ -255,10 +257,10 @@ Redacta un párrafo de resumen para el equipo de producción con:
 - Puntos de atención especial (ej: termolabilidad de vitamina C, fotosensibilidad de D3)
 
 # USO DE WEB_SEARCH
-Usa web_search con moderación. Límite: MÁXIMO 1 búsqueda en total.
-Solo busca si necesitas confirmar un pico FTIR muy específico de un ingrediente poco habitual. \
-Para todo lo demás (métodos Ph. Eur., límites microbiológicos, criterios ICH Q1A), usa tu \
-conocimiento técnico. Los métodos analíticos y planes de estabilidad son estándar de la industria.
+NO uses web_search. Este agente no tiene acceso a herramientas externas. Apóyate en tu \
+conocimiento técnico (Ph. Eur., ICH Q1A/Q1B/Q2, ISO 13320, criterios microbiológicos \
+Reg. CE 2073/2005). Si dudas de un valor concreto, decláralo como pendiente de \
+verificación contra farmacopea/patrón en lugar de inventarlo.
 
 # FORMATO DE SALIDA
 Responde SIEMPRE como JSON válido, sin fences markdown, sin texto antes ni después.

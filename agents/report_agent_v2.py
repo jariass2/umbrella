@@ -205,7 +205,78 @@ Escribe un párrafo final de 3-5 frases dirigido a dirección o al cliente, que:
 
 # FORMATO DE SALIDA
 Responde SIEMPRE como JSON válido, sin fences markdown, sin texto antes ni después.
-Ajústate al schema InformeEjecutivo del pipeline.
+Usa EXACTAMENTE estas claves de nivel superior (schema InformeEjecutivo):
+
+{
+  "resumen_ejecutivo": {
+    "nombre_producto": "Nombre comercial o de proyecto",
+    "descripcion_breve": "2-3 frases describiendo el producto y su propuesta de valor",
+    "clasificacion": "complemento_alimentario | alimento_funcional | alimento_enriquecido",
+    "objetivo_funcional": "Beneficio funcional principal según el análisis KIC",
+    "veredicto_global": "VIABLE | VIABLE_CON_CONDICIONES | REQUIERE_REVISION | NO_VIABLE",
+    "justificacion_veredicto": "Razón principal del veredicto, apoyada en 2-3 factores"
+  },
+  "hallazgos_por_agente": [
+    {
+      "agente": "KIC | Regulatorio | Ficha Técnica | Claims | Etiqueta | Formatos | Docs Internos | QC",
+      "hallazgo": "Conclusión más importante del agente",
+      "impacto": "Qué implica para el producto o el proceso"
+    }
+  ],
+  "sintesis_regulatoria": {
+    "viabilidad": "VIABLE | VIABLE_CON_CONDICIONES | REQUIERE_REVISION | NO_VIABLE",
+    "ingredientes_problematicos": ["ingrediente con semáforo ⚠️ o ❌"],
+    "condiciones_criticas": ["dosis máxima, advertencias obligatorias, etc."],
+    "tramites_necesarios": ["Notificación AESAN", "registro de operador", "..."]
+  },
+  "sintesis_comercial": {
+    "formato_recomendado": "Formato óptimo según el agente Formatos",
+    "claims_principales": ["claim 1", "claim 2", "claim 3"],
+    "selling_points_top": ["selling point 1", "selling point 2", "selling point 3"],
+    "target_primario": "Perfil de consumidor principal",
+    "posicionamiento": "Posicionamiento en una frase"
+  },
+  "sintesis_produccion_qc": {
+    "formato_fabricacion": "Formato/proceso de fabricación recomendado",
+    "puntos_criticos_produccion": ["PCC 1", "PCC 2"],
+    "ensayos_criticos_qc": ["FTIR identidad", "Cuantificación de activos por HPLC", "..."],
+    "vida_util_estimada": "Ej: 24 meses en envase aluminio",
+    "alertas_navision": ["material PENDIENTE_PROVEEDOR", "..."]
+  },
+  "alertas_y_riesgos": [
+    {
+      "descripcion": "Descripción del riesgo",
+      "nivel": "BAJO | MEDIO | ALTO | CRITICO",
+      "origen": "Agente o área que detectó el riesgo",
+      "accion_recomendada": "Acción concreta para mitigar"
+    }
+  ],
+  "inconsistencias_detectadas": [
+    {
+      "descripcion": "Contradicción concreta entre agentes",
+      "agentes_implicados": ["KIC", "Regulatorio"],
+      "resolucion_sugerida": "Cómo resolver la inconsistencia"
+    }
+  ],
+  "proximos_pasos": [
+    {
+      "accion": "Acción concreta y accionable",
+      "responsable": "técnico | legal | producción | marketing | compras",
+      "prioridad": "INMEDIATA | CORTO_PLAZO | MEDIO_PLAZO | LARGO_PLAZO",
+      "dependencias": ["paso o validación previa"]
+    }
+  ],
+  "conclusion_final": "Párrafo de 3-5 frases con estado del producto, mayor riesgo, mayor oportunidad y acción más urgente. Debe poder leerse de forma independiente.",
+  "fuentes_consultadas": [
+    {"id": 1, "fuente": "nombre", "url": "", "tipo": "web_search|normativa|conocimiento_experto"}
+  ],
+  "metadata": {
+    "version": "2.0",
+    "disclaimer": "Este informe es un resumen sintético generado automáticamente. Las decisiones comerciales y regulatorias deben validarse por expertos humanos."
+  }
+}
+
+IMPORTANTE: Usa SIEMPRE las claves exactas indicadas arriba.
 
 # REGLAS CRÍTICAS
 1. NO copies bloques de texto de los agentes anteriores. Sintetiza con criterio.
