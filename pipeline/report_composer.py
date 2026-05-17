@@ -97,6 +97,29 @@ def _section(title: str, level: int = 2) -> str:
     return f"\n{'#' * level} {title}\n"
 
 
+def _kv_block(data: dict, fields: list[tuple[str, str]], suffix: str = "  ") -> list[str]:
+    """Emit "**label:** value{suffix}" lines for each (key, label) where data[key] is truthy."""
+    out: list[str] = []
+    for key, label in fields:
+        val = data.get(key)
+        if val:
+            out.append(f"**{label}:** {val}{suffix}")
+    return out
+
+
+def _labeled_list(label: str, items, *, blank_after: bool = True) -> list[str]:
+    """Emit '**label:**' + '- item' lines. Accepts list, scalar, or empty."""
+    if not items:
+        return []
+    seq = items if isinstance(items, list) else [items]
+    if not seq:
+        return []
+    out = [f"**{label}:**"] + [f"- {x}" for x in seq]
+    if blank_after:
+        out.append("")
+    return out
+
+
 def _fuentes(fuentes: list) -> list[str]:
     if not fuentes:
         return []
@@ -285,16 +308,13 @@ def fmt_ficha_tecnica(d: dict) -> list[str]:
 
     id_ = d.get("fase_1_identificacion", {})
     if id_:
-        for campo, label in [
+        lines += _kv_block(id_, [
             ("denominacion_legal", "Denominación legal"),
             ("nombre_comercial", "Nombre comercial"),
             ("tipo_producto", "Tipo de producto"),
             ("forma_presentacion", "Forma de presentación"),
             ("publico_objetivo", "Público objetivo"),
-        ]:
-            val = id_.get(campo)
-            if val:
-                lines.append(f"**{label}:** {val}  ")
+        ])
         lines.append("")
 
     # Composición
@@ -662,7 +682,7 @@ def fmt_etiqueta(d: dict) -> list[str]:
         cl = caras.get("cara_lateral_contraetiqueta", {})
         if cl:
             lines.append(_section("Cara lateral / contraetiqueta", 3))
-            for campo, label in [
+            lines += _kv_block(cl, [
                 ("operador_responsable", "Operador responsable"),
                 ("fabricante", "Fabricante"),
                 ("fecha_duracion_minima", "Duración mínima"),
@@ -670,10 +690,7 @@ def fmt_etiqueta(d: dict) -> list[str]:
                 ("numero_lote", "N.º lote"),
                 ("pais_origen", "País de origen"),
                 ("notificacion_aesan", "Notificación AESAN"),
-            ]:
-                val = cl.get(campo, "")
-                if val:
-                    lines.append(f"**{label}:** {val}  ")
+            ])
             notas_lat = cl.get("notas_lateral", "")
             if notas_lat:
                 lines += ["", f"*{notas_lat}*"]
@@ -830,10 +847,8 @@ def fmt_formatos(d: dict) -> list[str]:
             ("combinaciones_sinergicas", "Combinaciones sinérgicas"),
         ]:
             items = innov.get(campo, [])
-            if isinstance(items, list) and items:
-                lines.append(f"**{label}:**")
-                lines += [f"- {x}" for x in items]
-                lines.append("")
+            if isinstance(items, list):
+                lines += _labeled_list(label, items)
 
     lines += _fuentes(d.get("fuentes_consultadas", []))
     return lines
