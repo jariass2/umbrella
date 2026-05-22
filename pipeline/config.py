@@ -20,6 +20,10 @@ from dataclasses import dataclass
 from dotenv import load_dotenv
 
 load_dotenv()
+# Defaults del pipeline
+DEFAULT_MODEL_FALLBACK = "glm-5-turbo"
+DEFAULT_BASE_URL_FALLBACK = "https://api.z.ai/api/coding/paas/v4"
+DEFAULT_TEMPERATURE_FALLBACK = 0.1
 
 # Prefijos de cada agente (en orden del pipeline)
 AGENT_PREFIXES = {
@@ -32,6 +36,28 @@ AGENT_PREFIXES = {
     7: "AGENT_7_DOCS",
     8: "AGENT_8_QC",
 }
+# Alias “clave lógica de agente” -> prefijo de variables de entorno.
+# Útil para frontends que quieran configurar cada agente individualmente.
+AGENT_KEY_TO_PREFIX = {
+    "KIC": AGENT_PREFIXES[1],
+    "Regulatorio": AGENT_PREFIXES[2],
+    "Ficha Técnica": AGENT_PREFIXES[3],
+    "Claims": AGENT_PREFIXES[4],
+    "Etiqueta": AGENT_PREFIXES[5],
+    "Formatos": AGENT_PREFIXES[6],
+    "Docs Internos": AGENT_PREFIXES[7],
+    "QC": AGENT_PREFIXES[8],
+}
+
+PROVIDER_API_KEY_ENV_VARS = (
+    "OPENROUTER_API_KEY",
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "GEMINI_API_KEY",
+    "ZAI_API_KEY",  # legacy / backwards compatibility
+)
+
+_SUPPORTED_AGENT_OVERRIDE_FIELDS = ("MODEL", "BASE_URL", "API_KEY", "TEMPERATURE")
 
 
 @dataclass
@@ -45,6 +71,71 @@ class AgentConfig:
         key_preview = self.api_key[:8] + "..." if self.api_key else "(no key)"
         return f"model={self.model} | base_url={self.base_url} | key={key_preview} | temperature={self.temperature}"
 
+def _first_non_empty(*values: str | None) -> str:
+    for v in values:
+        if v is not None and str(v).strip() != "":
+            return str(v).strip()
+    return ""
+
+
+def _infer_provider_api_key_env(base_url: str, model: str) -> str | None:
+    """Infiero qué variable de API key conviene usar según endpoint/modelo."""
+    b = (base_url or "").lower()
+    m = (model or "").lower()
+
+    if "openrouter.ai" in b:
+        return "OPENROUTER_API_KEY"
+    if "api.openai.com" in b:
+        return "OPENAI_API_KEY"
+    if "anthropic.com" in b:
+        return "ANTHROPIC_API_KEY"
+    if "generativelanguage.googleapis.com" in b or "googleapis.com" in b:
+        return "GEMINI_API_KEY"
+    if "api.z.ai" in b:
+        return "ZAI_API_KEY"
+
+    # Heurística por nombre de modelo si el base_url no ayuda.
+    if m.startswith("gpt-") or m.startswith("o1") or m.startswith("o3"):
+        return "OPENAI_API_KEY"
+    if "claude" in m:
+        return "ANTHROPIC_API_KEY"
+    if "gemini" in m:
+        return "GEMINI_API_KEY"
+    return None
+
+
+def _resolve_api_key(prefix: str, base_url: str, model: str) -> str:
+    provider_env = _infer_provider_api_key_env(base_url, model)
+    provider_value = os.getenv(provider_env) if provider_env else None
+
+    # Prioridad:
+    # 1) Variable específica del agente
+    # 2) DEFAULT_API_KEY
+    # 3) Variable de proveedor inferida por endpoint/modelo
+    # 4) Cualquier variable estándar de proveedor
+    return _first_non_empty(
+        os.getenv(f"{prefix}_API_KEY"),
+        os.getenv("DEFAULT_API_KEY"),
+        provider_value,
+        *(os.getenv(name) for name in PROVIDER_API_KEY_ENV_VARS),
+    )
+
+
+def _resolve_temperature(prefix: str) -> float:
+    raw = _first_non_empty(
+        os.getenv(f"{prefix}_TEMPERATURE"),
+        os.getenv("DEFAULT_TEMPERATURE"),
+    )
+    if not raw:
+        return DEFAULT_TEMPERATURE_FALLBACK
+    try:
+        return float(raw)
+    except ValueError as exc:
+        raise RuntimeError(
+            f"Temperatura inválida para {prefix}: '{raw}'. "
+            f"Define {prefix}_TEMPERATURE o DEFAULT_TEMPERATURE con un número."
+        ) from exc
+
 
 def get_agent_config(prefix: str) -> AgentConfig:
     """
@@ -54,35 +145,56 @@ def get_agent_config(prefix: str) -> AgentConfig:
     model = (
         os.getenv(f"{prefix}_MODEL")
         or os.getenv("DEFAULT_MODEL")
-        or "glm-5-turbo"
-    )
-    api_key = (
-        os.getenv(f"{prefix}_API_KEY")
-        or os.getenv("DEFAULT_API_KEY")
-        or os.getenv("ZAI_API_KEY")
-        or ""
+        or DEFAULT_MODEL_FALLBACK
     )
     base_url = (
         os.getenv(f"{prefix}_BASE_URL")
         or os.getenv("DEFAULT_BASE_URL")
-        or "https://api.z.ai/api/coding/paas/v4"
+        or DEFAULT_BASE_URL_FALLBACK
     )
+    api_key = _resolve_api_key(prefix=prefix, base_url=base_url, model=model)
 
     if not api_key:
         raise RuntimeError(
             f"No hay API key para el agente con prefijo {prefix}. "
-            f"Define {prefix}_API_KEY, DEFAULT_API_KEY o ZAI_API_KEY en .env"
+            f"Define {prefix}_API_KEY, DEFAULT_API_KEY o una API key de proveedor "
+            f"(OPENROUTER_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY, ZAI_API_KEY) en .env"
         )
 
-    temperature = float(
-        os.getenv(f"{prefix}_TEMPERATURE")
-        or os.getenv("DEFAULT_TEMPERATURE")
-        or "0.1"
-    )
+    temperature = _resolve_temperature(prefix)
 
     return AgentConfig(model=model, api_key=api_key, base_url=base_url,
                        temperature=temperature)
 
+
+def build_agent_env_overrides(agent_settings: dict[str, dict[str, object]] | None) -> dict[str, str]:
+    """Convierte settings por agente en variables AGENT_*_X para inyectar en env.
+
+    Soporta claves de entrada por:
+    - nombre lógico de agente (ej: "KIC", "Claims", "Ficha Técnica"), o
+    - prefijo directo (ej: "AGENT_1_KIC").
+    """
+    env_overrides: dict[str, str] = {}
+    if not agent_settings:
+        return env_overrides
+
+    for agent_key, settings in agent_settings.items():
+        if not isinstance(settings, dict):
+            continue
+        prefix = AGENT_KEY_TO_PREFIX.get(agent_key, agent_key if str(agent_key).startswith("AGENT_") else None)
+        if not prefix:
+            continue
+
+        for field in _SUPPORTED_AGENT_OVERRIDE_FIELDS:
+            raw = settings.get(field) or settings.get(field.lower())
+            if raw is None:
+                continue
+            value = str(raw).strip()
+            if not value:
+                continue
+            env_overrides[f"{prefix}_{field}"] = value
+
+    return env_overrides
 
 def print_pipeline_config() -> None:
     """Imprime la configuración de todos los agentes al iniciar el pipeline."""

@@ -1313,8 +1313,8 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
             f"**Tiempo total de pipeline:** {total_mm}m {total_ss}s  ",
             f"**Coste estimado total:** {_format_cost(total_cost)}  ",
             "",
-            "| Agente | Modelo | Tiempo | Tokens (in / out) | Coste est. | Endpoint |",
-            "|---|---|---|---|---|---|",
+            "| Agente | Modelo | Temp | Tiempo | Tokens (in / out) | Coste est. | Endpoint |",
+            "|---|---|---|---|---|---|---|",
         ]
         for prefix, cfg in agent_models.items():
             key, name = agent_names.get(prefix, (prefix, prefix))
@@ -1338,8 +1338,11 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
             p_in, p_out = _lookup_price(tr.get("model") or cfg.model or "")
             cost = (in_tok / 1_000_000) * p_in + (out_tok / 1_000_000) * p_out
             cost_str = _format_cost(cost)
+            temperature = tr.get("temperature", cfg.temperature)
 
-            lines.append(f"| {name} | `{cfg.model}` | {t_str} | {tok_str} | {cost_str} | `{cfg.base_url}` |")
+            lines.append(
+                f"| {name} | `{cfg.model}` | `{temperature}` | {t_str} | {tok_str} | {cost_str} | `{cfg.base_url}` |"
+            )
 
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:

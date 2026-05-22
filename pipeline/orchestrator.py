@@ -323,10 +323,12 @@ def _build_trace(agent: Agent, prompt_version: str | None,
     from datetime import datetime, timezone
     model_id = getattr(getattr(agent, "model", None), "id", None)
     base_url = getattr(getattr(agent, "model", None), "base_url", None)
+    temperature = getattr(getattr(agent, "model", None), "temperature", None)
     return {
         "prompt_version": prompt_version,
         "model": model_id,
         "base_url": base_url,
+        "temperature": temperature,
         "timestamp_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "duration_s": round(elapsed, 2),
         "attempts": attempt,
