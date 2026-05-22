@@ -963,7 +963,7 @@ def download_report(run_id):
     from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT
     from reportlab.platypus import (
         SimpleDocTemplate, Paragraph, Spacer, HRFlowable,
-        Table, TableStyle, KeepTogether,
+        Table, TableStyle, KeepTogether, PageBreak,
     )
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
@@ -1007,15 +1007,14 @@ def download_report(run_id):
     BORDER = HexColor('#DCDFE6')
 
     # ── paragraph styles ───────────────────────────────────────────────
-    # Body in Helvetica (cleaner, more standard look). Justification relaxed
-    # to TA_LEFT — TA_JUSTIFY produced ugly rivers on narrow tables and short
-    # paragraphs. Tables already wrap per-cell so they read better left-aligned.
+    # Body justified (TA_JUSTIFY) for long descriptions; bullets and tables
+    # stay left-aligned because justification on narrow widths creates rivers.
     def S(name, **kw):
         kw.setdefault('fontName', 'Helvetica')
         return ParagraphStyle(name, **kw)
 
-    body_s   = S('body',   fontSize=10, leading=14, textColor=BODY,  alignment=TA_LEFT, spaceAfter=3*mm)
-    bullet_s = S('bul',    fontSize=10, leading=14, textColor=BODY,  alignment=TA_LEFT, leftIndent=14, firstLineIndent=0, spaceAfter=2*mm)
+    body_s   = S('body',   fontSize=10, leading=15, textColor=BODY,  alignment=TA_JUSTIFY, spaceAfter=3*mm, hyphenationLang='es_ES', hyphenationMinWordLength=6)
+    bullet_s = S('bul',    fontSize=10, leading=15, textColor=BODY,  alignment=TA_JUSTIFY, leftIndent=18, bulletIndent=6, firstLineIndent=0, spaceAfter=2*mm, hyphenationLang='es_ES', hyphenationMinWordLength=6)
     h1_s     = S('h1',     fontSize=16, leading=21, textColor=NAVY,  fontName='Helvetica-Bold', spaceAfter=4*mm, spaceBefore=2*mm)
     h2_s     = S('h2',     fontSize=13, leading=17, textColor=NAVY,  fontName='Helvetica-Bold', spaceAfter=2*mm, spaceBefore=4*mm)
     h3_s     = S('h3',     fontSize=11, leading=15, textColor=NAVY,  fontName='Helvetica-Bold', spaceAfter=1*mm, spaceBefore=2*mm)
@@ -1105,12 +1104,39 @@ def download_report(run_id):
         return t
 
     # ── markdown → Platypus flowables ─────────────────────────────────
-    def md_to_flowables(md_text: str) -> list:
+    def md_to_flowables(md_text: str, page_break_h1: bool = True) -> list:
         fl: list = []
         in_code = False
         code_buf: list[str] = []
         in_table = False
         table_rows: list[list[str]] = []
+        in_toc = False
+        toc_items: list[tuple[str, str]] = []
+
+        def flush_toc():
+            nonlocal toc_items, in_toc
+            if not toc_items:
+                in_toc = False
+                return
+            toc_num_s = S('toc_num', fontSize=10, leading=14,
+                          textColor=MUTED, fontName='Helvetica-Bold')
+            toc_txt_s = S('toc_txt', fontSize=10, leading=14, textColor=BODY)
+            rows = [
+                [Paragraph(num, toc_num_s), Paragraph(rl(title), toc_txt_s)]
+                for num, title in toc_items
+            ]
+            t = Table(rows, colWidths=[12 * mm, 153 * mm])
+            t.setStyle(TableStyle([
+                ('VALIGN',       (0,0), (-1,-1), 'TOP'),
+                ('LEFTPADDING',  (0,0), (-1,-1), 0),
+                ('RIGHTPADDING', (0,0), (-1,-1), 0),
+                ('TOPPADDING',   (0,0), (-1,-1), 5),
+                ('BOTTOMPADDING',(0,0), (-1,-1), 5),
+                ('LINEBELOW',    (0,0), (-1,-2), 0.2, RULE),
+            ]))
+            fl.append(t)
+            fl.append(Spacer(1, 4 * mm))
+            toc_items, in_toc = [], False
 
         def flush_code():
             nonlocal code_buf
@@ -1176,12 +1202,23 @@ def download_report(run_id):
             # headings
             if stripped.startswith('# '):
                 flush_code()
-                fl.append(Spacer(1, 2 * mm))
+                flush_toc()
+                if page_break_h1:
+                    fl.append(PageBreak())
                 fl.append(safe_paragraph(rl(stripped[2:]), h1_s))
                 continue
             if stripped.startswith('## '):
                 flush_code()
-                fl.append(safe_paragraph(rl(stripped[3:]), h2_s))
+                flush_toc()
+                title = stripped[3:]
+                # H2 numerado ("## 1. Análisis…", "## 8. Plan…") = sección
+                # principal del informe ⇒ arranca en página propia.
+                if page_break_h1 and re.match(r'^##\s+\d+\.', stripped):
+                    fl.append(PageBreak())
+                fl.append(safe_paragraph(rl(title), h2_s))
+                fl.append(HRFlowable(width='100%', thickness=0.3, color=RULE, spaceAfter=2))
+                if title.strip().lower() == 'índice':
+                    in_toc = True
                 continue
             if stripped.startswith('### '):
                 flush_code()
@@ -1191,6 +1228,7 @@ def download_report(run_id):
             # HR
             if stripped in ('---', '***', '___'):
                 flush_code()
+                flush_toc()
                 fl.append(Spacer(1, 2 * mm))
                 fl.append(HRFlowable(width='100%', thickness=0.4, color=RULE))
                 fl.append(Spacer(1, 3 * mm))
@@ -1200,6 +1238,7 @@ def download_report(run_id):
             m = re.match(r'^[-*] (.+)', stripped)
             if m:
                 flush_code()
+                flush_toc()
                 fl.append(safe_paragraph('• ' + rl(m.group(1)), bullet_s))
                 continue
 
@@ -1207,6 +1246,12 @@ def download_report(run_id):
             m = re.match(r'^(\d+)\. (.+)', stripped)
             if m:
                 flush_code()
+                if in_toc:
+                    item = m.group(2)
+                    link_m = re.match(r'^\[(.+?)\]\(#.+?\)$', item)
+                    title = link_m.group(1) if link_m else item
+                    toc_items.append((m.group(1), title))
+                    continue
                 fl.append(safe_paragraph(f'{m.group(1)}. ' + rl(m.group(2)), bullet_s))
                 continue
 
@@ -1218,21 +1263,20 @@ def download_report(run_id):
 
             # regular paragraph (inline markup preserved)
             flush_code()
+            flush_toc()
             fl.append(safe_paragraph(rl(stripped), body_s))
 
         flush_code()
         flush_table()
+        flush_toc()
         return fl
 
     # ── page callbacks (header / footer) ──────────────────────────────
     PW, PH = A4
 
     def _first_page(canvas, doc):
-        canvas.saveState()
-        canvas.setFont('Helvetica', 8)
-        canvas.setFillColor(MUTED)
-        canvas.drawCentredString(PW / 2, 12 * mm, f'Página {doc.page}')
-        canvas.restoreState()
+        # Portada limpia: sin header ni número de página.
+        pass
 
     def _later_pages(canvas, doc):
         canvas.saveState()
@@ -1264,7 +1308,7 @@ def download_report(run_id):
     story.append(Paragraph(f'Generado el {date_str}', cov_meta_s))
     story.append(Spacer(1, 7 * mm))
     story.append(HRFlowable(width='100%', thickness=0.8, color=NAVY))
-    story.append(Spacer(1, 10 * mm))
+    story.append(PageBreak())
 
     # Prefer the structured master report produced by pipeline.report_composer
     # (matches the v7 reference PDF: portada + índice + fórmula + 8 secciones + anexo).
