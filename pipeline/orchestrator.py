@@ -37,7 +37,12 @@ from agents.etiqueta_agent_v2 import ETIQUETA_INSTRUCTIONS, EtiquetaAnalysis, PR
 from agents.formatos_agent_v2 import FORMATOS_INSTRUCTIONS, FormatosAnalysis, PROMPT_VERSION as FORMATOS_PROMPT_VERSION
 from agents.docs_internos_agent_v2 import DOCS_INTERNOS_INSTRUCTIONS, DocsInternosAnalysis, PROMPT_VERSION as DOCS_PROMPT_VERSION
 from agents.qc_agent_v2 import QC_INSTRUCTIONS, PlanQCAnalysis, PROMPT_VERSION as QC_PROMPT_VERSION
-from pipeline.config import get_agent_config, AGENT_PREFIXES, print_pipeline_config
+from pipeline.config import (
+    get_agent_config,
+    get_search_max_queries,
+    AGENT_PREFIXES,
+    print_pipeline_config,
+)
 from pipeline.report_composer import compose_informe
 
 # Mapa de modelos Pydantic por clave de agente (None = sin modelo, usa json_mode)
@@ -315,6 +320,24 @@ def _validate_defensively(data: dict, output_model: type[BaseModel] | None, labe
         print(f"⚠️  [{label}] drift contra schema {output_model.__name__}: {msg}")
 
 
+def _collect_tool_calls(agent: Agent) -> dict[str, int]:
+    """Suma el `call_count` de cada toolkit del agente, agrupado por nombre lógico."""
+    counts: dict[str, int] = {}
+    for tool in getattr(agent, "tools", []) or []:
+        n = getattr(tool, "call_count", None)
+        if n is None:
+            continue
+        # Nombre lógico estable para reporting (no el nombre de la clase Python).
+        cls_name = type(tool).__name__
+        label = {
+            "MonitoredPubmedTools": "pubmed",
+            "MonitoredDuckDuckGoTools": "duckduckgo",
+            "TavilySearchTools": "tavily",
+        }.get(cls_name, cls_name)
+        counts[label] = counts.get(label, 0) + int(n)
+    return counts
+
+
 def _build_trace(agent: Agent, prompt_version: str | None,
                  attempt: int, transient_count: int, deterministic_count: int,
                  elapsed: float, input_tokens: int = 0,
@@ -324,6 +347,7 @@ def _build_trace(agent: Agent, prompt_version: str | None,
     model_id = getattr(getattr(agent, "model", None), "id", None)
     base_url = getattr(getattr(agent, "model", None), "base_url", None)
     temperature = getattr(getattr(agent, "model", None), "temperature", None)
+    tool_calls = _collect_tool_calls(agent)
     return {
         "prompt_version": prompt_version,
         "model": model_id,
@@ -336,6 +360,8 @@ def _build_trace(agent: Agent, prompt_version: str | None,
         "deterministic_retries": deterministic_count,
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
+        "tool_calls": tool_calls,
+        "tool_calls_total": sum(tool_calls.values()) if tool_calls else 0,
     }
 
 
@@ -611,7 +637,14 @@ def _run_step(key: str, label: str, env_prefix: int,
                started_event: threading.Event | None = None):
     """Ejecuta un agente individual (para usar dentro de ThreadPoolExecutor)."""
     use_search = key in AGENTS_WITH_SEARCH
-    agent = make_agent(label, AGENT_PREFIXES[env_prefix], use_search=use_search)
+    prefix = AGENT_PREFIXES[env_prefix]
+    agent = make_agent(label, prefix, use_search=use_search)
+    # Sustituye placeholders soportados en el prompt. Usamos .replace() porque los
+    # prompts contienen ejemplos JSON con llaves `{}` que romperían str.format().
+    if "{search_max}" in instructions:
+        instructions = instructions.replace(
+            "{search_max}", str(get_search_max_queries(prefix))
+        )
     agent.instructions = instructions
     t0 = time.time()
     output_model = AGENT_OUTPUT_MODELS.get(key)

@@ -50,6 +50,7 @@ class TavilySearchTools(Toolkit):
         self.api_key = api_key or _get_api_key()
         from tavily import TavilyClient
         self._client = TavilyClient(api_key=self.api_key)
+        self.call_count = 0
         super().__init__(name="tavily_search", tools=[self.web_search, self.search_news])
 
     # Max chars per result content — keeps context lean without losing key facts
@@ -87,6 +88,7 @@ class TavilySearchTools(Toolkit):
             query: The query to search for.
             max_results: The maximum number of results to return.
         """
+        self.call_count += 1
         monitor_search("Tavily", query)
         results = self._safe_search("Tavily", query=query, max_results=max_results)
 
@@ -105,6 +107,7 @@ class TavilySearchTools(Toolkit):
             query: The query to search for.
             max_results: The maximum number of results to return.
         """
+        self.call_count += 1
         monitor_search("Tavily/News", query)
         results = self._safe_search(
             "Tavily/News", query=query, max_results=max_results, topic="news"

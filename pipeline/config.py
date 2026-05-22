@@ -24,6 +24,7 @@ load_dotenv()
 DEFAULT_MODEL_FALLBACK = "glm-5-turbo"
 DEFAULT_BASE_URL_FALLBACK = "https://api.z.ai/api/coding/paas/v4"
 DEFAULT_TEMPERATURE_FALLBACK = 0.1
+DEFAULT_SEARCH_MAX_FALLBACK = 5
 
 # Prefijos de cada agente (en orden del pipeline)
 AGENT_PREFIXES = {
@@ -119,6 +120,35 @@ def _resolve_api_key(prefix: str, base_url: str, model: str) -> str:
         provider_value,
         *(os.getenv(name) for name in PROVIDER_API_KEY_ENV_VARS),
     )
+
+
+def get_search_max_queries(prefix: str | None = None) -> int:
+    """Devuelve el tope de búsquedas web/PubMed que se le indica al agente.
+
+    Prioridad:
+      1) AGENT_<prefix>_SEARCH_MAX (si se pasa prefix)
+      2) SEARCH_MAX_QUERIES (global)
+      3) DEFAULT_SEARCH_MAX_FALLBACK
+    """
+    candidates = []
+    if prefix:
+        candidates.append(os.getenv(f"{prefix}_SEARCH_MAX"))
+    candidates.append(os.getenv("SEARCH_MAX_QUERIES"))
+    raw = _first_non_empty(*candidates)
+    if not raw:
+        return DEFAULT_SEARCH_MAX_FALLBACK
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise RuntimeError(
+            f"Valor inválido para tope de búsquedas ({prefix or 'global'}): '{raw}'. "
+            f"Debe ser un entero ≥ 0."
+        ) from exc
+    if value < 0:
+        raise RuntimeError(
+            f"El tope de búsquedas no puede ser negativo (recibido {value})."
+        )
+    return value
 
 
 def _resolve_temperature(prefix: str) -> float:
