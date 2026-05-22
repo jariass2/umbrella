@@ -11,6 +11,7 @@ import threading
 import time
 from pathlib import Path
 from queue import Queue, Empty
+from pipeline.config import build_agent_env_overrides
 
 PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 
@@ -43,6 +44,13 @@ _AGENT_FILENAME = {
     "Docs Internos": "agente_7_docs_internos_v2",
     "QC": "agente_8_qc_v2",
 }
+_KNOWN_PROVIDER_KEYS = (
+    "OPENROUTER_API_KEY",
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "GEMINI_API_KEY",
+    "ZAI_API_KEY",
+)
 
 
 def _agent_key_from_label(label: str) -> str | None:
@@ -57,7 +65,35 @@ def _agent_key_from_label(label: str) -> str | None:
     return None
 
 
-def run_pipeline(formula_text: str, output_dir: str, status_queue: Queue):
+def _build_runtime_env(
+    agent_settings: dict[str, dict[str, object]] | None = None,
+    provider_api_keys: dict[str, str] | None = None,
+) -> dict[str, str]:
+    """Construye el entorno del subprocess con overrides opcionales por agente/proveedor."""
+    runtime_env = {**os.environ, "PYTHONUNBUFFERED": "1"}
+
+    # Permite inyectar claves de proveedor desde UI sin tocar el .env local.
+    if provider_api_keys:
+        for key in _KNOWN_PROVIDER_KEYS:
+            raw = provider_api_keys.get(key) or provider_api_keys.get(key.lower())
+            if raw is None:
+                continue
+            value = str(raw).strip()
+            if value:
+                runtime_env[key] = value
+
+    # Permite setear model/base_url/api_key/temperature por agente para este run.
+    runtime_env.update(build_agent_env_overrides(agent_settings))
+    return runtime_env
+
+
+def run_pipeline(
+    formula_text: str,
+    output_dir: str,
+    status_queue: Queue,
+    agent_settings: dict[str, dict[str, object]] | None = None,
+    provider_api_keys: dict[str, str] | None = None,
+):
     """Ejecuta el pipeline como subproceso, monitorizando stdout y ficheros de salida."""
     os.makedirs(output_dir, exist_ok=True)
 
@@ -72,7 +108,10 @@ def run_pipeline(formula_text: str, output_dir: str, status_queue: Queue):
         stderr=subprocess.STDOUT,
         text=True,
         cwd=PROJECT_ROOT,
-        env={**os.environ, "PYTHONUNBUFFERED": "1"},
+        env=_build_runtime_env(
+            agent_settings=agent_settings,
+            provider_api_keys=provider_api_keys,
+        ),
     )
     status_queue.put({"type": "process", "pid": proc.pid})
 
