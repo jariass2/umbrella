@@ -48,11 +48,12 @@ AGENT_LABELS = {
     "Formatos": "Formatos — Formatos de Presentación",
     "Docs Internos": "Docs Internos — Documentación Interna",
     "QC": "QC — Plan de Control de Calidad",
+    "Portfolio": "Portfolio — Gama Recomendada",
 }
 
 # DAG wave structure — mirrors pipeline/orchestrator.py execution order
 AGENT_WAVES = [
-    ["KIC", "Formatos", "Docs Internos", "QC"],  # Wave 1: parallel, no deps
+    ["KIC", "Formatos", "Docs Internos", "QC", "Portfolio"],  # Wave 1: parallel, no deps
     ["Regulatorio"],                               # Wave 2: after KIC
     ["Ficha Técnica", "Claims"],                   # Wave 3: parallel, after Regulatorio
     ["Etiqueta"],                                  # Wave 4: after Ficha Técnica + Claims
@@ -143,6 +144,11 @@ def _agent_headline(agent: str, data: dict) -> str:
             ensayos = data.get("fase_6_ensayos_analiticos_adicionales") or []
             n = len(ensayos) if isinstance(ensayos, list) else 0
             return f"{n} ensayos QC adicionales" if n else "Plan QC generado"
+        if agent == "Portfolio":
+            ext = data.get("fase_2_extensiones_linea") or []
+            comp = data.get("fase_3_productos_complementarios") or []
+            n = (len(ext) if isinstance(ext, list) else 0) + (len(comp) if isinstance(comp, list) else 0)
+            return f"{n} productos propuestos" if n else "Portfolio generado"
     except Exception:
         return ""
     return ""
@@ -621,6 +627,50 @@ def _render_qc(data: dict) -> str:
     return "".join(parts) or '<p class="summary-empty">Sin plan QC.</p>'
 
 
+def _render_portfolio(data: dict) -> str:
+    parts = []
+    pos = data.get("fase_1_posicionamiento") or {}
+    if isinstance(pos, dict):
+        if pos.get("producto_ancla"):
+            parts.append(f'<div class="summary-headline">{_esc(pos["producto_ancla"])}</div>')
+        if pos.get("propuesta_valor"):
+            parts.append(f'<p class="summary-intro">{_esc(_truncate(str(pos["propuesta_valor"]), 160))}</p>')
+
+    def _tabla(items, titulo, col_rel, key_rel):
+        if not isinstance(items, list) or not items:
+            return
+        rows = []
+        for p in items:
+            if not isinstance(p, dict):
+                continue
+            ing = p.get("ingredientes_clave") or []
+            ing = "; ".join(str(x) for x in ing) if isinstance(ing, list) else str(ing)
+            rows.append(
+                f'<tr><td>{_esc(p.get("nombre", "—"))}</td>'
+                f'<td>{_esc(_truncate(str(p.get(key_rel, "")), 110))}</td>'
+                f'<td>{_esc(p.get("segmento_objetivo") or "—")}</td>'
+                f'<td>{_esc(p.get("formato_sugerido") or "—")}</td></tr>'
+            )
+        parts.append(
+            f'<div class="summary-block"><div class="summary-sub">{titulo}</div>'
+            '<table class="summary-table"><thead><tr>'
+            f'<th>Producto</th><th>{col_rel}</th><th>Segmento</th><th>Formato</th>'
+            '</tr></thead><tbody>' + "".join(rows) + '</tbody></table></div>'
+        )
+
+    _tabla(data.get("fase_2_extensiones_linea"), "Extensiones de línea", "Diferencia", "diferencia_vs_ancla")
+    _tabla(data.get("fase_3_productos_complementarios"), "Productos complementarios", "Sinergia", "sinergia_con_ancla")
+
+    gama = data.get("fase_4_gama_recomendada") or {}
+    if isinstance(gama, dict):
+        sec = gama.get("secuencia_lanzamiento") or []
+        if isinstance(sec, list) and sec:
+            items = "".join(f'<li>{_esc(s)}</li>' for s in sec)
+            parts.append(f'<div class="summary-block"><div class="summary-sub">Gama recomendada</div><ul>{items}</ul></div>')
+
+    return "".join(parts) or '<p class="summary-empty">Sin portfolio.</p>'
+
+
 _SUMMARY_RENDERERS = {
     "KIC": _render_kic,
     "Regulatorio": _render_regulatorio,
@@ -630,6 +680,7 @@ _SUMMARY_RENDERERS = {
     "Formatos": _render_formatos,
     "Docs Internos": _render_docs_internos,
     "QC": _render_qc,
+    "Portfolio": _render_portfolio,
 }
 
 
@@ -1018,6 +1069,8 @@ def download_report(run_id):
     h1_s     = S('h1',     fontSize=16, leading=21, textColor=NAVY,  fontName='Helvetica-Bold', spaceAfter=4*mm, spaceBefore=2*mm)
     h2_s     = S('h2',     fontSize=13, leading=17, textColor=NAVY,  fontName='Helvetica-Bold', spaceAfter=2*mm, spaceBefore=4*mm)
     h3_s     = S('h3',     fontSize=11, leading=15, textColor=NAVY,  fontName='Helvetica-Bold', spaceAfter=1*mm, spaceBefore=2*mm)
+    h4_s     = S('h4',     fontSize=10, leading=14, textColor=BLUE,  fontName='Helvetica-Bold', spaceAfter=1*mm, spaceBefore=2*mm)
+    quote_s  = S('quote',  fontSize=10, leading=15, textColor=MUTED, alignment=TA_JUSTIFY, leftIndent=12, fontName='Helvetica-Oblique', spaceAfter=2*mm)
     sec_s    = S('sec',    fontSize=14, leading=19, textColor=NAVY,  fontName='Helvetica-Bold')
     cov_t_s  = S('cov_t',  fontSize=28, leading=34, textColor=NAVY,  fontName='Helvetica-Bold')
     cov_sub_s= S('cov_s',  fontSize=14, leading=19, textColor=BLUE)
@@ -1220,9 +1273,20 @@ def download_report(run_id):
                 if title.strip().lower() == 'índice':
                     in_toc = True
                 continue
+            if stripped.startswith('#### '):
+                flush_code()
+                fl.append(safe_paragraph(rl(stripped[5:]), h4_s))
+                continue
             if stripped.startswith('### '):
                 flush_code()
                 fl.append(safe_paragraph(rl(stripped[4:]), h3_s))
+                continue
+
+            # blockquote
+            if stripped.startswith('> '):
+                flush_code()
+                flush_toc()
+                fl.append(safe_paragraph(rl(stripped[2:]), quote_s))
                 continue
 
             # HR

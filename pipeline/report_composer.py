@@ -1203,8 +1203,10 @@ def fmt_docs_internos(d: dict) -> list[str]:
                     op = paso.get("operacion", paso.get("nombre", ""))
                     desc = paso.get("descripcion", paso.get("detalle", ""))
                     pcc = paso.get("punto_critico", paso.get("pcc", False))
-                    pcc_str = " 🔴 **PCC**" if pcc else ""
-                    lines.append(f"**{num}. {op}{pcc_str}**")
+                    # El marcador PCC va FUERA de la negrita del título para no
+                    # anidar `**...**` (rompe el render markdown→PDF dejando '**').
+                    pcc_str = " 🔴 PCC" if pcc else ""
+                    lines.append(f"**{num}. {op}**{pcc_str}")
                     lines.append(f"{desc}")
                     cond = paso.get("condiciones", {})
                     if isinstance(cond, dict) and cond:

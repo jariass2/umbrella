@@ -25,12 +25,14 @@ AGENT_ORDER = [
     "Formatos",
     "Docs Internos",
     "QC",
+    "Portfolio",
 ]
 
 # Agent key → prefijo numérico en el label del pipeline
 _AGENT_NUM = {
     "KIC": 1, "Regulatorio": 2, "Ficha Técnica": 3, "Claims": 4,
     "Etiqueta": 5, "Formatos": 6, "Docs Internos": 7, "QC": 8,
+    "Portfolio": 9,
 }
 
 # Agent key → nombre del fichero de salida (sin extensión)
@@ -43,6 +45,7 @@ _AGENT_FILENAME = {
     "Formatos": "agente_6_formatos_v2",
     "Docs Internos": "agente_7_docs_internos_v2",
     "QC": "agente_8_qc_v2",
+    "Portfolio": "agente_9_portfolio_v2",
 }
 _KNOWN_PROVIDER_KEYS = (
     "OPENROUTER_API_KEY",

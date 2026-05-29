@@ -964,7 +964,7 @@ NOTAS PARA LA LISTA DE INGREDIENTES:
 
 ### Proceso de fabricación
 
-**1. Pesada de materiales 🔴 **PCC****
+**1. Pesada de materiales** 🔴 PCC
 Pesada individual de cada materia prima en balanza calibrada (clase II). Orden: mayoritarios primero (Glicina, Colageno), luego medios (HA, Magnesio), despues minoritarios (AKBA, minerales traza, vitaminas). Los ingredientes ultratraza (Folato, K2, B12) se pesan en zona de pesada de precision con balanza analitica. Verificar identificacion de lote de proveedor para cada material.
 *Condiciones: tiempo: 30-40 min; temperatura: <25°C; humedad_relativa: <45%; velocidad: N/A; observaciones: PCC: Identidad y cantidad de cada materia prima. Trazabilidad lote proveedor -> lote produccion.*
 
@@ -972,7 +972,7 @@ Pesada individual de cada materia prima en balanza calibrada (clase II). Orden: 
 Tamizar por malla de 0.8 mm: L-Glicina, Peptidos de Colageno, Acido Hialuronico y Magnesio bisglicinato. El tamizado previene aglomerados y mejora la distribucion uniforme en la mezcla. Limpiar malla entre cambios de material para evitar contaminacion cruzada.
 *Condiciones: tiempo: 15-20 min; temperatura: <25°C; humedad_relativa: <45%; velocidad: Manual o vibrador tamiz; observaciones: No tamizar vitaminas ni extractos para evitar perdidas por adherencia.*
 
-**3. Pre-mezcla de activos minoritarios y traza 🔴 **PCC****
+**3. Pre-mezcla de activos minoritarios y traza** 🔴 PCC
 En mezcladora pequena tipo turbula (capacidad 5-10 L), realizar premix con aproximadamente 500g de L-Glicina como soporte. Orden de incorporacion al premix: (a) Hierro bisglicinato y Zinc bisglicinato, (b) AKBA extracto, (c) vitaminas B1, B2, B5, B6, (d) Folato diluido, (e) Astaxantina (proteger de luz - cubrir mezcladora), (f) K2 MK-7 diluido, (g) B12 diluido. Este paso es critico para garantizar homogeneidad de los componentes en proporcion inferior al 0.1%.
 *Condiciones: tiempo: 15 min; temperatura: <25°C; humedad_relativa: <45%; velocidad: 25 rpm; observaciones: PCC: Homogeneidad del premix. La presencia de hierro como pro-oxidante requiere que la astaxantina y K2 se incorporen en ultimo lugar dentro del premix para minimizar tiempo de contacto.*
 
@@ -980,11 +980,11 @@ En mezcladora pequena tipo turbula (capacidad 5-10 L), realizar premix con aprox
 Cargar en mezcladora de doble cono (V-blender, capacidad 200 L): primero la Glicina tamizada restante, luego los Peptidos de Colageno tamizados, luego el Acido Hialuronico y Magnesio. Iniciar mezcla a 15 rpm durante 5 min. Parar, incorporar el premix de minoritarios de forma uniforme sobre la superficie del lecho. Reiniciar mezcla a 15 rpm durante 20 min. Finalmente, anadir el Dioxido de silicio coloidal y mezclar 3 min adicionales.
 *Condiciones: tiempo: 28 min total; temperatura: <25°C; humedad_relativa: <45%; velocidad: 15 rpm; observaciones: El dioxido de silicio se incorpora al final como antiaglomerante para no interferir con la mezcla de activos.*
 
-**5. Control de homogeneidad 🔴 **PCC****
+**5. Control de homogeneidad** 🔴 PCC
 Tomar 10 muestras de distintos puntos de la mezcladora (superior, medio, inferior, izquierda, derecha, anterior, posterior y centro). Analizar por espectrofotometria UV el contenido de riboflavina (Vitamina B2) como marcador, o por ICP-OES el contenido de zinc. Criterio de aceptacion: RSD < 5% entre las 10 muestras. Si no se supera el criterio, extender mezcla 10 min adicionales y remuestrear.
 *Condiciones: tiempo: 45-60 min (incluye analitica); temperatura: <25°C; humedad_relativa: <45%; velocidad: N/A; observaciones: PCC: Si RSD >= 5%, el lote no puede avanzar a envasado. Seleccionar zinc como marcador por ser un mineral traza con buena sensibilidad por ICP.*
 
-**6. Envasado en stick monodosis 🔴 **PCC****
+**6. Envasado en stick monodosis** 🔴 PCC
 Traslado del polvo homogeneizado a la tolva de la envasadora de stick horizontal (formato film aluminio/PE termosellable). Ajuste de dosificacion a 10.295 g +/- 3% (rango aceptable: 9.986 - 10.604 g). Control de termosellado: temperatura de sellado 150-170°C, presion 3-4 bar. Velocidad de envasado ajustada a 40-60 sticks/min.
 *Condiciones: tiempo: 180-250 min (10.000 uds a 40-55 uds/min); temperatura: <25°C (sala), sellado 150-170°C; humedad_relativa: <45%; velocidad: 40-60 sticks/min; observaciones: PCC: Peso de dosificacion y hermeticidad del termosellado. La astaxantina es fotosensible: la estructura del stick de aluminio protege del UV durante el envasado, pero mantener la tolva cubierta con film opaco.*
 
@@ -1180,16 +1180,18 @@ Muestreo estadistico: cada 15 min tomar 3 sticks consecutivos. Controles: (a) pe
 
 ## Anexo — Configuración del Pipeline
 
-**Fecha de ejecución:** 12/04/2026  
-**Tiempo total de pipeline:** 15m 53s  
+**Fecha de ejecución:** 29/05/2026  
+**Tiempo total de pipeline:** 0m 0s  
+**Coste estimado total:** —  
 
-| Agente | Modelo | Tiempo | Endpoint |
-|---|---|---|---|
-| Agente 1 — KIC (Análisis de Ingredientes) | `minimaxai/minimax-m2.7` | 2m 3s | `https://integrate.api.nvidia.com/v1` |
-| Agente 2 — Regulatorio | `glm-5-turbo` | 1m 34s | `https://api.z.ai/api/coding/paas/v4` |
-| Agente 3 — Ficha Técnica | `minimaxai/minimax-m2.7` | 2m 55s | `https://integrate.api.nvidia.com/v1` |
-| Agente 4 — Claims y Diferenciación | `minimaxai/minimax-m2.7` | 10m 1s | `https://integrate.api.nvidia.com/v1` |
-| Agente 5 — Etiqueta | `glm-5-turbo` | 2m 14s | `https://api.z.ai/api/coding/paas/v4` |
-| Agente 6 — Formatos e Innovación | `glm-5-turbo` | 2m 0s | `https://api.z.ai/api/coding/paas/v4` |
-| Agente 7 — Documentación Interna | `glm-5-turbo` | 3m 4s | `https://api.z.ai/api/coding/paas/v4` |
-| Agente 8 — Plan QC | `glm-5-turbo` | 3m 8s | `https://api.z.ai/api/coding/paas/v4` |
+| Agente | Modelo | Temp | Tiempo | Tokens (in / out) | Coste est. | Endpoint |
+|---|---|---|---|---|---|---|
+| Agente 1 — KIC (Análisis de Ingredientes) | `anthropic/claude-haiku-4.5` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
+| Agente 2 — Regulatorio | `anthropic/claude-haiku-4.5` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
+| Agente 3 — Ficha Técnica | `anthropic/claude-sonnet-4.6` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
+| Agente 4 — Claims y Diferenciación | `anthropic/claude-haiku-4.5` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
+| Agente 5 — Etiqueta | `anthropic/claude-sonnet-4.6` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
+| Agente 6 — Formatos e Innovación | `anthropic/claude-haiku-4.5` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
+| Agente 7 — Documentación Interna | `anthropic/claude-haiku-4.5` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
+| Agente 8 — Plan QC | `anthropic/claude-sonnet-4.6` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
+| Agente 9 — Portfolio recomendado | `anthropic/claude-haiku-4.5` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
