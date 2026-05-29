@@ -1,6 +1,6 @@
 # Umbrella Group — Pipeline de Agentes IA
 
-Pipeline de 9 agentes especializados para el análisis y documentación de fórmulas de complementos alimentarios.
+Pipeline de 8 agentes especializados para el análisis y documentación de fórmulas de complementos alimentarios. El informe ejecutivo final se compone de forma programática (sin LLM) en `pipeline/report_composer.py`.
 
 ## Estructura del proyecto
 
@@ -15,7 +15,6 @@ umbrella/
 │   ├── formatos_agent_v2.py
 │   ├── docs_internos_agent_v2.py
 │   ├── qc_agent_v2.py
-│   ├── report_agent_v2.py
 │   └── legacy/              # Agentes v1 (solo para referencia/tests)
 ├── pipeline/                # Orquestación y configuración
 │   ├── orchestrator.py      # Pipeline principal (ejecutar desde aquí)
@@ -82,7 +81,7 @@ Cada agente recibe **solo el contexto que necesita** (dependencias mínimas):
 | 4 | Etiqueta | Claims + Ficha Técnica |
 
 Los resultados se guardan en `outputs/v2/` como `.json` (para la cadena) y `.md` (para lectura humana).
-El agente 9 genera además `outputs/v2/informe_ejecutivo.md` como documento final de entrega.
+Tras los 8 agentes, `pipeline/report_composer.py` compone `outputs/v2/informe_ejecutivo.md` como documento final de entrega (sin llamadas a LLM).
 
 ## Instalación
 

@@ -1,4 +1,4 @@
-"""Pipeline v2 completo: 9 agentes en cadena."""
+"""Pipeline v2 completo: 8 agentes en cadena + composición programática del informe."""
 
 from __future__ import annotations
 
