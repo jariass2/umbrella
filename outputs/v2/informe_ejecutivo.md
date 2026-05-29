@@ -1,6 +1,6 @@
 # Informe de Producto — Collagen Complex Pro
 
-**Fecha:** 12/04/2026  
+**Fecha:** 29/05/2026  
 **Viabilidad regulatoria:**  VIABLE_CON_MODIFICACIONES  
 **Formato recomendado:** Stick de polvo monodosis (film metallizado barrera) - 14-16g de peso total  
 
@@ -8,15 +8,13 @@
 
 ## Índice
 
-1. [Análisis KIC — Composición de Ingredientes](#1-análisis-de-composición-de-ingredientes-kic)
-2. [Validación Regulatoria](#2-validación-regulatoria)
-3. [Ficha Técnica](#3-ficha-técnica)
-4. [Claims y Diferenciación Comercial](#4-claims-y-diferenciación-comercial)
-5. [Propuesta de Etiqueta](#5-propuesta-de-etiqueta)
-6. [Formatos e Innovación](#6-formatos-e-innovación)
-7. [Documentación Interna de Producción](#7-documentación-interna-de-producción)
-8. [Plan de Control de Calidad](#8-plan-de-control-de-calidad)
-9. [Anexo — Configuración del Pipeline](#anexo--configuración-del-pipeline)
+1. [Fórmula Cuantitativa](#1-fórmula-cuantitativa)
+2. [Ficha Técnica](#2-ficha-técnica)
+3. [Información de Marketing](#3-información-de-marketing)
+4. [Documentación Interna de Producción](#4-documentación-interna-de-producción)
+5. [Plan de Calidad](#5-plan-de-calidad)
+6. [Portfolio recomendado](#6-portfolio-recomendado)
+7. [Anexo — Configuración del Pipeline](#anexo--configuración-del-pipeline)
 
 ---
 
@@ -44,32 +42,35 @@ Collagen Complex Pro
 
 ---
 
-## 1. Análisis de Composición de Ingredientes (KIC)
+## 1. Fórmula Cuantitativa
+
+
+### Tabla de ingredientes
+
+| Ingrediente | Dosis | % NRV/VRN | Forma química | Biodisponibilidad | Reg. |
+|---|---|---|---|---|---|
+| L-Glicina | 5000 mg | no aplica | Glicina (aminoácido libre, grado farmacéutico) | ALTA | ✅ |
+| Péptidos de Colágeno | 5000 mg | no aplica | Colágeno hidrolizado (peso molecular 2-5 kDa) | ALTA | ✅ |
+| Ácido Hialurónico | 100 mg | no aplica | Hialuronato sódico (peso molecular 800-1500 kDa, origen fermentativo Streptomyces) | MEDIA | ✅ |
+| Magnesio | 75 mg | 20% | Forma por confirmar con el fabricante (ej: citrato, bisglicinato, óxido - todas en Anexo II Dir. 2002/46/CE) | MEDIA | ✅ |
+| AKBA (Boswellia serrata 30%) | 10 mg | no aplica | Extracto de resina de Boswellia serrata estandarizado al 30% de ácido 3-O-acetil-11-ceto-β-boswélico (AKBA) | BAJA | ⚠️ |
+| Hierro | 3.5 mg | 25% | Forma por confirmar (ej: bisglicinato, sulfato ferroso, fumarato ferroso - verificar inclusión en Anexo II Dir. 2002/46/CE) | MEDIA | ✅ |
+| Zinc | 2.5 mg | 25% | Forma por confirmar (ej: citrato, gluconato, picolinato, bisglicinato - verificar Anexo II Dir. 2002/46/CE) | MEDIA | ✅ |
+| Vitamina B5 (Ácido pantoténico) | 1.5 mg | 25% | Ácido pantoténico o calcio D-pantotenato (Anexo II Dir. 2002/46/CE) | ALTA | ✅ |
+| Astaxantina | 1 mg | no aplica | Oleorresina rica en astaxantina del alga Haematococcus pluvialis (Novel Food autorizado Reg. (UE) 2017/2470, modificado por Reg. (UE) 2023/1581) | MEDIA | ⚠️ |
+| Vitamina B2 (Riboflavina) | 0.35 mg | 25% | Riboflavina o riboflavina-5'-fosfato sódico (Anexo II Dir. 2002/46/CE) | ALTA | ✅ |
+| Vitamina B6 (Piridoxina) | 0.35 mg | 25% | Clorhidrato de piridoxina o piridoxina-5'-fosfato (Anexo II Dir. 2002/46/CE) | ALTA | ✅ |
+| Vitamina B1 (Tiamina) | 0.275 mg | 25% | Clorhidrato de tiamina o mononitrato de tiamina (Anexo II Dir. 2002/46/CE) | ALTA | ✅ |
+| Folato (Ácido fólico) | 0.05 mg | 25% | Ácido fólico (Anexo II Dir. 2002/46/CE) [no confundir con 5-MTHF que requiere Reg. (UE) 2016/1935] | MEDIA | ✅ |
+| Vitamina K2 (MK-7) | 0.025 mg | no aplica (AI: 75µg) | Menaquinona-7 (MK-7, origen fermentationis) | ALTA | ⚠️ |
+| Vitamina B12 (Cianocobalamina) | 0.00063 mg | 25% | Cianocobalamina (Anexo II Dir. 2002/46/CE) | MEDIA | ✅ |
+
+
+### Análisis de ingredientes
 
 **Tipo de producto:** complemento_alimenticio  
 **Objetivo funcional principal:** Soporte estructural osteoarticular y tegumentario (piel, articulaciones, tejido conectivo)  
 **Objetivos secundarios:** Antioxidación celular, Soporte nutricional para síntesis de colágeno, Energía y metabolismo  
-
-
-### Perfil de ingredientes
-
-| Ingrediente | Tipología | Dosis | % NRV | Biodisponibilidad | Evaluación dosis |
-|---|---|---|---|---|---|
-| L-Glicina | AMINOÁCIDO | 5000 mg | no aplica% | ALTA | adecuada |
-| Péptidos de Colágeno | PROTEÍNA_FUNCIONAL | 5000 mg | no aplica% | ALTA | adecuada |
-| Ácido Hialurónico | GLUCOSAMINGLICANO | 100 mg | no aplica% | MEDIA | adecuada |
-| Magnesio | MINERAL | 75 mg | 20%% | MEDIA | adecuada |
-| AKBA (Boswellia serrata 30%) | EXTRACTO_VEGETAL | 10 mg | no aplica% | BAJA | subdosificado |
-| Hierro | MINERAL | 3.5 mg | 25%% | MEDIA | adecuada |
-| Zinc | MINERAL | 2.5 mg | 25%% | MEDIA | adecuada |
-| Vitamina B5 (Ácido pantoténico) | VITAMINA | 1.5 mg | 25%% | ALTA | adecuada |
-| Astaxantina | CAROTENOIDE | 1 mg | no aplica% | MEDIA | subdosificado |
-| Vitamina B2 (Riboflavina) | VITAMINA | 0.35 mg | 25%% | ALTA | adecuada |
-| Vitamina B6 (Piridoxina) | VITAMINA | 0.35 mg | 25%% | ALTA | adecuada |
-| Vitamina B1 (Tiamina) | VITAMINA | 0.275 mg | 25%% | ALTA | adecuada |
-| Folato (Ácido fólico) | VITAMINA | 0.05 mg | 25%% | MEDIA | adecuada |
-| Vitamina K2 (MK-7) | VITAMINA | 0.025 mg | no aplica (AI: 75µg)% | ALTA | subdosificado |
-| Vitamina B12 (Cianocobalamina) | VITAMINA | 0.00063 mg | 25%% | MEDIA | adecuada |
 
 **L-Glicina**
 - *Función:* Precursor directo de colágeno (33% de sus residuos) / Neurotransmisor inhibitorio, soporte hepático
@@ -177,7 +178,7 @@ Collagen Complex Pro
 - *Advertencias de formulación:* Cianocobalamina es forma sintética estable; 0,63µg equivale a 25% NRV - dosis mantenimiento adecuada
 
 
-### Matriz de interacciones
+#### Matriz de interacciones
 
 | Par de ingredientes | Tipo | Relevancia | Descripción |
 |---|---|---|---|
@@ -192,10 +193,72 @@ Collagen Complex Pro
 | Zinc + Vitamina A | 🟦 SINERGIA_MODERADA | media | El zinc es necesario para la síntesis de RBP (retinol binding protein) que transporta vitamina A. También es cofactor de |
 
 
-### Valoración global de la fórmula
+#### Valoración global de la fórmula
 
 **Coherencia funcional:** MEJORABLE  
 **Potencial sinérgico:** La fórmula tiene una base sólida de péptidos de colágeno y glicina para soporte estructural, pero carece de la sinergia crítica con vitamina C para activación del colágeno. La presencia de vitaminas del grupo B es adecuada para metabolismo energético, pero la dosificación de algunos ingredientes clave (AKBA, astaxantina, K2) está por debajo de los rangos terapéuticos utilizados en estudios clínicos.  
+
+
+#### Fuentes consultadas
+
+[1] 5-Loxin clinical trial - Osteoarthritis efficacy and safety ([enlace](https://pubmed.ncbi.nlm.nih.gov/18573758/)) — *pubmed*
+[2] Astaxanthin skin aging meta-analysis 2021 ([enlace](https://pubmed.ncbi.nlm.nih.gov/33760444/)) — *pubmed*
+[3] Reglamento (UE) 1169/2011 - Valores de Referencia de Nutrientes ([enlace](https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:32011R1169)) — *web_search*
+
+### Validación regulatoria
+
+**Viabilidad:**  VIABLE_CON_MODIFICACIONES  
+> La fórmula 'Collagen Complex Pro' es en su mayor parte comercializable como complemento alimentario en España. El núcleo del producto (péptidos de colágeno, L-glicina, ácido hialurónico, vitaminas del grupo B y minerales) está bien fundamentado regulatoriamente. Sin embargo, existen tres ingredientes que requieren atención: (1) la Vitamina K2 (MK-7) no está explícitamente en el Anexo II de la Dir. 2002/46/CE y requiere verificación con AESAN; (2) el AKBA de Boswellia serrata necesita confirmación de la posición AESAN; (3) la astaxantina debe provenir obligatoriamente de la fuente autorizada (oleorresina de Haematococcus pluvialis) y cumplir las condiciones de etiquetado del Novel Food.
+
+**Bloqueantes regulatorios:**
+- Vitamina K2 (MK-7): no está explícitamente listada como fuente permitida en el Anexo II de la Dir. 2002/46/CE. Riesgo de objeción en la notificación RGSEAA. No es un bloqueante definitivo si AESAN acepta, pero requiere acción previa.
+
+
+#### Estatus regulatorio por ingrediente
+
+| Ingrediente | Normativa aplicable | Condiciones / Advertencias |
+|---|---|---|
+| L-Glicina | Marco general Reg. (CE) 178/2002 — sustancia alimentaria de uso generalizado; No incluida  | Ninguna condicionante. |
+| Péptidos de Colágeno | Marco general Reg. (CE) 178/2002 — ingrediente alimentario de uso tradicional; No incluido | Debe declararse el origen animal (bovino, porcino o aviario) en el etiquetado conforme al Reg. (UE) 1169/2011, Art. 21.1 |
+| Ácido Hialurónico | Consulta Art. 4 del Reg. (UE) 2015/2283 — resultado: NO Novel Food en complementos aliment | El origen debe ser mediante fermentación biotecnológica (hialuronato sódico producido por fermentación). Debe especifica |
+| Magnesio | Directiva 2002/46/CE, Anexo I (lista de vitaminas y minerales); Directiva 2002/46/CE, Anex | Debe especificarse la forma química empleada (ej: citrato, bisglicinato, carbonato) y verificar que esté en el Anexo II  |
+| AKBA (Boswellia serrata, extracto 30% AKBA) | Lista BELFRIT (BE-FR-IT) — incluye Boswellia serrata; Evaluaciones nacionales de plantas — | Verificar con AESAN la posición específica de Boswellia serrata antes de la notificación del producto. Incluir en el exp |
+| Hierro | Directiva 2002/46/CE, Anexo I (lista de vitaminas y minerales); Directiva 2002/46/CE, Anex | Debe especificarse la forma química. Verificar que esté en el Anexo II de la Dir. 2002/46/CE. El bisglicinato de hierro, |
+| Zinc | Directiva 2002/46/CE, Anexo I (lista de vitaminas y minerales); Directiva 2002/46/CE, Anex | Debe especificarse la forma química y verificar que esté en el Anexo II. |
+| Vitamina B5 (Ácido pantoténico) | Directiva 2002/46/CE, Anexo I; Directiva 2002/46/CE, Anexo II | Ninguna. |
+| Astaxantina | Reg. (UE) 2015/2283 (Novel Foods); Reg. de Ejecución (UE) 2017/2470 — autorización del NF  | 1) La fuente DEBE ser exclusivamente 'oleorresina rica en astaxantina del alga Haematococcus pluvialis' — no se admiten  |
+| Vitamina B2 (Riboflavina) | Directiva 2002/46/CE, Anexo I; Directiva 2002/46/CE, Anexo II | Ninguna. |
+| Vitamina B6 (Piridoxina) | Directiva 2002/46/CE, Anexo I; Directiva 2002/46/CE, Anexo II | Ninguna. |
+| Vitamina B1 (Tiamina) | Directiva 2002/46/CE, Anexo I; Directiva 2002/46/CE, Anexo II | Ninguna. |
+| Folato (Ácido fólico) | Directiva 2002/46/CE, Anexo I; Directiva 2002/46/CE, Anexo II (ácido fólico) | Si se usa ácido fólico (forma sintética), está cubierto por el Anexo II de Dir. 2002/46/CE. Si se usa 5-MTHF (forma acti |
+| Vitamina K2 (MK-7) | Directiva 2002/46/CE, Anexo I (Vitamina K — autorizada); Directiva 2002/46/CE, Anexo II (f | 1) Verificar con AESAN la aceptabilidad específica de MK-7 como fuente de Vitamina K en complementos alimentarios en Esp |
+| Vitamina B12 (Cianocobalamina) | Directiva 2002/46/CE, Anexo I; Directiva 2002/46/CE, Anexo II (cianocobalamina) | Ninguna. |
+
+
+#### Advertencias obligatorias en etiqueta
+
+- Conforme al Art. 10 RD 1487/2009: 'Los complementos alimenticios no deben utilizarse como sustitutos de una dieta variada y equilibrada y de un modo de vida sano.'
+- Conforme al Art. 10 RD 1487/2009: 'No superar la dosis diaria recomendada indicada.'
+- Conforme al Art. 10 RD 1487/2009: 'Mantener fuera del alcance de los niños más pequeños.'
+- Si se mantiene MK-7: 'Consulte con su médico o farmacéutico si está tomando medicamentos anticoagulantes.'
+- Si se incluye Boswellia serrata (tras verificación): consultar las advertencias específicas según la posición AESAN (potencialmente: 'No recomendado en embarazo y lactancia').
+- Declaración de alérgenos conforme al Anexo II del Reg. (UE) 1169/2011 si el colágeno es de origen marino (pescado/moluscos).
+
+
+#### Fuentes consultadas
+
+[1] Reglamento de Ejecución (UE) 2017/2470 — Autorización del NF 'oleorresina rica en astaxantina del alga Haematococcus pluvialis' ([enlace](https://farmaimpresa.com/en/astaxanthin-new-limits-and-rules-eu/)) — *web_search*
+[2] Gruppo FarmaImpresa — New Rules on Astaxanthin (UE) ([enlace](https://legalegonutrition.com/modificacion-astaxantina/)) — *web_search*
+[3] DOUE — Reglamento de Ejecución (UE) 2023/1581 ([enlace](https://www.boe.es/buscar/doc.php?id=DOUE-L-2023-81887)) — *web_search*
+[4] Food Compliance International — Sodium hyaluronate not Novel Food in supplements ([enlace](https://foodcomplianceinternational.com/industry-insight/news/3205-biotechnologically-produced-sodium-hyaluronate-is-not-novel-in-food-supplements)) — *web_search*
+[5] Directiva 2002/46/CE — Anexos I y II (vitaminas y minerales y sus fuentes permitidas) — *conocimiento_experto*
+[6] Real Decreto 1487/2009 — Complementos alimentarios (transposición española) — *conocimiento_experto*
+[7] EFSA — Upper Levels (UL) para vitaminas y minerales — *conocimiento_experto*
+[8] Lista BELFRIT (Bélgica-Francia-Italia) de plantas en complementos alimentarios — *conocimiento_experto*
+
+### Propuestas de mejora (IA)
+
+*Consolidado de los análisis de composición (KIC) y regulatorio, sin duplicados.*
 
 **Gaps funcionales:**
 - **Ausencia de vitamina C**: La vitamina C es absolutamente crítica para la síntesis de colágeno: es cofactor de prolil-4-hidroxilasa y lisil hidroxilasa. Sin ella, el colágeno no puede triple-helizarse correctamente y se secreta como procolágeno defectuoso que se degrada. Estudios clínicos con colágeno + vitamina C muestran resultados superiores a colágeno solo.
@@ -230,106 +293,101 @@ Collagen Complex Pro
 - **Considerar añadir silicio (metilsilanol)**: El silicio orgánico es cofavorable para la síntesis de colágeno y la mineralización ósea. Estudos muestran synergia con colágeno.
   - *Acción:* Añadir 10-20mg de silicio como metilsilanol DMAE o ácido ortosílicico estabilizado si se busca optimizar el perfil de salud articular.
 
+**Modificaciones regulatorias:**
+- **MK-7 → Evaluar sustitución por fitomenadiona (Vitamina K1), explícitamente autorizada en el Anexo II de la Dir. 2002/46/CE. Si se mantiene MK-7, consultar formalmente con AESAN y documentar el fundamento regulatorio.**
+- **AKBA (Boswellia serrata) → Confirmar la posición AESAN mediante consulta al servicio de información o en la base de datos de plantas de AESAN. Incluir documentación completa del extracto en el expediente de notificación.**
+- **Astaxantina → Asegurar que el proveedor certifica la fuente como 'oleorresina rica en astaxantina del alga Haematococcus pluvialis' conforme al Reg. (UE) 2017/2470. Incluir denominación obligatoria en etiqueta.**
+- **Eficacia general → Considerar ajustar las dosis de AKBA (actualmente subdosificado a 3 mg de AKBA vs. 25-250 mg efectivos), astaxantina (1 mg vs. 4-12 mg efectivos), folato (50 µg es muy bajo) y MK-7 (25 µg vs. 45-180 µg para funcionalidad ósea) para que el producto ofrezca valor percibido proporcional al precio de mercado.**
+- **Interacción hierro-astaxantina → Dado que el hierro puede oxidar la astaxantina, considerar la microencapsulación del hierro o la adición de un antioxidante (vitamina E natural, 15-30 mg) como protector.**
 
-### Fuentes consultadas
-
-[1] 5-Loxin clinical trial - Osteoarthritis efficacy and safety ([enlace](https://pubmed.ncbi.nlm.nih.gov/18573758/)) — *pubmed*
-[2] Astaxanthin skin aging meta-analysis 2021 ([enlace](https://pubmed.ncbi.nlm.nih.gov/33760444/)) — *pubmed*
-[3] Reglamento (UE) 1169/2011 - Valores de Referencia de Nutrientes ([enlace](https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:32011R1169)) — *web_search*
 
 ---
 
-## 2. Validación Regulatoria
-
-**Viabilidad:**  VIABLE_CON_MODIFICACIONES  
-> La fórmula 'Collagen Complex Pro' es en su mayor parte comercializable como complemento alimentario en España. El núcleo del producto (péptidos de colágeno, L-glicina, ácido hialurónico, vitaminas del grupo B y minerales) está bien fundamentado regulatoriamente. Sin embargo, existen tres ingredientes que requieren atención: (1) la Vitamina K2 (MK-7) no está explícitamente en el Anexo II de la Dir. 2002/46/CE y requiere verificación con AESAN; (2) el AKBA de Boswellia serrata necesita confirmación de la posición AESAN; (3) la astaxantina debe provenir obligatoriamente de la fuente autorizada (oleorresina de Haematococcus pluvialis) y cumplir las condiciones de etiquetado del Novel Food.
-
-**Bloqueantes regulatorios:**
-- Vitamina K2 (MK-7): no está explícitamente listada como fuente permitida en el Anexo II de la Dir. 2002/46/CE. Riesgo de objeción en la notificación RGSEAA. No es un bloqueante definitivo si AESAN acepta, pero requiere acción previa.
-
-**Modificaciones recomendadas:**
-- MK-7 → Evaluar sustitución por fitomenadiona (Vitamina K1), explícitamente autorizada en el Anexo II de la Dir. 2002/46/CE. Si se mantiene MK-7, consultar formalmente con AESAN y documentar el fundamento regulatorio.
-- AKBA (Boswellia serrata) → Confirmar la posición AESAN mediante consulta al servicio de información o en la base de datos de plantas de AESAN. Incluir documentación completa del extracto en el expediente de notificación.
-- Astaxantina → Asegurar que el proveedor certifica la fuente como 'oleorresina rica en astaxantina del alga Haematococcus pluvialis' conforme al Reg. (UE) 2017/2470. Incluir denominación obligatoria en etiqueta.
-- Eficacia general → Considerar ajustar las dosis de AKBA (actualmente subdosificado a 3 mg de AKBA vs. 25-250 mg efectivos), astaxantina (1 mg vs. 4-12 mg efectivos), folato (50 µg es muy bajo) y MK-7 (25 µg vs. 45-180 µg para funcionalidad ósea) para que el producto ofrezca valor percibido proporcional al precio de mercado.
-- Interacción hierro-astaxantina → Dado que el hierro puede oxidar la astaxantina, considerar la microencapsulación del hierro o la adición de un antioxidante (vitamina E natural, 15-30 mg) como protector.
+## 2. Ficha Técnica
 
 
-### Evaluación por ingrediente
+### 1 · Identificación y claims activos
 
-| Ingrediente | Estado | Normativa | Condiciones / Advertencias |
-|---|---|---|---|
-| L-Glicina |  ✅ | Marco general Reg. (CE) 178/2002 — sustancia alimentaria de uso generalizado; No | Ninguna condicionante. |
-| Péptidos de Colágeno |  ✅ | Marco general Reg. (CE) 178/2002 — ingrediente alimentario de uso tradicional; N | Debe declararse el origen animal (bovino, porcino o aviario) en el etiquetado conforme al Reg. (UE)  |
-| Ácido Hialurónico |  ✅ | Consulta Art. 4 del Reg. (UE) 2015/2283 — resultado: NO Novel Food en complement | El origen debe ser mediante fermentación biotecnológica (hialuronato sódico producido por fermentaci |
-| Magnesio |  ✅ | Directiva 2002/46/CE, Anexo I (lista de vitaminas y minerales); Directiva 2002/4 | Debe especificarse la forma química empleada (ej: citrato, bisglicinato, carbonato) y verificar que  |
-| AKBA (Boswellia serrata, extracto 30% AKBA) |  ⚠️ | Lista BELFRIT (BE-FR-IT) — incluye Boswellia serrata; Evaluaciones nacionales de | Verificar con AESAN la posición específica de Boswellia serrata antes de la notificación del product |
-| Hierro |  ✅ | Directiva 2002/46/CE, Anexo I (lista de vitaminas y minerales); Directiva 2002/4 | Debe especificarse la forma química. Verificar que esté en el Anexo II de la Dir. 2002/46/CE. El bis |
-| Zinc |  ✅ | Directiva 2002/46/CE, Anexo I (lista de vitaminas y minerales); Directiva 2002/4 | Debe especificarse la forma química y verificar que esté en el Anexo II. |
-| Vitamina B5 (Ácido pantoténico) |  ✅ | Directiva 2002/46/CE, Anexo I; Directiva 2002/46/CE, Anexo II | Ninguna. |
-| Astaxantina |  ⚠️ | Reg. (UE) 2015/2283 (Novel Foods); Reg. de Ejecución (UE) 2017/2470 — autorizaci | 1) La fuente DEBE ser exclusivamente 'oleorresina rica en astaxantina del alga Haematococcus pluvial |
-| Vitamina B2 (Riboflavina) |  ✅ | Directiva 2002/46/CE, Anexo I; Directiva 2002/46/CE, Anexo II | Ninguna. |
-| Vitamina B6 (Piridoxina) |  ✅ | Directiva 2002/46/CE, Anexo I; Directiva 2002/46/CE, Anexo II | Ninguna. |
-| Vitamina B1 (Tiamina) |  ✅ | Directiva 2002/46/CE, Anexo I; Directiva 2002/46/CE, Anexo II | Ninguna. |
-| Folato (Ácido fólico) |  ✅ | Directiva 2002/46/CE, Anexo I; Directiva 2002/46/CE, Anexo II (ácido fólico) | Si se usa ácido fólico (forma sintética), está cubierto por el Anexo II de Dir. 2002/46/CE. Si se us |
-| Vitamina K2 (MK-7) |  ⚠️ | Directiva 2002/46/CE, Anexo I (Vitamina K — autorizada); Directiva 2002/46/CE, A | 1) Verificar con AESAN la aceptabilidad específica de MK-7 como fuente de Vitamina K en complementos |
-| Vitamina B12 (Cianocobalamina) |  ✅ | Directiva 2002/46/CE, Anexo I; Directiva 2002/46/CE, Anexo II (cianocobalamina) | Ninguna. |
-
-
-### Advertencias obligatorias en etiqueta
-
-- Conforme al Art. 10 RD 1487/2009: 'Los complementos alimenticios no deben utilizarse como sustitutos de una dieta variada y equilibrada y de un modo de vida sano.'
-- Conforme al Art. 10 RD 1487/2009: 'No superar la dosis diaria recomendada indicada.'
-- Conforme al Art. 10 RD 1487/2009: 'Mantener fuera del alcance de los niños más pequeños.'
-- Si se mantiene MK-7: 'Consulte con su médico o farmacéutico si está tomando medicamentos anticoagulantes.'
-- Si se incluye Boswellia serrata (tras verificación): consultar las advertencias específicas según la posición AESAN (potencialmente: 'No recomendado en embarazo y lactancia').
-- Declaración de alérgenos conforme al Anexo II del Reg. (UE) 1169/2011 si el colágeno es de origen marino (pescado/moluscos).
-
-
-### Fuentes consultadas
-
-[1] Reglamento de Ejecución (UE) 2017/2470 — Autorización del NF 'oleorresina rica en astaxantina del alga Haematococcus pluvialis' ([enlace](https://farmaimpresa.com/en/astaxanthin-new-limits-and-rules-eu/)) — *web_search*
-[2] Gruppo FarmaImpresa — New Rules on Astaxanthin (UE) ([enlace](https://legalegonutrition.com/modificacion-astaxantina/)) — *web_search*
-[3] DOUE — Reglamento de Ejecución (UE) 2023/1581 ([enlace](https://www.boe.es/buscar/doc.php?id=DOUE-L-2023-81887)) — *web_search*
-[4] Food Compliance International — Sodium hyaluronate not Novel Food in supplements ([enlace](https://foodcomplianceinternational.com/industry-insight/news/3205-biotechnologically-produced-sodium-hyaluronate-is-not-novel-in-food-supplements)) — *web_search*
-[5] Directiva 2002/46/CE — Anexos I y II (vitaminas y minerales y sus fuentes permitidas) — *conocimiento_experto*
-[6] Real Decreto 1487/2009 — Complementos alimentarios (transposición española) — *conocimiento_experto*
-[7] EFSA — Upper Levels (UL) para vitaminas y minerales — *conocimiento_experto*
-[8] Lista BELFRIT (Bélgica-Francia-Italia) de plantas en complementos alimentarios — *conocimiento_experto*
-
----
-
-## 3. Ficha Técnica
+**Empresa:** Umbrella F&FI, S.L.  
+**NIF / VAT:** B65876351  
+**Dirección:** Pol. Ind. Mogent A7 Park — Av. Mogent 262-264, 08450 Llinars del Vallès (Barcelona), España  
+**Registro:** RGSEAA 26.020214/B  
+**Web:** www.umbrellamix.com  
 
 **Denominación legal:** Complemento alimenticio a base de péptidos de colágeno, L-glicina, ácido hialurónico, minerales (magnesio, hierro y zinc), vitaminas del grupo B (B1, B2, B5, B6, B12 y folato), vitamina K2, extracto de Boswellia serrata estandarizado en AKBA y astaxantina  
 **Nombre comercial:** Collagen Complex Pro  
 **Tipo de producto:** complemento_alimenticio  
 **Forma de presentación:** Cápsulas (determinar según evaluación técnica de viabilidad, considerando la alta dosis de glicina y péptidos de colágeno que podrían requerir presentación en polvo sobres o double-capsule)  
 **Público objetivo:** Adultos que buscan soporte nutricional para la salud articular, cutánea y del tejido conectivo. Producto orientado a personas activas, mayores de 30 años, y población general interesada en el cuidado integral de la síntesis de colágeno endógeno. No destinado a población infantil ni adolescentes menores de 14 años (por contenido de astaxantina conforme a Reg. (UE) 2023/1581).  
+**Fecha / versión:** 29/05/2026  
+**Dosis diaria:** 1 cápsula al día (o la dosis que corresponda según formato final: sobres, double-capsule, etc.)  
 
 
-### Composición cualitativa y cuantitativa
+#### Tabla de activos por dosis
 
-| Ingrediente | Forma química | Por dosis | Por 100g | % NRV | Estado reg. |
-|---|---|---|---|---|---|
-| L-Glicina | Glicina (aminoácido libre, grado farmacéutico) | 5000 mg (5 g) | 333 mg/g (variable según formato final) | No establecido VRN - aminoácido no cubierto por VRN en Anexo XIII Reg. 1169/2011 | ✅ PERMITIDO |
-| Péptidos de Colágeno | Colágeno hidrolizado (peso molecular 2-5 kDa) | 5000 mg (5 g) | 333 mg/g (variable según formato final) | No establecido VRN - proteína funcional no cubierta por VRN en Anexo XIII | ✅ PERMITIDO |
-| Ácido Hialurónico | Hialuronato sódico (peso molecular 800-1500 kDa, origen fermentativo Streptomyces) | 100 mg | Variable según formato final | No establecido VRN - glucosaminoglicano no cubierto por VRN | ✅ PERMITIDO (no Novel Food cuando es de origen fermentativo) |
-| Magnesio | Forma por confirmar con el fabricante (ej: citrato, bisglicinato, óxido - todas en Anexo II Dir. 2002/46/CE) | 75 mg | Variable según formato final | 20% VRN (VRN adultos: 375 mg) | ✅ PERMITIDO |
-| AKBA (Boswellia serrata) | Extracto de resina de Boswellia serrata estandarizado al 30% de ácido 3-O-acetil-11-ceto-β-boswélico (AKBA) | 33,3 mg de extracto (equivalente a 10 mg AKBA real) | Variable según formato final | No establecido VRN - fitonutriente no cubierto | ⚠️ CONDICIONADO (verificar posición AESAN antes de notificación; dosis de AKBA subóptima para efecto antiinflamatorio clínico) |
-| Hierro | Forma por confirmar (ej: bisglicinato, sulfato ferroso, fumarato ferroso - verificar inclusión en Anexo II Dir. 2002/46/CE) | 3,5 mg | Variable según formato final | 25% VRN (VRN adultos: 14 mg) | ✅ PERMITIDO |
-| Zinc | Forma por confirmar (ej: citrato, gluconato, picolinato, bisglicinato - verificar Anexo II Dir. 2002/46/CE) | 2,5 mg | Variable según formato final | 25% VRN (VRN adultos: 10 mg) | ✅ PERMITIDO |
-| Vitamina B5 (Ácido pantoténico) | Ácido pantoténico o calcio D-pantotenato (Anexo II Dir. 2002/46/CE) | 1,5 mg | Variable según formato final | 25% VRN (VRN adultos: 6 mg) | ✅ PERMITIDO |
-| Astaxantina | Oleorresina rica en astaxantina del alga Haematococcus pluvialis (Novel Food autorizado Reg. (UE) 2017/2470, modificado por Reg. (UE) 2023/1581) | 1 mg | Variable según formato final | No establecido VRN - carotenoide no cubierto por VRN. Cumple límite máximo de 8 mg/día | ⚠️ CONDICIONADO (fuente obligatoria: H. pluvialis; dosis subóptima para eficacia clínica, recomendada 4-12 mg) |
-| Vitamina B2 (Riboflavina) | Riboflavina o riboflavina-5'-fosfato sódico (Anexo II Dir. 2002/46/CE) | 0,35 mg | Variable según formato final | 25% VRN (VRN adultos: 1,4 mg) | ✅ PERMITIDO |
-| Vitamina B6 (Piridoxina) | Clorhidrato de piridoxina o piridoxina-5'-fosfato (Anexo II Dir. 2002/46/CE) | 0,35 mg | Variable según formato final | 25% VRN (VRN adultos: 1,4 mg) | ✅ PERMITIDO |
-| Vitamina B1 (Tiamina) | Clorhidrato de tiamina o mononitrato de tiamina (Anexo II Dir. 2002/46/CE) | 0,275 mg | Variable según formato final | 25% VRN (VRN adultos: 1,1 mg) | ✅ PERMITIDO |
-| Folato (Ácido fólico) | Ácido fólico (Anexo II Dir. 2002/46/CE) [no confundir con 5-MTHF que requiere Reg. (UE) 2016/1935] | 50 µg | Variable según formato final | 25% VRN (VRN adultos: 200 µg) | ✅ PERMITIDO |
-| Vitamina K2 (MK-7) | Menaquinona-7 (MK-7, origen fermentationis) | 25 µg | Variable según formato final | 33% VRN orientativo (VRN orientativo vitamina K: 75 µg) [dosis subóptima para efecto óseo, recomendado 45-180 µg] | ⚠️ CONDICIONADO (MK-7 no explícitamente en Anexo II Dir. 2002/46/CE; verificar con AESAN; alternativa: sustituir por fitomenadiona/K1 que sí está autorizada) |
-| Vitamina B12 (Cianocobalamina) | Cianocobalamina (Anexo II Dir. 2002/46/CE) | 0,63 µg | Variable según formato final | 25% VRN (VRN adultos: 2,5 µg) | ✅ PERMITIDO |
+| Activo | Cantidad / dosis | % NRV/VRN | Forma química |
+|---|---|---|---|
+| L-Glicina | 5000 mg | no aplica | Glicina (aminoácido libre, grado farmacéutico) |
+| Péptidos de Colágeno | 5000 mg | no aplica | Colágeno hidrolizado (peso molecular 2-5 kDa) |
+| Ácido Hialurónico | 100 mg | no aplica | Hialuronato sódico (peso molecular 800-1500 kDa, origen fermentativo Streptomyces) |
+| Magnesio | 75 mg | 20% | Forma por confirmar con el fabricante (ej: citrato, bisglicinato, óxido - todas en Anexo II Dir. 2002/46/CE) |
+| AKBA (Boswellia serrata 30%) | 10 mg | no aplica | Extracto de resina de Boswellia serrata estandarizado al 30% de ácido 3-O-acetil-11-ceto-β-boswélico (AKBA) |
+| Hierro | 3.5 mg | 25% | Forma por confirmar (ej: bisglicinato, sulfato ferroso, fumarato ferroso - verificar inclusión en Anexo II Dir. 2002/46/CE) |
+| Zinc | 2.5 mg | 25% | Forma por confirmar (ej: citrato, gluconato, picolinato, bisglicinato - verificar Anexo II Dir. 2002/46/CE) |
+| Vitamina B5 (Ácido pantoténico) | 1.5 mg | 25% | Ácido pantoténico o calcio D-pantotenato (Anexo II Dir. 2002/46/CE) |
+| Astaxantina | 1 mg | no aplica | Oleorresina rica en astaxantina del alga Haematococcus pluvialis (Novel Food autorizado Reg. (UE) 2017/2470, modificado por Reg. (UE) 2023/1581) |
+| Vitamina B2 (Riboflavina) | 0.35 mg | 25% | Riboflavina o riboflavina-5'-fosfato sódico (Anexo II Dir. 2002/46/CE) |
+| Vitamina B6 (Piridoxina) | 0.35 mg | 25% | Clorhidrato de piridoxina o piridoxina-5'-fosfato (Anexo II Dir. 2002/46/CE) |
+| Vitamina B1 (Tiamina) | 0.275 mg | 25% | Clorhidrato de tiamina o mononitrato de tiamina (Anexo II Dir. 2002/46/CE) |
+| Folato (Ácido fólico) | 0.05 mg | 25% | Ácido fólico (Anexo II Dir. 2002/46/CE) [no confundir con 5-MTHF que requiere Reg. (UE) 2016/1935] |
+| Vitamina K2 (MK-7) | 0.025 mg | no aplica (AI: 75µg) | Menaquinona-7 (MK-7, origen fermentationis) |
+| Vitamina B12 (Cianocobalamina) | 0.00063 mg | 25% | Cianocobalamina (Anexo II Dir. 2002/46/CE) |
 
 
-### Información nutricional
+#### Posibles claims por ingrediente
+
+*Resumen ingrediente → disponibilidad de claim EFSA. El listado completo está en el Bloque 3 (Marketing).*
+| Ingrediente | Claims EFSA | Ejemplo de claim autorizado |
+|---|---|---|
+| L-Glicina | — | — |
+| Péptidos de Colágeno | 1 | Los péptidos de colágeno hidrolizado han sido probados en ensayos controlados aleatorizado |
+| Ácido Hialurónico | — | — |
+| Magnesio | 9 | El magnesio contribuye a la reducción del cansancio y la fatiga |
+| AKBA (Boswellia serrata) | — | — |
+| Hierro | 7 | El hierro contribuye a la función cognitiva normal |
+| Zinc | 15 | El zinc contribuye a la síntesis normal de ADN |
+| Vitamina B5 (Ácido pantoténico) | 3 | El ácido pantoténico contribuye al metabolismo energético normal |
+| Astaxantina | — | — |
+| Vitamina B2 (Riboflavina) | 7 | La riboflavina contribuye al mantenimiento de la piel normal |
+| Vitamina B6 (Piridoxina) | 9 | La vitamina B6 contribuye a la síntesis normal de cisteína |
+| Vitamina B1 (Tiamina) | 4 | La tiamina contribuye al metabolismo energético normal |
+| Folato (Ácido fólico) | 6 | El folato contribuye a la síntesis normal de aminoácidos |
+| Vitamina K2 (MK-7) | 2 | La vitamina K contribuye al mantenimiento normal de los huesos |
+| Vitamina B12 (Cianocobalamina) | 8 | La vitamina B12 contribuye al metabolismo energético normal |
+
+
+### 2 · Ingredientes (por orden de peso)
+
+- L-Glicina — *Glicina (aminoácido libre, grado farmacéutico)*
+- Péptidos de Colágeno — *Colágeno hidrolizado (peso molecular 2-5 kDa)*
+- Ácido Hialurónico — *Hialuronato sódico (peso molecular 800-1500 kDa, origen fermentativo Streptomyces)*
+- Magnesio — *Forma por confirmar con el fabricante (ej: citrato, bisglicinato, óxido - todas en Anexo II Dir. 2002/46/CE)*
+- AKBA (Boswellia serrata 30%) — *Extracto de resina de Boswellia serrata estandarizado al 30% de ácido 3-O-acetil-11-ceto-β-boswélico (AKBA)*
+- Hierro — *Forma por confirmar (ej: bisglicinato, sulfato ferroso, fumarato ferroso - verificar inclusión en Anexo II Dir. 2002/46/CE)*
+- Zinc — *Forma por confirmar (ej: citrato, gluconato, picolinato, bisglicinato - verificar Anexo II Dir. 2002/46/CE)*
+- Vitamina B5 (Ácido pantoténico) — *Ácido pantoténico o calcio D-pantotenato (Anexo II Dir. 2002/46/CE)*
+- Astaxantina — *Oleorresina rica en astaxantina del alga Haematococcus pluvialis (Novel Food autorizado Reg. (UE) 2017/2470, modificado por Reg. (UE) 2023/1581)*
+- Vitamina B2 (Riboflavina) — *Riboflavina o riboflavina-5'-fosfato sódico (Anexo II Dir. 2002/46/CE)*
+- Vitamina B6 (Piridoxina) — *Clorhidrato de piridoxina o piridoxina-5'-fosfato (Anexo II Dir. 2002/46/CE)*
+- Vitamina B1 (Tiamina) — *Clorhidrato de tiamina o mononitrato de tiamina (Anexo II Dir. 2002/46/CE)*
+- Folato (Ácido fólico) — *Ácido fólico (Anexo II Dir. 2002/46/CE) [no confundir con 5-MTHF que requiere Reg. (UE) 2016/1935]*
+- Vitamina K2 (MK-7) — *Menaquinona-7 (MK-7, origen fermentationis)*
+- Vitamina B12 (Cianocobalamina) — *Cianocobalamina (Anexo II Dir. 2002/46/CE)*
+
+*Coadyuvantes tecnológicos y excipientes minoritarios según fórmula (Annex III Reg. (CE) 1334/2008).*
+
+
+### 3 · Información nutricional
 
 | Nutriente | Por dosis | % VRN* |
 |---|---|---|
@@ -354,27 +412,95 @@ Collagen Complex Pro
 | Vitamina K2 (Menaquinona-7) (µg) | 25 | 33% (orientativo) |
 *\* % Valores de Referencia de la Nutrición*
 
+**Vida útil estimada:** 24 meses  
 
-### Alérgenos
+
+#### Reactividad y estabilidad (cualitativa)
+
+- Oxidación de ingredientes lipídicos
+- Higroscopicidad de glicina
+- Interacción hierro-zinc por competencia de absorción
+- Estabilidad de vitaminas del grupo B en mezcla
+
+
+#### Criterios microbiológicos
+
+| Parámetro | Criterio |
+|---|---|
+| Recuento total de aerobios mesófilos | m=1000 UFC/g, M=10000 UFC/g (n=5, c=2) |
+| Levaduras y mohos | m=100 UFC/g, M=1000 UFC/g (n=5, c=2) |
+| Enterobacteriaceae | m=10 UFC/g, M=100 UFC/g (n=5, c=2) |
+| Escherichia coli | Ausencia en 1 g |
+| Salmonella spp. | Ausencia en 25 g |
+| Bacillus cereus | m=100 UFC/g, M=1000 UFC/g (n=5, c=2) |
+| Clostridium perfringens | Ausencia en 1 g |
+
+
+### 4 · Identificación y especificaciones
+
+**Aspecto:** Cápsulas duras de color [según excipientes - puede variar de transparente a opaco] / Polvo fino de color [según formulacion]  
+**Olor:** Característico de los ingredientes, sin olores anómalos  
+**Ph:** No aplicable (forma sólida en cápsulas; si se presenta como polvo para reconstituir, verificar pH en solución al 1%)  
+**Humedad:** < 5% (especificación típica para cápsulas y polvos secos)  
+**Actividad agua:** < 0,4 (especificación para estabilidad de producto seco)  
+**Color:** Variable - la astaxantina puede conferir tonalidad rojiza; la riboflavina tonalidad amarilla  
+
+**Identidad FTIR:** Identificación de materias primas y control de identidad del mix final mediante comparación espectral  
+**Granulometría / densidad / pH:** según plan de control (ver Bloque 5).  
+
+**Food grade:** Todos los aditivos cumplen la legislación alimentaria de la UE. Extractos vegetales y derivados de origen animal conformes al Reg. (CE) 396/2005 (residuos de plaguicidas) y a los límites de contaminantes del Reg. (UE) 915/2023. Criterios de pureza según Ph. Eur.  
+**GMO:** No fabricado a partir de materias primas GMO; no sujeto a Reg. (CE) 1829/2003 ni 1830/2003.  
+**TSE/BSE:** Fabricado sin materias primas de origen humano ni con riesgo TSE/BSE.  
+
+
+### 5 · Alérgenos y aptitud dietética
 
 **Contiene:** Pendiente de confirmar origen del colágeno - si es de origen marino (pescado), debe declararse como alérgeno obligatorio conforme al Anexo II del Reg. (UE) 1169/2011. Los colágenos bovino, porcino y aviario NO están en la lista de 14 alérgenos de declaración obligatoria, pero se recomienda declarar el origen por transparencia al consumidor.
-**Puede contener trazas de:** Pendiente de evaluación - si la fabricación se realiza en líneas que procesan productos que contengan los 14 alérgenos del Anexo II, podría haber riesgo de contaminación cruzada. En particular: pescado (si se usa colágeno marino en otras líneas), leche, huevo, soja, frutos de cáscara.
+**Trazas posibles:** Pendiente de evaluación - si la fabricación se realiza en líneas que procesan productos que contengan los 14 alérgenos del Anexo II, podría haber riesgo de contaminación cruzada. En particular: pescado (si se usa colágeno marino en otras líneas), leche, huevo, soja, frutos de cáscara.
 **Declaración:** La declaración de alérgenos debe seguir el formato del Art. 21 del Reg. (UE) 1169/2011. Ejemplo si hay trazas: 'Este producto se ha fabricado en una instalación que también utiliza [pescado/leche/huevo/soja/frutos de cáscara].' Si el colágeno es de origen marino: **Pescado** (o el alérgeno que corresponda). Si no hay alérgenos presentes ni trazas: 'Libre de alérgenos según Anexo II del Reg. (UE) 1169/2011.' ORÍGEN DEL COLÁGENO: [bovino/porcino/aviario/marino] — declarar como información adicional.
 
 
-### Conservación y vida útil
+#### Tabla de alérgenos (Anexo II Reg. UE 1169/2011)
 
-**Condiciones de conservación:** Conservar en lugar fresco y seco, protegido de la luz solar directa y de fuentes de calor. Temperatura recomendada: inferior a 25°C. Humedad relativa: inferior al 60%. Proteger de la oxidación (especialmente astaxantina y hierro).  
-**Vida útil estimada:** 24 meses meses — La vida útil de 24 meses es coherente con productos similares en cápsulas duras de polvo. Factores que pueden afectar la estabilidad: (1) Astaxantina ...  
-**Condiciones de transporte:** Transporte a temperatura ambiente controlada (15-25°C), protegido de humedad excesiva (>65% HR) y exposición directa al sol. Evitar golpes mecánicos que puedan dañar el encapsulado. Si el producto contiene desecante (sílica gel), verificar su estado al recibir la mercancía.  
+*Marcado a verificar con fichas de proveedor y plan HACCP; no analizado en esta fase.*
+| Grupo de alérgenos | Estado |
+|---|---|
+| Cereales con gluten y derivados | Verificar |
+| Crustáceos y derivados | Verificar |
+| Huevos y derivados | Verificar |
+| Pescado y derivados | Verificar |
+| Cacahuetes y derivados | Verificar |
+| Soja y derivados | Verificar |
+| Leche y derivados (incl. lactosa) | Verificar |
+| Frutos de cáscara (almendra, avellana, nuez…) | Verificar |
+| Apio y derivados | Verificar |
+| Mostaza y derivados | Verificar |
+| Granos de sésamo y derivados | Verificar |
+| Dióxido de azufre y sulfitos (>10 mg/kg) | Verificar |
+| Altramuces y derivados | Verificar |
+| Moluscos y derivados | Verificar |
 
 
-### Modo de empleo y advertencias
+#### Aptitud para dietas
 
+| Dieta | Estado |
+|---|---|
+| Vegetariano | Bajo petición |
+| Vegano | Bajo petición |
+| Sin gluten | Bajo petición |
+| Sin azúcar (<0,5 g/dosis) | Bajo petición |
+| Kosher | Bajo petición |
+| Halal | Bajo petición |
+| Bio / Ecológico | Bajo petición |
+
+
+### 6 · Datos de producto y conservación
+
+**Conservación:** Conservar en lugar fresco y seco, protegido de la luz solar directa y de fuentes de calor. Temperatura recomendada: inferior a 25°C. Humedad relativa: inferior al 60%. Proteger de la oxidación (especialmente astaxantina y hierro).  
+**Tras apertura:** Cerrar bien el envase después de cada uso. No utilizar si el precinto de seguridad está roto o缺失. Consumir preferentemente antes de la fecha indicada en el envase.  
+**Vida útil (producto terminado):** 24 meses  
+**Transporte:** No clasificado como peligroso. Transportar a 15-25 °C, protegido de luz, calor y humedad.  
 **Modo de empleo:** 1 cápsula al día (o la dosis que corresponda según formato final: sobres, double-capsule, etc.)  
-**Momento de ingesta:** Tomar preferentemente con una comida principal para mejorar la absorción de los componentes lipídicos (astaxantina, vitamina K2) y minimizar潜在的interacciones gastrointestinales (hierro, magnesio). Evitar tomar con lácteos o té (reducen absorción de hierro).  
-**Población objetivo:** Adultos sanos mayores de 18 años. No destinado a menores de 14 años (por contenido de astaxantina conforme a Reg. (UE) 2023/1581).  
-**Dosis máxima:** No superar la dosis diaria recomendada expresamente en el etiquetado.  
 
 
 ### Fuentes consultadas
@@ -385,7 +511,10 @@ Collagen Complex Pro
 
 ---
 
-## 4. Claims y Diferenciación Comercial
+## 3. Información de Marketing
+
+
+### Claims y diferenciación comercial
 
 
 ### Claims regulatorios autorizados (Reg. UE 432/2012)
@@ -573,191 +702,7 @@ Extracto de Boswellia serrata estandarizado al 30% en ácido acetil-11-ceto-β-b
 [5] Directiva 2002/46/CE - Anexos I y II (vitaminas y minerales autorizados) ([enlace](https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:32002L0046)) — *normativa*
 [6] Mi conocimiento experto del Reglamento (CE) 1924/2006 y Reglamento (UE) 432/2012 ([enlace](N/A)) — *conocimiento_experto*
 
----
-
-## 5. Propuesta de Etiqueta
-
-
-### Cara principal
-
-**Denominación de venta:**
-> Complemento alimenticio a base de péptidos de colágeno, L-glicina, ácido hialurónico, magnesio, hierro, zinc, vitaminas del grupo B, vitamina K2, extracto de Boswellia serrata y astaxantina
-
-**Cantidad neta:** [XX] g ([XX] sobres de [XX] g)  
-**Claims autorizados:**
-- Las vitaminas B1, B2, B5, B6 y B12 contribuyen al metabolismo energético normal
-- El magnesio contribuye a la función muscular normal
-- El zinc contribuye a la protección de las células frente al daño oxidativo
-- El hierro contribuye a la reducción del cansancio y la fatiga
-
-*No se incluyen claims para péptidos de colágeno, L-glicina, ácido hialurónico, AKBA (Boswellia serrata) ni astaxantina al no disponer de claims autorizados por EFSA (Reg. UE 432/2012). No se incluyen claims para vitamina K2 (MK-7) porque la menaquinona-7 no está incluida en el Anexo II de la Directiva 2002/46/CE como forma permitida de vitamina K; verificar con AESAN antes de utilizar cualquier claim. Todos los claims seleccionados cumplen la condición de 'fuente de' (≥15% VRN por dosis diaria) conforme al Anexo del Reg. (CE) 1924/2006.*
-
-
-### Cara secundaria
-
-**Lista de ingredientes:**
-> Péptidos de colágeno hidrolizado, L-glicina, ácido hialurónico (hialuronato sódico), magnesio bisglicinato, extracto de la resina de Boswellia serrata (estandarizado al 30% de ácido acetil-11-ceto-β-boswélico), hierro bisglicinato, zinc bisglicinato, oleorresina de Haematococcus pluvialis (estandarizada en astaxantina), ácido pantoténico, riboflavina, clorhidrato de piridoxina, clorhidrato de tiamina, ácido fólico, menaquinona-7, cianocobalamina, [excipientes pendientes de confirmar por el fabricante: ej. antiagregantes, edulcorantes, aromatizantes si proceden].
-
-**Alérgenos:** PENDIENTE DE CONFIRMACIÓN. Si el colágeno es de origen marino (pescado): debe declararse PESCADO en negrita como alérgeno obligatorio (Anexo II Reg. 1169/2011). Si el colágeno es bovino, porcino o aviario: no es alérgeno obligatorio, pero se recomienda indicar el origen. Verificar también posibles trazas según las líneas de fabricación.  
-
-**Modo de empleo:** Tomar 1 sobre al día, preferentemente con una de las comidas principales. Disolver el contenido del sobre en un vaso de agua (aprox. 200 ml) y agitar hasta su completa disolución. No tomar con lácteos ni con té, ya que pueden reducir la absorción del hierro.  
-**Dosis diaria:** 1 sobre (aprox. 12 g)  
-**Población:** Adultos mayores de 18 años. No destinado a menores de 14 años.  
-
-**Advertencias obligatorias:**
-- No superar la dosis diaria recomendada.
-- Los complementos alimenticios no deben utilizarse como sustitutos de una dieta variada y equilibrada y de un modo de vida sano.
-- Mantener fuera del alcance de los niños más pequeños.
-**Advertencias recomendadas:**
-- Producto no destinado a menores de 14 años (por contenido de astaxantina, conforme al Reg. UE 2023/1581).
-- No recomendado durante el embarazo y la lactancia sin supervisión médica.
-- Consulte con su médico o farmacéutico si está tomando medicamentos anticoagulantes o antiagregantes plaquetarios (por contenido de vitamina K2 y extracto de Boswellia serrata).
-- Los suplementos de hierro pueden causar molestias gastrointestinales (náuseas, estreñimiento) en personas sensibles.
-- Consulte con un profesional sanitario si está tomando antiinflamatorios.
-- No utilizar en caso de alergia a alguno de los componentes.
-- Consulte con su profesional sanitario en caso de hemocromatosis o insuficiencia renal.
-
-
-#### Tabla nutricional (cara secundaria)
-
-| Nutriente | Por dosis | % VRN* |
-|---|---|---|
-| Valor energético (kJ / kcal) | PENDIENTE | — |
-| Grasas (g) | PENDIENTE | — |
-|   de las cuales saturadas (g) | PENDIENTE | — |
-| Hidratos de carbono (g) | PENDIENTE | — |
-|   de los cuales azúcares (g) | PENDIENTE | — |
-| Proteínas (g) | PENDIENTE | — |
-| Sal (g) | PENDIENTE | — |
-| Magnesio (mg) | 75 | 20% |
-| Hierro (mg) | 3,5 | 25% |
-| Zinc (mg) | 2,5 | 25% |
-| Vitamina B1 (mg) | 0,275 | 25% |
-| Vitamina B2 (mg) | 0,35 | 25% |
-| Vitamina B5 (mg) | 1,5 | 25% |
-| Vitamina B6 (mg) | 0,35 | 25% |
-| Folato (µg) | 50 | 25% |
-| Vitamina B12 (µg) | 0,63 | 25% |
-| Vitamina K2 (MK-7) (µg) | 25 | 33%* |
-| L-Glicina (mg) | 5000 | — |
-| Péptidos de colágeno (mg) | 5000 | — |
-| Ácido hialurónico (mg) | 100 | — |
-| AKBA (mg) | 10 | — |
-| Astaxantina (mg) | 1 | — |
-*\* % Valores de Referencia de la Dieta*
-
-
-### Cara lateral / contraetiqueta
-
-**Operador responsable:** [NOMBRE RAZÓN SOCIAL DEL OPERADOR RESPONSABLE]
-[DIRECCIÓN COMPLETA]
-[CÓDIGO POSTAL] [CIUDAD]
-[PROVINCIA], España  
-**Fabricante:** [NOMBRE DEL FABRICANTE]
-[DIRECCIÓN DEL FABRICANTE]
-[PAÍS]  
-**Duración mínima:** Consumir preferentemente antes del fin de: MM/AAAA  
-**Conservación:** Conservar en lugar fresco y seco, protegido de la luz solar directa y de fuentes de calor. Temperatura inferior a 25°C. Cerrar bien el envase después de cada uso.  
-**N.º lote:** Lote: [ESPACIO PARA IMPRESIÓN]  
-**País de origen:** PENDIENTE: Indicar país de origen del colágeno y/o del producto final si es distinto de España  
-**Notificación AESAN:** [NÚMERO DE NOTIFICACIÓN AESAN PENDIENTE]  
-
-*Incluir declaración de trazas alérgenas si aplica tras evaluación de las líneas de fabricación. Verificar posición regulatoria de MK-7 y Boswellia serrata con AESAN antes de la notificación. Considerar sustituir MK-7 por fitomenadiona (K1) si AESAN no acepta la menaquinona-7 como fuente de vitamina K. Los valores de macronutrientes y energía de la tabla nutricional deben completarse con análisis de lote del producto terminado.*
-
-
-### Lista de ingredientes
-
-> Péptidos de colágeno hidrolizado, L-glicina, ácido hialurónico (hialuronato sódico), magnesio bisglicinato, extracto de la resina de Boswellia serrata (estandarizado al 30% de ácido acetil-11-ceto-β-boswélico), hierro bisglicinato, zinc bisglicinato, oleorresina de Haematococcus pluvialis (estandarizada en astaxantina), ácido pantoténico, riboflavina, clorhidrato de piridoxina, clorhidrato de tiamina, ácido fólico, menaquinona-7, cianocobalamina, [EXCIPIENTES PENDIENTES DE CONFIRMACIÓN POR EL FABRICANTE].
-
-NOTAS PARA LA LISTA DE INGREDIENTES:
-- Las formas químicas de magnesio, hierro y zinc (bisglicinato) están pendientes de confirmación con el fabricante. Si se utilizan otras formas (citrato, sulfato, etc.), actualizar la denominación en consecuencia.
-- Los excipientes (antiagregantes, edulcorantes, aromatizantes, correctores de acidez) deben añadirse en orden decreciente por peso.
-- ALÉRGENOS: Si el colágeno es de origen marino (pescado), el término 'péptidos de colágeno hidrolizado' debe ir seguido de la indicación de alérgeno conforme al Art. 21 Reg. 1169/2011: 'péptidos de colágeno hidrolizado (PESCADO)' o incluir 'Contiene pescado' en la declaración de alérgenos.
-- Si se utilizan excipientes que contengan alérgenos del Anexo II (ej. maltodextrina de trigo), deben indicarse en NEGRITA.
-- La menaquinona-7 (MK-7) no está explícitamente listada en el Anexo II de la Directiva 2002/46/CE. Verificar con AESAN su aceptación como fuente de vitamina K antes de la notificación del producto.
-
-
-### Tabla de información nutricional
-
-*Valores por dosis de referencia (1 sobre (aprox. 12 g)*):*
-| Nutriente | Por 100g | Por dosis | % VRD* |
-|---|---|---|---|
-| Valor energético | PENDIENTE kJ / PENDIENTE kcal | PENDIENTE kJ / PENDIENTE kcal | — |
-| Grasas | PENDIENTE g | PENDIENTE g | — |
-|   de las cuales saturadas | PENDIENTE g | PENDIENTE g | — |
-| Hidratos de carbono | PENDIENTE g | PENDIENTE g | — |
-|   de los cuales azúcares | PENDIENTE g | PENDIENTE g | — |
-| Proteínas | PENDIENTE g | PENDIENTE g | — |
-| Sal | PENDIENTE g | PENDIENTE g | — |
-| Magnesio | 625 mg | 75 mg | 20% |
-| Hierro | 29 mg | 3,5 mg | 25% |
-| Zinc | 21 mg | 2,5 mg | 25% |
-| Vitamina B1 (Tiamina) | 2,3 mg | 0,275 mg | 25% |
-| Vitamina B2 (Riboflavina) | 2,9 mg | 0,35 mg | 25% |
-| Vitamina B5 (Ácido pantoténico) | 12,5 mg | 1,5 mg | 25% |
-| Vitamina B6 (Piridoxina) | 2,9 mg | 0,35 mg | 25% |
-| Folato (Ácido fólico) | 417 µg | 50 µg | 25% |
-| Vitamina B12 (Cianocobalamina) | 5,3 µg | 0,63 µg | 25% |
-| Vitamina K2 (Menaquinona-7) | 208 µg | 25 µg | 33%* |
-| L-Glicina | 41667 mg | 5000 mg | — |
-| Péptidos de colágeno | 41667 mg | 5000 mg | — |
-| Ácido hialurónico | 833 mg | 100 mg | — |
-| AKBA (de extracto de Boswellia serrata) | 83 mg | 10 mg | — |
-| Astaxantina (de Haematococcus pluvialis) | 8,3 mg | 1 mg | — |
-*\* % Valores de Referencia de la Dieta*
-
-
-### Notas técnicas de diseño
-
-- **Altura mínima de la 'x':** ≥1,2 mm (suponiendo superficie de etiquetado ≥80 cm²; si el envase o sobre tiene superficie <80 cm², aplicar ≥0,9 mm conforme al Art. 13.2 del Reg. 1169/2011)
-- **Superficie de etiquetado:** PENDIENTE: Depende del formato de envase final. Estimación orientativa: si se trata de un bote con 30 sobres (típico 15×10×10 cm), la superficie disponible para etiquetado sería ≥150 cm². Si se trata de una caja de cartón con 30 sobres individuales, el sobre individual tendría superficie <80 cm², aplicando ≥0,9 mm para la información del sobre y ≥1,2 mm para el embalaje exterior.
-- FORMATO: La dosis de 10g de activos (L-glicina 5g + péptidos de colágeno 5g) hace inviable la presentación en cápsula estándar (capacidad máxima ~500-700 mg). Se asume formato polvo en sobres monodosis. Confirmar con el fabricante.
-- CAMPO VISUAL PRINCIPAL (Art. 13.3 Reg. 1169/2011): La denominación de venta ('Complemento alimenticio a base de...') y la cantidad neta deben aparecer juntas en el mismo campo visual.
-- ASTAXANTINA - PROTECCIÓN DE LUZ: La astaxantina es fotosensible. El material de envasado de los sobres debe ser opaco o con barrera a la luz (ej. lámina compleja aluminizada). No utilizar envases transparentes.
-- HIERRO - OXIDACIÓN: Riesgo de oxidación cruzada hierro-astaxantina. Considerar encapsulado separado o microencapsulación del hierro. Incluir antioxidante (ej. tocoferoles) en la formulación si el estudio de estabilidad lo recomienda.
-- GLICINA - HIGROSCOPICIDAD: La L-glicina es higroscópica. Requerir sellado hermético de los sobres e incluir desecante (sílica gel) en el envase exterior.
-- VITAMINA K2 MK-7 - RIESGO REGULATORIO: La menaquinona-7 no está en el Anexo II de la Directiva 2002/46/CE. Antes de fabricar, verificar con AESAN si acepta MK-7 como fuente de vitamina K. Alternativa regulatoriamente segura: sustituir por fitomenadiona (vitamina K1), que sí está autorizada.
-- BOSWELLIA SERRATA - POSICIÓN AESAN: Verificar si AESAN considera Boswellia serrata como sustancia de uso autorizado en complementos alimentarios. Si no, deberá sustituirse antes de la notificación.
-- TABLA NUTRICIONAL - VALORES PENDIENTES: Los valores de energía, grasas, hidratos de carbono, azúcares, proteínas y sal DEBEN completarse mediante análisis de lote del producto terminado. No publicar la etiqueta sin estos valores.
-- VALORES POR 100g: Los valores de vitaminas y minerales por 100g se han calculado asumiendo un peso de dosis de ~12g (100/12 = 8,33 como factor de conversión). Ajustar al peso real del sobre una vez confirmado.
-- IDOMA: La etiqueta debe estar obligatoriamente en español para el mercado español. Si se distribuye en otros Estados miembros de la UE, debe incluirse la traducción al idioma del país de destino (Art. 13.1 Reg. 1169/2011).
-- CLAIMS: Los claims seleccionados deben reproducirse literalmente conforme a las versiones oficiales en español del Reg. (UE) 432/2012. No modificar el texto autorizado.
-- SÍMBOLO DE CEE: Incluir el símbolo de complemento alimentario si el envase lo permite visualmente, aunque no es obligatorio en España.
-
-
-### Información pendiente de completar
-
-- **Cantidad neta total del envase** _pendiente_: Peso total en gramos del envase y número de sobres (ej: 360 g, 30 sobres de 12 g)
-- **Peso exacto por sobre (dosis)** _pendiente_: Peso del sobre incluyendo todos los ingredientes activos y excipientes
-- **Excipientes completos** _pendiente_: Lista completa de excipientes con denominaciones legales, en orden decreciente por peso, incluyendo categoría funcional y número E de aditivos si proceden
-- **Origen del colágeno** _pendiente_: Especificar si el colágeno es bovino, porcino, aviario o marino. Si es marino, es alérgeno obligatorio (Anexo II Reg. 1169/2011)
-- **Formas químicas de magnesio, hierro y zinc** _pendiente_: Confirmar si son bisglicinato, citrato, sulfato u otra forma, y verificar que están en el Anexo II de la Directiva 2002/46/CE
-- **Valores de macronutrientes y energía** _pendiente_: Valores reales de energía (kJ/kcal), grasas, saturadas, hidratos de carbono, azúcares, proteínas y sal por dosis y por 100g, obtenidos mediante análisis de laboratorio del producto terminado
-- **Operador responsable** _pendiente_: Nombre o razón social completo y dirección fiscal del operador responsable establecido en la UE (Art. 8.1 Reg. 1169/2011)
-- **Fabricante** _pendiente_: Nombre y dirección completa del fabricante si es distinto del operador responsable
-- **Número de lote** _pendiente_: Sistema de codificación de lote (dejar espacio para impresión/etching)
-- **Fecha de duración mínima** _pendiente_: Fecha concreta o sistema de impresión de fecha (tinta térmica, láser, etc.)
-- **Número de notificación AESAN** _pendiente_: Número asignado tras la notificación del complemento alimentario en la base de datos de AESAN
-- **Declaración de alérgenos y trazas** _pendiente_: Resultado de la evaluación de alérgenos presentes y de contaminación cruzada en las líneas de fabricación
-- **País de origen** _pendiente_: País de origen del colágeno y/o del producto final si es distinto de España (Art. 26 Reg. 1169/2011)
-- **Material de envasado** _pendiente_: Confirmación del material de los sobres (debe ser opaco por contener astaxantina fotosensible) y del envase exterior
-- **Posición regulatoria de MK-7 y Boswellia serrata ante AESAN** _pendiente_: Confirmación escrita de AESAN sobre la aceptación de menaquinona-7 como fuente de vitamina K y de Boswellia serrata como ingrediente de uso autorizado en complementos alimentarios en España
-
-
-### Fuentes consultadas
-
-[1] Reglamento (UE) 1169/2011 del Parlamento Europeo y del Consejo, de 25 de octubre de 2011, sobre la información alimentaria facilitada al consumidor — *normativa*
-[2] Real Decreto 1487/2009, de 26 de septiembre, por el que se regula la composición y la información que deben facilitarse respecto de los complementos alimenticios — *normativa*
-[3] Reglamento (CE) 1924/2006 del Parlamento Europeo y del Consejo, de 20 de diciembre de 2006, relativo a las declaraciones nutricionales y de propiedades saludables en los alimentos — *normativa*
-[4] Reglamento (UE) 432/2012 de la Comisión, de 16 de mayo de 2012, por el que se establece una lista de declaraciones de propiedades saludables autorizadas en los alimentos — *normativa*
-[5] Directiva 2002/46/CE del Parlamento Europeo y del Consejo, de 10 de junio de 2002, relativa a la aproximación de las legislaciones de los Estados miembros sobre los complementos alimenticios (Anexo II - Sustancias autorizadas) — *normativa*
-[6] Reglamento (UE) 2017/2470 de la Comisión, de 20 de diciembre de 2017, por el que se establece la lista de la Unión de nuevos alimentos (Novel Foods) - Entrada: Astaxantina de Haematococcus pluvialis — *normativa*
-[7] Reglamento (UE) 2023/1581 de la Comisión, de 10 de agosto de 2023, que modifica el Reg. 2017/2470 en lo que respecta a las condiciones de uso de la astaxantina de Haematococcus pluvialis — *normativa*
-[8] Anexo XIII del Reglamento (UE) 1169/2011 - Valores de Referencia de la Dieta (VRN) para vitaminas y minerales — *normativa*
-
----
-
-## 6. Formatos e Innovación
+### Formatos e innovación
 
 **Formato recomendado:** Stick de polvo monodosis (film metallizado barrera) - 14-16g de peso total  
 > Es el ÚNICO formato que asume los 10g+ de polvo activo (glicina + colágeno) en una sola toma sin comprometer la estabilidad. La lámina metallizada (PET/AL/PE) proporciona barrera UV y oxígeno crítica para astaxantina (fotodegradable), vitamina K2 MK-7 (sensible a oxidación) y AKBA (terpenos lábiles)...
@@ -820,9 +765,130 @@ NOTAS PARA LA LISTA DE INGREDIENTES:
 [3] Conocimiento experto en capacidades de formatos (volumen por cápsula, comprimido, gominola) — *conocimiento_experto*
 [4] Conocimiento experto en propiedades barrera de materiales de envasado (WVTR, OTR) — *conocimiento_experto*
 
+### Propuesta de etiqueta
+
+
+### Cara principal
+
+**Denominación de venta:**
+> Complemento alimenticio a base de péptidos de colágeno, L-glicina, ácido hialurónico, magnesio, hierro, zinc, vitaminas del grupo B, vitamina K2, extracto de Boswellia serrata y astaxantina
+
+**Cantidad neta:** [XX] g ([XX] sobres de [XX] g)  
+**Claims autorizados:**
+- Las vitaminas B1, B2, B5, B6 y B12 contribuyen al metabolismo energético normal
+- El magnesio contribuye a la función muscular normal
+- El zinc contribuye a la protección de las células frente al daño oxidativo
+- El hierro contribuye a la reducción del cansancio y la fatiga
+
+*No se incluyen claims para péptidos de colágeno, L-glicina, ácido hialurónico, AKBA (Boswellia serrata) ni astaxantina al no disponer de claims autorizados por EFSA (Reg. UE 432/2012). No se incluyen claims para vitamina K2 (MK-7) porque la menaquinona-7 no está incluida en el Anexo II de la Directiva 2002/46/CE como forma permitida de vitamina K; verificar con AESAN antes de utilizar cualquier claim. Todos los claims seleccionados cumplen la condición de 'fuente de' (≥15% VRN por dosis diaria) conforme al Anexo del Reg. (CE) 1924/2006.*
+
+
+### Cara secundaria
+
+**Lista de ingredientes:**
+> Péptidos de colágeno hidrolizado, L-glicina, ácido hialurónico (hialuronato sódico), magnesio bisglicinato, extracto de la resina de Boswellia serrata (estandarizado al 30% de ácido acetil-11-ceto-β-boswélico), hierro bisglicinato, zinc bisglicinato, oleorresina de Haematococcus pluvialis (estandarizada en astaxantina), ácido pantoténico, riboflavina, clorhidrato de piridoxina, clorhidrato de tiamina, ácido fólico, menaquinona-7, cianocobalamina, [excipientes pendientes de confirmar por el fabricante: ej. antiagregantes, edulcorantes, aromatizantes si proceden].
+
+**Alérgenos:** PENDIENTE DE CONFIRMACIÓN. Si el colágeno es de origen marino (pescado): debe declararse PESCADO en negrita como alérgeno obligatorio (Anexo II Reg. 1169/2011). Si el colágeno es bovino, porcino o aviario: no es alérgeno obligatorio, pero se recomienda indicar el origen. Verificar también posibles trazas según las líneas de fabricación.  
+
+**Modo de empleo:** Tomar 1 sobre al día, preferentemente con una de las comidas principales. Disolver el contenido del sobre en un vaso de agua (aprox. 200 ml) y agitar hasta su completa disolución. No tomar con lácteos ni con té, ya que pueden reducir la absorción del hierro.  
+**Dosis diaria:** 1 sobre (aprox. 12 g)  
+**Población:** Adultos mayores de 18 años. No destinado a menores de 14 años.  
+
+**Advertencias obligatorias:**
+- No superar la dosis diaria recomendada.
+- Los complementos alimenticios no deben utilizarse como sustitutos de una dieta variada y equilibrada y de un modo de vida sano.
+- Mantener fuera del alcance de los niños más pequeños.
+**Advertencias recomendadas:**
+- Producto no destinado a menores de 14 años (por contenido de astaxantina, conforme al Reg. UE 2023/1581).
+- No recomendado durante el embarazo y la lactancia sin supervisión médica.
+- Consulte con su médico o farmacéutico si está tomando medicamentos anticoagulantes o antiagregantes plaquetarios (por contenido de vitamina K2 y extracto de Boswellia serrata).
+- Los suplementos de hierro pueden causar molestias gastrointestinales (náuseas, estreñimiento) en personas sensibles.
+- Consulte con un profesional sanitario si está tomando antiinflamatorios.
+- No utilizar en caso de alergia a alguno de los componentes.
+- Consulte con su profesional sanitario en caso de hemocromatosis o insuficiencia renal.
+
+
+### Cara lateral / contraetiqueta
+
+**Operador responsable:** [NOMBRE RAZÓN SOCIAL DEL OPERADOR RESPONSABLE]
+[DIRECCIÓN COMPLETA]
+[CÓDIGO POSTAL] [CIUDAD]
+[PROVINCIA], España  
+**Fabricante:** [NOMBRE DEL FABRICANTE]
+[DIRECCIÓN DEL FABRICANTE]
+[PAÍS]  
+**Duración mínima:** Consumir preferentemente antes del fin de: MM/AAAA  
+**Conservación:** Conservar en lugar fresco y seco, protegido de la luz solar directa y de fuentes de calor. Temperatura inferior a 25°C. Cerrar bien el envase después de cada uso.  
+**N.º lote:** Lote: [ESPACIO PARA IMPRESIÓN]  
+**País de origen:** PENDIENTE: Indicar país de origen del colágeno y/o del producto final si es distinto de España  
+**Notificación AESAN:** [NÚMERO DE NOTIFICACIÓN AESAN PENDIENTE]  
+
+*Incluir declaración de trazas alérgenas si aplica tras evaluación de las líneas de fabricación. Verificar posición regulatoria de MK-7 y Boswellia serrata con AESAN antes de la notificación. Considerar sustituir MK-7 por fitomenadiona (K1) si AESAN no acepta la menaquinona-7 como fuente de vitamina K. Los valores de macronutrientes y energía de la tabla nutricional deben completarse con análisis de lote del producto terminado.*
+
+
+### Lista de ingredientes
+
+> Péptidos de colágeno hidrolizado, L-glicina, ácido hialurónico (hialuronato sódico), magnesio bisglicinato, extracto de la resina de Boswellia serrata (estandarizado al 30% de ácido acetil-11-ceto-β-boswélico), hierro bisglicinato, zinc bisglicinato, oleorresina de Haematococcus pluvialis (estandarizada en astaxantina), ácido pantoténico, riboflavina, clorhidrato de piridoxina, clorhidrato de tiamina, ácido fólico, menaquinona-7, cianocobalamina, [EXCIPIENTES PENDIENTES DE CONFIRMACIÓN POR EL FABRICANTE].
+
+NOTAS PARA LA LISTA DE INGREDIENTES:
+- Las formas químicas de magnesio, hierro y zinc (bisglicinato) están pendientes de confirmación con el fabricante. Si se utilizan otras formas (citrato, sulfato, etc.), actualizar la denominación en consecuencia.
+- Los excipientes (antiagregantes, edulcorantes, aromatizantes, correctores de acidez) deben añadirse en orden decreciente por peso.
+- ALÉRGENOS: Si el colágeno es de origen marino (pescado), el término 'péptidos de colágeno hidrolizado' debe ir seguido de la indicación de alérgeno conforme al Art. 21 Reg. 1169/2011: 'péptidos de colágeno hidrolizado (PESCADO)' o incluir 'Contiene pescado' en la declaración de alérgenos.
+- Si se utilizan excipientes que contengan alérgenos del Anexo II (ej. maltodextrina de trigo), deben indicarse en NEGRITA.
+- La menaquinona-7 (MK-7) no está explícitamente listada en el Anexo II de la Directiva 2002/46/CE. Verificar con AESAN su aceptación como fuente de vitamina K antes de la notificación del producto.
+
+
+### Notas técnicas de diseño
+
+- **Altura mínima de la 'x':** ≥1,2 mm (suponiendo superficie de etiquetado ≥80 cm²; si el envase o sobre tiene superficie <80 cm², aplicar ≥0,9 mm conforme al Art. 13.2 del Reg. 1169/2011)
+- **Superficie de etiquetado:** PENDIENTE: Depende del formato de envase final. Estimación orientativa: si se trata de un bote con 30 sobres (típico 15×10×10 cm), la superficie disponible para etiquetado sería ≥150 cm². Si se trata de una caja de cartón con 30 sobres individuales, el sobre individual tendría superficie <80 cm², aplicando ≥0,9 mm para la información del sobre y ≥1,2 mm para el embalaje exterior.
+- FORMATO: La dosis de 10g de activos (L-glicina 5g + péptidos de colágeno 5g) hace inviable la presentación en cápsula estándar (capacidad máxima ~500-700 mg). Se asume formato polvo en sobres monodosis. Confirmar con el fabricante.
+- CAMPO VISUAL PRINCIPAL (Art. 13.3 Reg. 1169/2011): La denominación de venta ('Complemento alimenticio a base de...') y la cantidad neta deben aparecer juntas en el mismo campo visual.
+- ASTAXANTINA - PROTECCIÓN DE LUZ: La astaxantina es fotosensible. El material de envasado de los sobres debe ser opaco o con barrera a la luz (ej. lámina compleja aluminizada). No utilizar envases transparentes.
+- HIERRO - OXIDACIÓN: Riesgo de oxidación cruzada hierro-astaxantina. Considerar encapsulado separado o microencapsulación del hierro. Incluir antioxidante (ej. tocoferoles) en la formulación si el estudio de estabilidad lo recomienda.
+- GLICINA - HIGROSCOPICIDAD: La L-glicina es higroscópica. Requerir sellado hermético de los sobres e incluir desecante (sílica gel) en el envase exterior.
+- VITAMINA K2 MK-7 - RIESGO REGULATORIO: La menaquinona-7 no está en el Anexo II de la Directiva 2002/46/CE. Antes de fabricar, verificar con AESAN si acepta MK-7 como fuente de vitamina K. Alternativa regulatoriamente segura: sustituir por fitomenadiona (vitamina K1), que sí está autorizada.
+- BOSWELLIA SERRATA - POSICIÓN AESAN: Verificar si AESAN considera Boswellia serrata como sustancia de uso autorizado en complementos alimentarios. Si no, deberá sustituirse antes de la notificación.
+- TABLA NUTRICIONAL - VALORES PENDIENTES: Los valores de energía, grasas, hidratos de carbono, azúcares, proteínas y sal DEBEN completarse mediante análisis de lote del producto terminado. No publicar la etiqueta sin estos valores.
+- VALORES POR 100g: Los valores de vitaminas y minerales por 100g se han calculado asumiendo un peso de dosis de ~12g (100/12 = 8,33 como factor de conversión). Ajustar al peso real del sobre una vez confirmado.
+- IDOMA: La etiqueta debe estar obligatoriamente en español para el mercado español. Si se distribuye en otros Estados miembros de la UE, debe incluirse la traducción al idioma del país de destino (Art. 13.1 Reg. 1169/2011).
+- CLAIMS: Los claims seleccionados deben reproducirse literalmente conforme a las versiones oficiales en español del Reg. (UE) 432/2012. No modificar el texto autorizado.
+- SÍMBOLO DE CEE: Incluir el símbolo de complemento alimentario si el envase lo permite visualmente, aunque no es obligatorio en España.
+
+
+### Información pendiente de completar
+
+- **Cantidad neta total del envase** _pendiente_: Peso total en gramos del envase y número de sobres (ej: 360 g, 30 sobres de 12 g)
+- **Peso exacto por sobre (dosis)** _pendiente_: Peso del sobre incluyendo todos los ingredientes activos y excipientes
+- **Excipientes completos** _pendiente_: Lista completa de excipientes con denominaciones legales, en orden decreciente por peso, incluyendo categoría funcional y número E de aditivos si proceden
+- **Origen del colágeno** _pendiente_: Especificar si el colágeno es bovino, porcino, aviario o marino. Si es marino, es alérgeno obligatorio (Anexo II Reg. 1169/2011)
+- **Formas químicas de magnesio, hierro y zinc** _pendiente_: Confirmar si son bisglicinato, citrato, sulfato u otra forma, y verificar que están en el Anexo II de la Directiva 2002/46/CE
+- **Valores de macronutrientes y energía** _pendiente_: Valores reales de energía (kJ/kcal), grasas, saturadas, hidratos de carbono, azúcares, proteínas y sal por dosis y por 100g, obtenidos mediante análisis de laboratorio del producto terminado
+- **Operador responsable** _pendiente_: Nombre o razón social completo y dirección fiscal del operador responsable establecido en la UE (Art. 8.1 Reg. 1169/2011)
+- **Fabricante** _pendiente_: Nombre y dirección completa del fabricante si es distinto del operador responsable
+- **Número de lote** _pendiente_: Sistema de codificación de lote (dejar espacio para impresión/etching)
+- **Fecha de duración mínima** _pendiente_: Fecha concreta o sistema de impresión de fecha (tinta térmica, láser, etc.)
+- **Número de notificación AESAN** _pendiente_: Número asignado tras la notificación del complemento alimentario en la base de datos de AESAN
+- **Declaración de alérgenos y trazas** _pendiente_: Resultado de la evaluación de alérgenos presentes y de contaminación cruzada en las líneas de fabricación
+- **País de origen** _pendiente_: País de origen del colágeno y/o del producto final si es distinto de España (Art. 26 Reg. 1169/2011)
+- **Material de envasado** _pendiente_: Confirmación del material de los sobres (debe ser opaco por contener astaxantina fotosensible) y del envase exterior
+- **Posición regulatoria de MK-7 y Boswellia serrata ante AESAN** _pendiente_: Confirmación escrita de AESAN sobre la aceptación de menaquinona-7 como fuente de vitamina K y de Boswellia serrata como ingrediente de uso autorizado en complementos alimentarios en España
+
+
+### Fuentes consultadas
+
+[1] Reglamento (UE) 1169/2011 del Parlamento Europeo y del Consejo, de 25 de octubre de 2011, sobre la información alimentaria facilitada al consumidor — *normativa*
+[2] Real Decreto 1487/2009, de 26 de septiembre, por el que se regula la composición y la información que deben facilitarse respecto de los complementos alimenticios — *normativa*
+[3] Reglamento (CE) 1924/2006 del Parlamento Europeo y del Consejo, de 20 de diciembre de 2006, relativo a las declaraciones nutricionales y de propiedades saludables en los alimentos — *normativa*
+[4] Reglamento (UE) 432/2012 de la Comisión, de 16 de mayo de 2012, por el que se establece una lista de declaraciones de propiedades saludables autorizadas en los alimentos — *normativa*
+[5] Directiva 2002/46/CE del Parlamento Europeo y del Consejo, de 10 de junio de 2002, relativa a la aproximación de las legislaciones de los Estados miembros sobre los complementos alimenticios (Anexo II - Sustancias autorizadas) — *normativa*
+[6] Reglamento (UE) 2017/2470 de la Comisión, de 20 de diciembre de 2017, por el que se establece la lista de la Unión de nuevos alimentos (Novel Foods) - Entrada: Astaxantina de Haematococcus pluvialis — *normativa*
+[7] Reglamento (UE) 2023/1581 de la Comisión, de 10 de agosto de 2023, que modifica el Reg. 2017/2470 en lo que respecta a las condiciones de uso de la astaxantina de Haematococcus pluvialis — *normativa*
+[8] Anexo XIII del Reglamento (UE) 1169/2011 - Valores de Referencia de la Dieta (VRN) para vitaminas y minerales — *normativa*
+
 ---
 
-## 7. Documentación Interna de Producción
+## 4. Documentación Interna de Producción
 
 
 ### Lista de Materiales (L.M.) NAVISION
@@ -950,7 +1016,7 @@ Muestreo estadistico: cada 15 min tomar 3 sticks consecutivos. Controles: (a) pe
 
 ---
 
-## 8. Plan de Control de Calidad
+## 5. Plan de Calidad
 
 > El plan de control de calidad para Collagen Complex Pro se centra en tres ejes críticos: (1) Homogeneidad del mix, dada la enorme disparidad de concentraciones entre ingredientes (desde 5 g de colágeno hasta 0,63 μg de vitamina B12), lo que hace obligatorio el ensayo de uniformidad de contenido por dosis con RSD ≤6% en los marcadores de bajo contenido (K2, B12, folato, AKBA, astaxantina), requiriendo pre-mezcla certificada de los micronutrientes antes de su incorporación al colágeno; (2) Protección de la estabilidad de los activos fotosensibles y termolábiles, siendo la astaxantina y la vitamina K2 los ingredientes de mayor riesgo, lo que impone envase opaco con barrera a humedad y oxígeno (PET/Al/PE o HDPE con liner), control estricto de pH en rango 4,5-6,5 para evitar degradación alcalina del folato y la K2, y estudio de fotodegradación ICH Q1B obligatorio; (3) Control microbiológico riguroso, especialmente por la naturaleza proteica del colágeno (riesgo de B. cereus por esporulación) y el origen animal potencial (C. perfringens en T=0 cada 5 lotes). La frecuencia de muestreo recomendada por lote incluye: controles físicos (FTIR, granulometría, densidad, aspecto, pH, humedad) en 100% de lotes; cuantificación completa de todos los activos por HPLC/ICP en 100% de lotes dado el perfil multicomponente; microbiología completa en 100% de lotes; y metales pesados en 100% de lotes de materia prima de colágeno y cada 3 lotes de producto final. Puntos de atención especial para producción: realizar la mezcla por orden de tamaño de partícula decreciente, verificar que el Índice de Carr sea <18% antes del envasado, proteger las zonas de mezcla y envasado de luz UV directa, y considerar sobreformulación del 10-20% en astaxantina, K2, B12, B1 y folato para compensar la degradación esperada durante la vida útil de 24 meses.
 
@@ -1029,8 +1095,8 @@ Muestreo estadistico: cada 15 min tomar 3 sticks consecutivos. Controles: (a) pe
 **Vida útil objetivo:** 24 meses ✅  
 
 **Condiciones de estudio:**
-- Larga duración: 25°C ± 2°C / 60% ± 5% — 24 meses meses
-- Acelerado: 40°C ± 2°C / 75% ± 5% — 6 meses meses
+- Larga duración: 25°C ± 2°C / 60% ± 5% — 24 meses
+- Acelerado: 40°C ± 2°C / 75% ± 5% — 6 meses
 - Fotodegradación: 25°C / Ambiente — 1,2 millones de lux·horas luz visible + 200 W·h/m² luz UV meses
 
 **Cronograma:**
@@ -1073,6 +1139,13 @@ Muestreo estadistico: cada 15 min tomar 3 sticks consecutivos. Controles: (a) pe
 [11] USP <905> Uniformity of Dosage Units (referencia metodológica adaptada) — *normativa*
 [12] Conocimiento experto en espectroscopía FTIR de péptidos, aminoácidos, carotenoides y triterpenos — *conocimiento_experto*
 [13] Conocimiento experto en estabilidad de vitaminas liposolubles (K2, astaxantina) y vitaminas del grupo B en matrices de polvo — *conocimiento_experto*
+
+---
+
+## 6. Portfolio recomendado
+
+*Sección en desarrollo (ver `tasks/todo.md`, Fase 6d): propuesta de productos complementarios a aconsejar al cliente.*
+
 
 ---
 
