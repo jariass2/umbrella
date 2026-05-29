@@ -1109,6 +1109,22 @@ def download_report(run_id):
                 )
         return text
 
+    # ── super/subíndices Unicode → <super>/<sub> de ReportLab ─────────
+    # Helvetica no tiene glifos para ⁻ ₂ etc. (salen como ■). Los mapeamos a
+    # dígitos/símbolos normales dentro de <super>/<sub> (p.ej. cm⁻¹ → cm<super>-1</super>,
+    # O₂ → O<sub>2</sub>).
+    _SUP = {'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9',
+            '⁺':'+','⁻':'-','⁼':'=','ⁿ':'n','⁽':'(','⁾':')'}
+    _SUB = {'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9',
+            '₊':'+','₋':'-','₌':'=','₍':'(','₎':')'}
+    _SUP_RE = re.compile('[' + ''.join(_SUP) + ']+')
+    _SUB_RE = re.compile('[' + ''.join(_SUB) + ']+')
+
+    def _supersub(text: str) -> str:
+        text = _SUP_RE.sub(lambda m: '<super>' + ''.join(_SUP[c] for c in m.group()) + '</super>', text)
+        text = _SUB_RE.sub(lambda m: '<sub>' + ''.join(_SUB[c] for c in m.group()) + '</sub>', text)
+        return text
+
     # ── inline markdown → ReportLab XML ───────────────────────────────
     def rl(text: str) -> str:
         text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
@@ -1123,6 +1139,7 @@ def download_report(run_id):
         # markdown like '****', '____', or interleaved markers.
         for _ in range(4):
             text = re.sub(r'<(b|i)>\s*</\1>', '', text)
+        text = _supersub(text)
         text = _swap_emojis(text)
         return text
 
