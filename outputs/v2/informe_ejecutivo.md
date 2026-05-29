@@ -768,67 +768,25 @@ Extracto de Boswellia serrata estandarizado al 30% en ácido acetil-11-ceto-β-b
 ### Propuesta de etiqueta
 
 
-### Cara principal
-
-**Denominación de venta:**
-> Complemento alimenticio a base de péptidos de colágeno, L-glicina, ácido hialurónico, magnesio, hierro, zinc, vitaminas del grupo B, vitamina K2, extracto de Boswellia serrata y astaxantina
-
-**Cantidad neta:** [XX] g ([XX] sobres de [XX] g)  
-**Claims autorizados:**
-- Las vitaminas B1, B2, B5, B6 y B12 contribuyen al metabolismo energético normal
-- El magnesio contribuye a la función muscular normal
-- El zinc contribuye a la protección de las células frente al daño oxidativo
-- El hierro contribuye a la reducción del cansancio y la fatiga
-
-*No se incluyen claims para péptidos de colágeno, L-glicina, ácido hialurónico, AKBA (Boswellia serrata) ni astaxantina al no disponer de claims autorizados por EFSA (Reg. UE 432/2012). No se incluyen claims para vitamina K2 (MK-7) porque la menaquinona-7 no está incluida en el Anexo II de la Directiva 2002/46/CE como forma permitida de vitamina K; verificar con AESAN antes de utilizar cualquier claim. Todos los claims seleccionados cumplen la condición de 'fuente de' (≥15% VRN por dosis diaria) conforme al Anexo del Reg. (CE) 1924/2006.*
+#### Versión en español (ES)
 
 
-### Cara secundaria
+#### Cara frontal
 
-**Lista de ingredientes:**
-> Péptidos de colágeno hidrolizado, L-glicina, ácido hialurónico (hialuronato sódico), magnesio bisglicinato, extracto de la resina de Boswellia serrata (estandarizado al 30% de ácido acetil-11-ceto-β-boswélico), hierro bisglicinato, zinc bisglicinato, oleorresina de Haematococcus pluvialis (estandarizada en astaxantina), ácido pantoténico, riboflavina, clorhidrato de piridoxina, clorhidrato de tiamina, ácido fólico, menaquinona-7, cianocobalamina, [excipientes pendientes de confirmar por el fabricante: ej. antiagregantes, edulcorantes, aromatizantes si proceden].
-
-**Alérgenos:** PENDIENTE DE CONFIRMACIÓN. Si el colágeno es de origen marino (pescado): debe declararse PESCADO en negrita como alérgeno obligatorio (Anexo II Reg. 1169/2011). Si el colágeno es bovino, porcino o aviario: no es alérgeno obligatorio, pero se recomienda indicar el origen. Verificar también posibles trazas según las líneas de fabricación.  
-
-**Modo de empleo:** Tomar 1 sobre al día, preferentemente con una de las comidas principales. Disolver el contenido del sobre en un vaso de agua (aprox. 200 ml) y agitar hasta su completa disolución. No tomar con lácteos ni con té, ya que pueden reducir la absorción del hierro.  
-**Dosis diaria:** 1 sobre (aprox. 12 g)  
-**Población:** Adultos mayores de 18 años. No destinado a menores de 14 años.  
-
-**Advertencias obligatorias:**
-- No superar la dosis diaria recomendada.
-- Los complementos alimenticios no deben utilizarse como sustitutos de una dieta variada y equilibrada y de un modo de vida sano.
-- Mantener fuera del alcance de los niños más pequeños.
-**Advertencias recomendadas:**
-- Producto no destinado a menores de 14 años (por contenido de astaxantina, conforme al Reg. UE 2023/1581).
-- No recomendado durante el embarazo y la lactancia sin supervisión médica.
-- Consulte con su médico o farmacéutico si está tomando medicamentos anticoagulantes o antiagregantes plaquetarios (por contenido de vitamina K2 y extracto de Boswellia serrata).
-- Los suplementos de hierro pueden causar molestias gastrointestinales (náuseas, estreñimiento) en personas sensibles.
-- Consulte con un profesional sanitario si está tomando antiinflamatorios.
-- No utilizar en caso de alergia a alguno de los componentes.
-- Consulte con su profesional sanitario en caso de hemocromatosis o insuficiencia renal.
+**Obligatorio:**
+- Marca / nombre comercial: Collagen Complex Pro
+- En base a: péptidos de colágeno, L-glicina, ácido hialurónico, magnesio, hierro, zinc, vitaminas del grupo B, vitamina K2, extracto de Boswellia serrata y astaxantina
+- Dosis / cantidad neta: [XX] g ([XX] sobres de [XX] g)
+- Mención legal: **Complemento alimenticio**
+**Opcional:**
+- Logos (certificaciones: vegano, sin gluten, GMP… según corresponda)
 
 
-### Cara lateral / contraetiqueta
+#### Caras laterales
 
-**Operador responsable:** [NOMBRE RAZÓN SOCIAL DEL OPERADOR RESPONSABLE]
-[DIRECCIÓN COMPLETA]
-[CÓDIGO POSTAL] [CIUDAD]
-[PROVINCIA], España  
-**Fabricante:** [NOMBRE DEL FABRICANTE]
-[DIRECCIÓN DEL FABRICANTE]
-[PAÍS]  
-**Duración mínima:** Consumir preferentemente antes del fin de: MM/AAAA  
-**Conservación:** Conservar en lugar fresco y seco, protegido de la luz solar directa y de fuentes de calor. Temperatura inferior a 25°C. Cerrar bien el envase después de cada uso.  
-**N.º lote:** Lote: [ESPACIO PARA IMPRESIÓN]  
-**País de origen:** PENDIENTE: Indicar país de origen del colágeno y/o del producto final si es distinto de España  
-**Notificación AESAN:** [NÚMERO DE NOTIFICACIÓN AESAN PENDIENTE]  
-
-*Incluir declaración de trazas alérgenas si aplica tras evaluación de las líneas de fabricación. Verificar posición regulatoria de MK-7 y Boswellia serrata con AESAN antes de la notificación. Considerar sustituir MK-7 por fitomenadiona (K1) si AESAN no acepta la menaquinona-7 como fuente de vitamina K. Los valores de macronutrientes y energía de la tabla nutricional deben completarse con análisis de lote del producto terminado.*
-
-
-### Lista de ingredientes
-
-> Péptidos de colágeno hidrolizado, L-glicina, ácido hialurónico (hialuronato sódico), magnesio bisglicinato, extracto de la resina de Boswellia serrata (estandarizado al 30% de ácido acetil-11-ceto-β-boswélico), hierro bisglicinato, zinc bisglicinato, oleorresina de Haematococcus pluvialis (estandarizada en astaxantina), ácido pantoténico, riboflavina, clorhidrato de piridoxina, clorhidrato de tiamina, ácido fólico, menaquinona-7, cianocobalamina, [EXCIPIENTES PENDIENTES DE CONFIRMACIÓN POR EL FABRICANTE].
+**Obligatorio:**
+- Lista de ingredientes *(alérgenos en negrita)*:
+  > Péptidos de colágeno hidrolizado, L-glicina, ácido hialurónico (hialuronato sódico), magnesio bisglicinato, extracto de la resina de Boswellia serrata (estandarizado al 30% de ácido acetil-11-ceto-β-boswélico), hierro bisglicinato, zinc bisglicinato, oleorresina de Haematococcus pluvialis (estandarizada en astaxantina), ácido pantoténico, riboflavina, clorhidrato de piridoxina, clorhidrato de tiamina, ácido fólico, menaquinona-7, cianocobalamina, [EXCIPIENTES PENDIENTES DE CONFIRMACIÓN POR EL FABRICANTE].
 
 NOTAS PARA LA LISTA DE INGREDIENTES:
 - Las formas químicas de magnesio, hierro y zinc (bisglicinato) están pendientes de confirmación con el fabricante. Si se utilizan otras formas (citrato, sulfato, etc.), actualizar la denominación en consecuencia.
@@ -836,6 +794,56 @@ NOTAS PARA LA LISTA DE INGREDIENTES:
 - ALÉRGENOS: Si el colágeno es de origen marino (pescado), el término 'péptidos de colágeno hidrolizado' debe ir seguido de la indicación de alérgeno conforme al Art. 21 Reg. 1169/2011: 'péptidos de colágeno hidrolizado (PESCADO)' o incluir 'Contiene pescado' en la declaración de alérgenos.
 - Si se utilizan excipientes que contengan alérgenos del Anexo II (ej. maltodextrina de trigo), deben indicarse en NEGRITA.
 - La menaquinona-7 (MK-7) no está explícitamente listada en el Anexo II de la Directiva 2002/46/CE. Verificar con AESAN su aceptación como fuente de vitamina K antes de la notificación del producto.
+- Declaración de alérgenos: PENDIENTE DE CONFIRMACIÓN. Si el colágeno es de origen marino (pescado): debe declararse PESCADO en negrita como alérgeno obligatorio (Anexo II Reg. 1169/2011). Si el colágeno es bovino, porcino o aviario: no es alérgeno obligatorio, pero se recomienda indicar el origen. Verificar también posibles trazas según las líneas de fabricación.
+- Modo de empleo / dosis: Tomar 1 sobre al día, preferentemente con una de las comidas principales. Disolver el contenido del sobre en un vaso de agua (aprox. 200 ml) y agitar hasta su completa disolución. No tomar con lácteos ni con té, ya que pueden reducir la absorción del hierro.
+- Advertencias y frases obligatorias:
+  - No superar la dosis diaria recomendada.
+  - Los complementos alimenticios no deben utilizarse como sustitutos de una dieta variada y equilibrada y de un modo de vida sano.
+  - Mantener fuera del alcance de los niños más pequeños.
+- Operador responsable: [NOMBRE RAZÓN SOCIAL DEL OPERADOR RESPONSABLE]
+- Fabricado por: [NOMBRE DEL FABRICANTE]
+- Distribuido por: —
+- Peso neto · Lote · Caducidad: Consumir preferentemente antes del fin de: MM/AAAA
+- Logo Ecoembes (Punto Verde) — gestión de residuos de envases
+**Opcional:**
+- Tabla nutricional / %VRN → ver Bloque 2 (Ficha Técnica)
+- Contribución nutricional (claims) → ver Claims, Bloque 3
+- Código de barras · código QR
+
+
+#### Versión en inglés (EN)
+
+*El agente Etiqueta aún no emite contenido en inglés; se muestran las menciones legales fijas en EN y el contenido variable queda pendiente. Regenera el pipeline tras activar el modo bilingüe del agente para poblarlo.*
+
+
+#### Cara frontal
+
+**Obligatorio:**
+- Marca / nombre comercial: Collagen Complex Pro
+- Food supplement based on: _(pendiente: regenerar el pipeline con el agente Etiqueta bilingüe)_
+- Dosis / cantidad neta: _(pendiente: regenerar el pipeline con el agente Etiqueta bilingüe)_
+- Mención legal: **Food supplement**
+**Opcional:**
+- Logos (certificaciones: vegano, sin gluten, GMP… según corresponda)
+
+
+#### Caras laterales
+
+**Obligatorio:**
+- Lista de ingredientes *(alérgenos en negrita)*:
+  > _(pendiente: regenerar el pipeline con el agente Etiqueta bilingüe)_
+- Modo de empleo / dosis: _(pendiente: regenerar el pipeline con el agente Etiqueta bilingüe)_
+- Advertencias y frases obligatorias:
+  - Do not exceed the recommended daily dose.
+  - Food supplements should not be used as a substitute for a varied and balanced diet and a healthy lifestyle.
+  - Keep out of reach of young children.
+- Distribuido por: _(pendiente: regenerar el pipeline con el agente Etiqueta bilingüe)_
+- Peso neto · Lote · Caducidad: _(pendiente: regenerar el pipeline con el agente Etiqueta bilingüe)_
+- Logo Ecoembes (Punto Verde) — gestión de residuos de envases
+**Opcional:**
+- Tabla nutricional / %VRN → ver Bloque 2 (Ficha Técnica)
+- Contribución nutricional (claims) → ver Claims, Bloque 3
+- Código de barras · código QR
 
 
 ### Notas técnicas de diseño

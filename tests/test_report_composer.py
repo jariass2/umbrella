@@ -102,6 +102,25 @@ def test_vida_util_sin_meses_duplicado(tmp_path):
     assert "meses meses" not in texto
 
 
+def test_etiqueta_layout_caras(tmp_path):
+    texto = _informe(tmp_path)
+    # Layout de Xavier: cara frontal + caras laterales con obligatorio/opcional.
+    assert "#### Cara frontal" in texto
+    assert "#### Caras laterales" in texto
+    assert "**Obligatorio:**" in texto
+    assert "**Opcional:**" in texto
+    assert "Logo Ecoembes" in texto
+
+
+def test_etiqueta_bilingue(tmp_path):
+    texto = _informe(tmp_path)
+    assert "Versión en español (ES)" in texto
+    assert "Versión en inglés (EN)" in texto
+    # Mención legal en ambos idiomas.
+    assert "**Complemento alimenticio**" in texto
+    assert "**Food supplement**" in texto
+
+
 if __name__ == "__main__":
     import tempfile
 
@@ -110,6 +129,7 @@ if __name__ == "__main__":
         for fn in (test_seis_bloques_en_orden, test_tabla_ingredientes_una_sola_vez,
                    test_nutricional_no_se_repite, test_sin_doble_porcentaje,
                    test_ficha_tecnica_seis_secciones, test_ficha_tecnica_cabecera_fabricante,
-                   test_vida_util_sin_meses_duplicado):
+                   test_vida_util_sin_meses_duplicado, test_etiqueta_layout_caras,
+                   test_etiqueta_bilingue):
             fn(tmp)
             print(f"✅ {fn.__name__}")

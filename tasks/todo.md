@@ -135,10 +135,10 @@ Formato objetivo = `FT Formula 1 MIX 250188.pdf` (plantilla estándar Umbrella, 
 
 - [ ] **Segmentos de mercado**: hoy solo existe `publico_objetivo_principal/secundario` (strings) en Claims. Decidir: enriquecer el prompt de Claims para emitir segmentos estructurados, o nuevo mini-agente de segmentación.
 - [ ] **Formatos × Segmentos (matriz)**: hoy Formatos recomienda 1 formato óptimo, no una matriz. Ampliar el prompt/esquema de Formatos para emitir `matriz_formato_segmento` (qué formato encaja con qué segmento, incluyendo formatos de innovación).
-- [ ] **Etiqueta visual cara frontal / caras laterales** (adjuntos recibidos: `etiqueta español/ingles modificacion 2005 V2.pdf`, producto "Immunara*"). Layout real = 3 paneles, **bilingüe ES+EN**. Mapea exacto a la spec de Xavier:
-  - Cara frontal (panel central) — obligatorio: marca, "Complemento alimenticio basado en…", dosis (uds), "Complemento Alimenticio", nombre producto; opcional: logos (Vegano/Gluten Free/GMP).
-  - Caras laterales — obligatorio: lista ingredientes (alérgenos en **negrita**), tabla `Ingredientes · 3 caps · %VRN · 6 caps · %VRN`, dosis diaria, advertencias/frases obligatorias, fabricado por + RGSEAA, distribuido por, contenido/peso neto, lote/caducidad, código de barras, logo Ecoembes; opcional: QR, marcas registradas, contribución nutricional.
-  - Decidir si generamos ES+EN o solo ES (Xavier mostró ambas). Remapear esquema del agente Etiqueta (`cara_principal/secundaria/lateral_contraetiqueta` → `cara_frontal/caras_laterales` con flags obligatorio/opcional) y actualizar `fmt_etiqueta`.
+- [x] **Etiqueta visual cara frontal / caras laterales** — IMPLEMENTADO (2026-05-29). `fmt_etiqueta` reescrita al layout de Xavier (espejo de "Immunara*"): **Cara frontal** (obligatorio: marca, "En base a:", dosis/cantidad neta, "Complemento alimenticio"; opcional: logos) + **Caras laterales** (obligatorio: lista ingredientes con nota de alérgenos en negrita, advertencias/frases obligatorias, operador/fabricado por/distribuido por, peso neto·lote·caducidad, logo Ecoembes; opcional: tabla nutricional→Bloque 2, claims→Bloque 3, código barras/QR).
+- [x] **Bilingüe ES+EN:** el compositor renderiza panel ES (desde datos) + panel EN (desde campos `_en`). Agente Etiqueta extendido (FASE 7, prompt v2.1.0) para emitir `denominacion_venta_en`, `cantidad_neta_en`, `lista_ingredientes_en`, `alergenos_en`, `modo_empleo_en`, `dosis_diaria_en`, `advertencias_obligatorias_en`. **PENDIENTE DE VERIFICAR:** el contenido EN variable se poblará al **re-ejecutar el pipeline** (cambio de prompt no testeable offline). Hoy el panel EN muestra frases legales fijas + nota "regenerar". Tests del compositor: 24/24 verde.
+
+**Pendiente 6c (mejora):** poner alérgenos en negrita inline (hoy el agente los pone en campo aparte narrativo); tabla `Ingredientes · 3 caps · %VRN · 6 caps · %VRN` estilo Immunara como opción visual.
 
 ### 6d. Bloque 6 — Portfolio recomendado (capacidad nueva)
 

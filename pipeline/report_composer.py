@@ -806,109 +806,116 @@ def fmt_claims(d: dict) -> list[str]:
     return lines
 
 
-# ── Sección 5: Etiqueta ─────────────────────────────────────────────────────
+# ── Bloque 3 · Etiqueta (layout cara frontal / caras laterales, ES + EN) ─────
+# Espejo del ejemplo "Immunara*": panel frontal + caras laterales, con la
+# división obligatorio/opcional que pide Xavier. Bilingüe: el español sale de
+# los datos del agente; el inglés de los campos con sufijo `_en` (cuando el
+# agente Etiqueta los emita) y, en su defecto, de las frases legales fijas.
 
-def fmt_etiqueta(d: dict) -> list[str]:
-    lines = [_section("Propuesta de etiqueta", 3)]
+ETIQUETA_MENCION = {"es": "Complemento alimenticio", "en": "Food supplement"}
+ETIQUETA_ADVERTENCIAS_EN = [
+    "Do not exceed the recommended daily dose.",
+    "Food supplements should not be used as a substitute for a varied and balanced diet and a healthy lifestyle.",
+    "Keep out of reach of young children.",
+]
+ETIQUETA_ECOEMBES = "Logo Ecoembes (Punto Verde) — gestión de residuos de envases"
 
+
+def _etq_caras(d: dict) -> dict:
     caras = d.get("fase_2_texto_por_caras", d.get("caras", {}))
-    if isinstance(caras, list) and caras:
-        # Normalizar lista de caras a dict por nombre de cara
-        caras_dict = {}
+    if isinstance(caras, list):
+        out: dict = {}
         for c in caras:
             if isinstance(c, dict):
-                cara_name = c.get("cara", "").lower().replace(" ", "_")
-                caras_dict[cara_name] = c
-        caras = caras_dict
-    if isinstance(caras, dict):
-        # ── Cara principal ──────────────────────────────────────────
-        cp = caras.get("cara_principal", {})
-        if cp:
-            lines.append(_section("Cara principal", 3))
-            denom = cp.get("denominacion_venta", "")
-            if denom:
-                lines += [f"**Denominación de venta:**", f"> {denom}", ""]
-            cantidad = cp.get("cantidad_neta", "")
-            if cantidad:
-                lines.append(f"**Cantidad neta:** {cantidad}  ")
-            claims = cp.get("claims_autorizados", [])
-            if claims:
-                lines.append("**Claims autorizados:**")
-                for c in (claims if isinstance(claims, list) else [claims]):
-                    lines.append(f"- {c}")
-            notas_c = cp.get("notas_claims", "")
-            if notas_c:
-                lines += ["", f"*{notas_c}*"]
-            lines.append("")
+                out[c.get("cara", "").lower().replace(" ", "_")] = c
+        return out
+    return caras if isinstance(caras, dict) else {}
 
-        # ── Cara secundaria ─────────────────────────────────────────
-        cs = caras.get("cara_secundaria", {})
-        if cs:
-            lines.append(_section("Cara secundaria", 3))
-            lista_ing = cs.get("lista_ingredientes", "")
-            if lista_ing:
-                lines += [f"**Lista de ingredientes:**", f"> {lista_ing}", ""]
-            alergenos = cs.get("alergenos", "")
-            if alergenos:
-                lines += [f"**Alérgenos:** {alergenos}  ", ""]
-            modo = cs.get("modo_empleo", "")
-            dosis = cs.get("dosis_diaria", "")
-            poblacion = cs.get("poblacion", "")
-            if modo:
-                lines.append(f"**Modo de empleo:** {modo}  ")
-            if dosis:
-                lines.append(f"**Dosis diaria:** {dosis}  ")
-            if poblacion:
-                lines.append(f"**Población:** {poblacion}  ")
-            lines.append("")
-            adv_oblig = cs.get("advertencias_obligatorias", [])
-            adv_rec = cs.get("advertencias_recomendadas", [])
-            if adv_oblig:
-                lines.append("**Advertencias obligatorias:**")
-                for a in adv_oblig:
-                    lines.append(f"- {a.get('texto', a) if isinstance(a, dict) else a}")
-            if adv_rec:
-                lines.append("**Advertencias recomendadas:**")
-                for a in adv_rec:
-                    lines.append(f"- {a.get('texto', a) if isinstance(a, dict) else a}")
-            bloque = cs.get("bloque_advertencias_texto", "")
-            if bloque and not adv_oblig and not adv_rec:
-                lines += [f"> {bloque}"]
-            lines.append("")
-            # La tabla nutricional/%VRN va una sola vez en el Bloque 2 (Ficha
-            # Técnica). En la etiqueta es opcional → no se reimprime aquí.
 
-        # ── Cara lateral / contraetiqueta ───────────────────────────
-        cl = caras.get("cara_lateral_contraetiqueta", {})
-        if cl:
-            lines.append(_section("Cara lateral / contraetiqueta", 3))
-            lines += _kv_block(cl, [
-                ("operador_responsable", "Operador responsable"),
-                ("fabricante", "Fabricante"),
-                ("fecha_duracion_minima", "Duración mínima"),
-                ("condiciones_conservacion", "Conservación"),
-                ("numero_lote", "N.º lote"),
-                ("pais_origen", "País de origen"),
-                ("notificacion_aesan", "Notificación AESAN"),
-            ])
-            notas_lat = cl.get("notas_lateral", "")
-            if notas_lat:
-                lines += ["", f"*{notas_lat}*"]
-            lines.append("")
+def _etq_panel(caras: dict, lista_ing_es: str, lang: str, nombre_producto: str) -> list[str]:
+    """Layout (cara frontal + caras laterales) en el idioma dado.
+    Para 'en' lee los campos con sufijo `_en`; si faltan, usa las frases legales
+    fijas y marca el contenido variable como pendiente."""
+    cp = caras.get("cara_principal", {}) or {}
+    cs = caras.get("cara_secundaria", {}) or {}
+    cl = caras.get("cara_lateral_contraetiqueta", {}) or {}
+    pend = "_(pendiente: regenerar el pipeline con el agente Etiqueta bilingüe)_" if lang == "en" else "—"
 
-    # Lista de ingredientes
+    def g(dic: dict, key: str) -> str:
+        return (dic.get(f"{key}_en", "") if lang == "en" else dic.get(key, "")) or ""
+
+    L: list[str] = []
+    # ── Cara frontal ──
+    L.append(_section("Cara frontal", 4))
+    L.append("**Obligatorio:**")
+    L.append(f"- Marca / nombre comercial: {nombre_producto or g(cp,'denominacion_venta') or pend}")
+    base = g(cp, "denominacion_venta")
+    # Evita "a base de… complemento alimenticio a base de…" (la denominación legal ya lo incluye).
+    base = re.sub(r"(?i)^\s*(complemento alimenticio\s+)?a base de\s+", "", base).strip()
+    en_base = "Food supplement based on:" if lang == "en" else "En base a:"
+    L.append(f"- {en_base} {base or pend}")
+    L.append(f"- Dosis / cantidad neta: {g(cp,'cantidad_neta') or pend}")
+    L.append(f"- Mención legal: **{ETIQUETA_MENCION[lang]}**")
+    L.append("**Opcional:**")
+    L.append("- Logos (certificaciones: vegano, sin gluten, GMP… según corresponda)")
+    L.append("")
+    # ── Caras laterales ──
+    L.append(_section("Caras laterales", 4))
+    L.append("**Obligatorio:**")
+    li = lista_ing_es if lang == "es" else g(cs, "lista_ingredientes")
+    L.append("- Lista de ingredientes *(alérgenos en negrita)*:")
+    L.append(f"  > {li or pend}")
+    aler = g(cs, "alergenos")
+    if aler:
+        L.append(f"- Declaración de alérgenos: {aler}")
+    modo = g(cs, "modo_empleo") or g(cs, "dosis_diaria")
+    L.append(f"- Modo de empleo / dosis: {modo or pend}")
+    adv = cs.get("advertencias_obligatorias", []) if lang == "es" else (cs.get("advertencias_obligatorias_en") or ETIQUETA_ADVERTENCIAS_EN)
+    L.append("- Advertencias y frases obligatorias:")
+    for a in (adv or []):
+        L.append(f"  - {a.get('texto', a) if isinstance(a, dict) else a}")
+    op_es = [("operador_responsable", "Operador responsable"), ("fabricante", "Fabricado por")]
+    op_en = [("operador_responsable", "Responsible operator"), ("fabricante", "Manufactured by")]
+    for key, lab in (op_en if lang == "en" else op_es):
+        v = g(cl, key)
+        if v:
+            L.append(f"- {lab}: {v.splitlines()[0] if v else v}")
+    L.append("- Distribuido por: " + (g(cl, "distribuido_por") or pend))
+    cad = g(cl, "fecha_duracion_minima")
+    L.append(f"- Peso neto · Lote · Caducidad: {cad or pend}")
+    L.append(f"- {ETIQUETA_ECOEMBES}")
+    L.append("**Opcional:**")
+    L.append("- Tabla nutricional / %VRN → ver Bloque 2 (Ficha Técnica)")
+    L.append("- Contribución nutricional (claims) → ver Claims, Bloque 3")
+    L.append("- Código de barras · código QR")
+    L.append("")
+    return L
+
+
+def fmt_etiqueta(d: dict, nombre_producto: str = "") -> list[str]:
+    lines = [_section("Propuesta de etiqueta", 3)]
+    caras = _etq_caras(d)
     lista_ing = d.get("fase_4_lista_ingredientes_completa", d.get("lista_ingredientes_completa", ""))
-    if lista_ing:
-        lines.append(_section("Lista de ingredientes", 3))
-        if isinstance(lista_ing, str):
-            lines += [f"> {lista_ing}", ""]
-        elif isinstance(lista_ing, dict):
-            texto = lista_ing.get("texto", lista_ing.get("lista", ""))
-            if texto:
-                lines += [f"> {texto}", ""]
+    if isinstance(lista_ing, dict):
+        lista_ing = lista_ing.get("texto", lista_ing.get("lista", ""))
 
-    # Tabla nutricional: ver Bloque 2 (Ficha Técnica). No se reimprime en la
-    # etiqueta — Xavier la marca como opcional en las caras laterales.
+    lines.append(_section("Versión en español (ES)", 4))
+    lines += _etq_panel(caras, lista_ing, "es", nombre_producto)
+
+    lines.append(_section("Versión en inglés (EN)", 4))
+    has_en = any(
+        (caras.get(c, {}) or {}).get(f"{k}_en")
+        for c in ("cara_principal", "cara_secundaria", "cara_lateral_contraetiqueta")
+        for k in ("denominacion_venta", "lista_ingredientes", "modo_empleo")
+    )
+    if not has_en:
+        lines += [
+            "*El agente Etiqueta aún no emite contenido en inglés; se muestran las "
+            "menciones legales fijas en EN y el contenido variable queda pendiente. "
+            "Regenera el pipeline tras activar el modo bilingüe del agente para poblarlo.*",
+            "",
+        ]
+    lines += _etq_panel(caras, lista_ing, "en", nombre_producto)
 
     # Notas técnicas
     notas = d.get("fase_5_notas_tecnicas_diseno", d.get("notas_tecnicas", {}))
@@ -1476,7 +1483,7 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
         if fmt:
             lines += fmt_formatos(fmt)
         if etq:
-            lines += fmt_etiqueta(etq)
+            lines += fmt_etiqueta(etq, nombre_producto=nombre_producto)
         lines.append("\n---")
 
     # ── Bloque 4 · Documentación Interna de Producción ───────────────
