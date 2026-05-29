@@ -24,7 +24,7 @@ except ImportError:
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from pipeline.report_composer import compose_informe  # noqa: E402
+from pipeline.report_composer import compose_informe, fmt_portfolio  # noqa: E402
 
 OUTPUTS_DIR = Path(__file__).resolve().parent.parent / "outputs" / "v2"
 
@@ -121,6 +121,33 @@ def test_etiqueta_bilingue(tmp_path):
     assert "**Food supplement**" in texto
 
 
+def test_portfolio_render():
+    sample = {
+        "fase_1_posicionamiento": {"producto_ancla": "X", "categoria": "Y", "propuesta_valor": "Z"},
+        "fase_2_extensiones_linea": [{"nombre": "Ext1", "diferencia_vs_ancla": "doble dosis",
+                                      "ingredientes_clave": ["a", "b"], "formato_sugerido": "Stick",
+                                      "segmento_objetivo": "Senior"}],
+        "fase_3_productos_complementarios": [{"nombre": "Comp1", "sinergia_con_ancla": "rutina",
+                                              "ingredientes_clave": ["c"], "formato_sugerido": "Cápsula",
+                                              "segmento_objetivo": "Deportista"}],
+        "fase_4_gama_recomendada": {"secuencia_lanzamiento": ["1º: ancla"], "justificacion": "porque sí"},
+        "fuentes_consultadas": [],
+    }
+    out = "\n".join(fmt_portfolio(sample))
+    assert "Producto ancla:** X" in out
+    assert "### Extensiones de línea" in out
+    assert "### Productos complementarios" in out
+    assert "### Gama recomendada (roadmap)" in out
+    assert "Ext1" in out and "Comp1" in out
+
+
+def test_bloque6_fallback_sin_portfolio(tmp_path):
+    # Sin JSON de portfolio (outputs/v2 no lo tiene aún), Bloque 6 muestra el aviso.
+    texto = _informe(tmp_path)
+    assert "## 6. Portfolio recomendado" in texto
+    assert "Agente 9" in texto  # mensaje de pendiente
+
+
 if __name__ == "__main__":
     import tempfile
 
@@ -130,6 +157,8 @@ if __name__ == "__main__":
                    test_nutricional_no_se_repite, test_sin_doble_porcentaje,
                    test_ficha_tecnica_seis_secciones, test_ficha_tecnica_cabecera_fabricante,
                    test_vida_util_sin_meses_duplicado, test_etiqueta_layout_caras,
-                   test_etiqueta_bilingue):
+                   test_etiqueta_bilingue, test_bloque6_fallback_sin_portfolio):
             fn(tmp)
             print(f"✅ {fn.__name__}")
+        test_portfolio_render()
+        print("✅ test_portfolio_render")

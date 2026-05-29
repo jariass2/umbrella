@@ -1367,6 +1367,64 @@ def fmt_qc(d: dict) -> list[str]:
     return lines
 
 
+# ── Bloque 6 · Portfolio recomendado (Agente 9) ──────────────────────────────
+
+def fmt_portfolio(d: dict) -> list[str]:
+    """Renderiza el portfolio a aconsejar al cliente: posicionamiento del
+    producto ancla, extensiones de línea, productos complementarios y gama
+    recomendada."""
+    lines: list[str] = []
+
+    pos = d.get("fase_1_posicionamiento", {})
+    if isinstance(pos, dict) and pos:
+        lines += _kv_block(pos, [
+            ("producto_ancla", "Producto ancla"),
+            ("categoria", "Categoría"),
+            ("propuesta_valor", "Propuesta de valor"),
+        ])
+        lines.append("")
+
+    def _tabla_productos(items: list, titulo: str, col_relacion: str, key_relacion: str) -> None:
+        if not isinstance(items, list) or not items:
+            return
+        lines.append(_section(titulo, 3))
+        headers = ["Producto", col_relacion, "Ingredientes clave", "Formato", "Segmento"]
+        rows = []
+        for p in items:
+            if not isinstance(p, dict):
+                continue
+            ing = p.get("ingredientes_clave", [])
+            ing_str = ", ".join(ing) if isinstance(ing, list) else _val(ing)
+            rows.append([
+                p.get("nombre", ""),
+                p.get(key_relacion, p.get("descripcion", "")),
+                ing_str or "—",
+                p.get("formato_sugerido", "") or "—",
+                p.get("segmento_objetivo", "") or "—",
+            ])
+        lines.extend(_table(headers, rows))
+        lines.append("")
+
+    _tabla_productos(d.get("fase_2_extensiones_linea", []),
+                     "Extensiones de línea", "Diferencia vs ancla", "diferencia_vs_ancla")
+    _tabla_productos(d.get("fase_3_productos_complementarios", []),
+                     "Productos complementarios", "Sinergia con el ancla", "sinergia_con_ancla")
+
+    gama = d.get("fase_4_gama_recomendada", {})
+    if isinstance(gama, dict) and gama:
+        lines.append(_section("Gama recomendada (roadmap)", 3))
+        sec = gama.get("secuencia_lanzamiento", [])
+        if isinstance(sec, list):
+            lines += [f"- {s}" for s in sec]
+        just = gama.get("justificacion", "")
+        if just:
+            lines += ["", f"*{just}*"]
+        lines.append("")
+
+    lines += _fuentes(d.get("fuentes_consultadas", []))
+    return lines
+
+
 # ── Compositor principal ────────────────────────────────────────────────────
 
 def compose_informe(formula: str, path: str, agent_models: dict | None = None,
@@ -1391,6 +1449,7 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
     fmt = _load("agente_6_formatos_v2", output_dir)
     doc = _load("agente_7_docs_internos_v2", output_dir)
     qc  = _load("agente_8_qc_v2", output_dir)
+    prt = _load("agente_9_portfolio_v2", output_dir)
 
     # Mapa prefix → _trazabilidad (para tokens y coste en el Anexo)
     _trazab_map: dict[str, dict] = {
@@ -1402,6 +1461,7 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
         "AGENT_6_FORMATOS": fmt.get("_trazabilidad", {}),
         "AGENT_7_DOCS":     doc.get("_trazabilidad", {}),
         "AGENT_8_QC":       qc.get("_trazabilidad", {}),
+        "AGENT_9_PORTFOLIO": prt.get("_trazabilidad", {}),
     }
 
     # ── Portada ──────────────────────────────────────────────────────
@@ -1498,14 +1558,17 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
         lines += fmt_qc(qc)
         lines.append("\n---")
 
-    # ── Bloque 6 · Portfolio recomendado (capacidad en desarrollo) ───
+    # ── Bloque 6 · Portfolio recomendado (Agente 9) ──────────────────
     lines.append(_section("6. Portfolio recomendado", 2))
-    lines += [
-        "*Sección en desarrollo (ver `tasks/todo.md`, Fase 6d): propuesta de "
-        "productos complementarios a aconsejar al cliente.*",
-        "",
-        "\n---",
-    ]
+    if prt:
+        lines += fmt_portfolio(prt)
+    else:
+        lines.append(
+            "*Pendiente: ejecuta el pipeline con el Agente 9 (Portfolio) para poblar "
+            "esta sección con la propuesta de gama a aconsejar al cliente.*"
+        )
+        lines.append("")
+    lines.append("\n---")
 
     # ── Anexo: modelos y tiempos de ejecución ────────────────────────
     if agent_models:
@@ -1518,6 +1581,7 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
             "AGENT_6_FORMATOS": ("Formatos", "Agente 6 — Formatos e Innovación"),
             "AGENT_7_DOCS":     ("Docs Internos", "Agente 7 — Documentación Interna"),
             "AGENT_8_QC":       ("QC", "Agente 8 — Plan QC"),
+            "AGENT_9_PORTFOLIO": ("Portfolio", "Agente 9 — Portfolio recomendado"),
         }
         # Calcular duración total en mm:ss
         total_mm = int(total_elapsed // 60)

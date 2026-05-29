@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Configuración centralizada del pipeline.
 
@@ -36,6 +38,7 @@ AGENT_PREFIXES = {
     6: "AGENT_6_FORMATOS",
     7: "AGENT_7_DOCS",
     8: "AGENT_8_QC",
+    9: "AGENT_9_PORTFOLIO",
 }
 # Alias “clave lógica de agente” -> prefijo de variables de entorno.
 # Útil para frontends que quieran configurar cada agente individualmente.
@@ -48,6 +51,7 @@ AGENT_KEY_TO_PREFIX = {
     "Formatos": AGENT_PREFIXES[6],
     "Docs Internos": AGENT_PREFIXES[7],
     "QC": AGENT_PREFIXES[8],
+    "Portfolio": AGENT_PREFIXES[9],
 }
 
 PROVIDER_API_KEY_ENV_VARS = (

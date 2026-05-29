@@ -1152,7 +1152,7 @@ Muestreo estadistico: cada 15 min tomar 3 sticks consecutivos. Controles: (a) pe
 
 ## 6. Portfolio recomendado
 
-*Sección en desarrollo (ver `tasks/todo.md`, Fase 6d): propuesta de productos complementarios a aconsejar al cliente.*
+*Pendiente: ejecuta el pipeline con el Agente 9 (Portfolio) para poblar esta sección con la propuesta de gama a aconsejar al cliente.*
 
 
 ---

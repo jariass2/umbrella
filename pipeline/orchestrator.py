@@ -37,6 +37,7 @@ from agents.etiqueta_agent_v2 import ETIQUETA_INSTRUCTIONS, EtiquetaAnalysis, PR
 from agents.formatos_agent_v2 import FORMATOS_INSTRUCTIONS, FormatosAnalysis, PROMPT_VERSION as FORMATOS_PROMPT_VERSION
 from agents.docs_internos_agent_v2 import DOCS_INTERNOS_INSTRUCTIONS, DocsInternosAnalysis, PROMPT_VERSION as DOCS_PROMPT_VERSION
 from agents.qc_agent_v2 import QC_INSTRUCTIONS, PlanQCAnalysis, PROMPT_VERSION as QC_PROMPT_VERSION
+from agents.portfolio_agent_v2 import PORTFOLIO_INSTRUCTIONS, PortfolioAnalysis, PROMPT_VERSION as PORTFOLIO_PROMPT_VERSION
 from pipeline.config import (
     get_agent_config,
     get_search_max_queries,
@@ -55,6 +56,7 @@ AGENT_OUTPUT_MODELS: dict[str, type[BaseModel] | None] = {
     "Formatos": FormatosAnalysis,
     "Docs Internos": DocsInternosAnalysis,
     "QC": PlanQCAnalysis,
+    "Portfolio": PortfolioAnalysis,
 }
 
 AGENT_PROMPT_VERSIONS: dict[str, str] = {
@@ -66,6 +68,7 @@ AGENT_PROMPT_VERSIONS: dict[str, str] = {
     "Formatos": FORMATOS_PROMPT_VERSION,
     "Docs Internos": DOCS_PROMPT_VERSION,
     "QC": QC_PROMPT_VERSION,
+    "Portfolio": PORTFOLIO_PROMPT_VERSION,
 }
 
 # Agentes que necesitan búsqueda web (el resto trabaja solo con la fórmula)
@@ -716,9 +719,9 @@ def main(argv: list[str] | None = None):
         # Wave 1: KIC arranca primero (path crítico → Regulatorio lo espera).
         # Los demás se lanzan solo después de que KIC haya adquirido su slot
         # en el semáforo del endpoint, garantizando que no le ganen la plaza.
-        monitor_wave(1, "KIC + Formatos + Docs Internos + QC (paralelo)")
+        monitor_wave(1, "KIC + Formatos + Docs Internos + QC + Portfolio (paralelo)")
         print(f"\n{'─'*60}")
-        print("  WAVE 1: KIC + Formatos + Docs Internos + QC (paralelo)")
+        print("  WAVE 1: KIC + Formatos + Docs Internos + QC + Portfolio (paralelo)")
         print(f"{'─'*60}")
 
         kic_slot_acquired = threading.Event()
@@ -741,6 +744,10 @@ def main(argv: list[str] | None = None):
             _run_step, "QC", "Agente 8: QC v2", 8, QC_INSTRUCTIONS,
             f"Define el plan de control de calidad del siguiente producto:\n\n{F}")
 
+        fut_portfolio = pool.submit(
+            _run_step, "Portfolio", "Agente 9: Portfolio v2", 9, PORTFOLIO_INSTRUCTIONS,
+            f"Propón un portfolio de productos a aconsejar al cliente a partir del siguiente producto ancla:\n\n{F}")
+
         # Wave 2: Regulatorio arranca en cuanto KIC termina (sin esperar a Formatos/Docs/QC)
         kic_ok = _collect(fut_kic, r, timings)
         if not kic_ok:
@@ -759,6 +766,7 @@ def main(argv: list[str] | None = None):
         _collect(fut_formatos, r, timings)
         _collect(fut_docs, r, timings)
         _collect(fut_qc, r, timings)
+        _collect(fut_portfolio, r, timings)
 
         # Wave 3: FT + Claims en paralelo (en cuanto Regulatorio termina)
         reg_ok = _collect(fut_reg, r, timings) if fut_reg else False
@@ -800,7 +808,7 @@ def main(argv: list[str] | None = None):
     t_pipeline_total = time.time() - t_pipeline_start
     agent_models = {
         AGENT_PREFIXES[i]: get_agent_config(AGENT_PREFIXES[i])
-        for i in range(1, 9)
+        for i in range(1, len(AGENT_PREFIXES) + 1)
     }
     compose_informe(
         F,
@@ -812,10 +820,11 @@ def main(argv: list[str] | None = None):
 
     ok = [k for k, v in r.items() if v]
     fail = [k for k in AGENT_OUTPUT_MODELS if k not in ok]
+    total = len(AGENT_OUTPUT_MODELS)
 
-    monitor_pipeline(f"Pipeline completado — {len(ok)}/8 agentes exitosos")
+    monitor_pipeline(f"Pipeline completado — {len(ok)}/{total} agentes exitosos")
     print(f"\n{'='*60}")
-    print(f"  Pipeline v2 completado — {len(ok)}/8 agentes exitosos")
+    print(f"  Pipeline v2 completado — {len(ok)}/{total} agentes exitosos")
     if fail:
         print(f"  ⚠️  Fallaron: {', '.join(fail)}")
     print(f"  Outputs en: {OUTPUT_DIR}/")

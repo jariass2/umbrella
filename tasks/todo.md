@@ -140,8 +140,21 @@ Formato objetivo = `FT Formula 1 MIX 250188.pdf` (plantilla estándar Umbrella, 
 
 **Pendiente 6c (mejora):** poner alérgenos en negrita inline (hoy el agente los pone en campo aparte narrativo); tabla `Ingredientes · 3 caps · %VRN · 6 caps · %VRN` estilo Immunara como opción visual.
 
-### 6d. Bloque 6 — Portfolio recomendado (capacidad nueva)
+### 6d. Bloque 6 — Portfolio recomendado (Agente 9 nuevo) — IMPLEMENTADO 2026-05-29
 
-- [ ] **[DECISIÓN Xavier]** ¿9º agente que propone productos complementarios al cliente, o cierre heurístico sobre lo ya analizado? No existe nada hoy.
+Decisión: **agente LLM nuevo** (Agente 9). Implementado:
+- [x] `agents/portfolio_agent_v2.py`: schema `PortfolioAnalysis` (fase_1_posicionamiento, fase_2_extensiones_linea, fase_3_productos_complementarios, fase_4_gama_recomendada) + prompt (estratégico, sin web_search, como Formatos). Prompt v1.0.0.
+- [x] Config: `AGENT_PREFIXES[9] = AGENT_9_PORTFOLIO` + alias `"Portfolio"`.
+- [x] Orquestador: import, AGENT_OUTPUT_MODELS, AGENT_PROMPT_VERSIONS, submit en Wave 1 (desde la fórmula, sin deps, paralelo con Formatos/Docs/QC), collect, `agent_models` y contador finales dinámicos.
+- [x] Compositor: `fmt_portfolio` renderiza el Bloque 6 (posicionamiento + extensiones de línea + complementarios + gama/roadmap); fallback si no hay JSON; anexo incluye Agente 9.
+- [x] Tests: render con muestra + fallback. Suite 26/26 verde.
+
+**PENDIENTE DE VERIFICAR:** la calidad del output del LLM solo se ve al **re-ejecutar el pipeline** (no testeable offline). Hoy el Bloque 6 muestra el aviso de "ejecuta con el Agente 9".
+
+**Orden sugerido:** 6a primero (resuelve ~80% de la queja de Xavier sin tocar LLMs ni esperar adjuntos) → 6b/6c/6d cuando lleguen los adjuntos y la decisión del portfolio.
+
+## Estado global (2026-05-29)
+6a ✅ · 6b ✅ · 6c ✅ (EN pendiente de re-run) · 6d ✅ (pendiente de re-run). Limpieza: Report Agent (antiguo "Agente 09") retirado; el "Agente 9" ahora es Portfolio.
+**Siguiente:** re-ejecutar el pipeline para poblar EN de etiqueta + Bloque 6 Portfolio; capacidades de marketing del Bloque 3 (segmentos, formatos×segmentos).
 
 **Orden sugerido:** 6a primero (resuelve ~80% de la queja de Xavier sin tocar LLMs ni esperar adjuntos) → 6b/6c/6d cuando lleguen los adjuntos y la decisión del portfolio.
