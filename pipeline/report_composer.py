@@ -844,6 +844,11 @@ def _etq_panel(caras: dict, lista_ing_es: str, lang: str, nombre_producto: str) 
     def g(dic: dict, key: str) -> str:
         return (dic.get(f"{key}_en", "") if lang == "en" else dic.get(key, "")) or ""
 
+    def gn(dic: dict, key: str) -> str:
+        # Campos administrativos (operador, fabricante, lote, fechas): comunes a
+        # ambos idiomas → siempre el valor base, sin sufijo _en ni 'pendiente'.
+        return dic.get(key, "") or ""
+
     L: list[str] = []
     # ── Cara frontal ──
     L.append(_section("Cara frontal", 4))
@@ -877,12 +882,11 @@ def _etq_panel(caras: dict, lista_ing_es: str, lang: str, nombre_producto: str) 
     op_es = [("operador_responsable", "Operador responsable"), ("fabricante", "Fabricado por")]
     op_en = [("operador_responsable", "Responsible operator"), ("fabricante", "Manufactured by")]
     for key, lab in (op_en if lang == "en" else op_es):
-        v = g(cl, key)
+        v = gn(cl, key)  # administrativo → valor común (no se traduce)
         if v:
             L.append(f"- {lab}: {v.splitlines()[0] if v else v}")
-    L.append("- Distribuido por: " + (g(cl, "distribuido_por") or pend))
-    cad = g(cl, "fecha_duracion_minima")
-    L.append(f"- Peso neto · Lote · Caducidad: {cad or pend}")
+    L.append("- Distribuido por: " + (gn(cl, "distribuido_por") or "—"))
+    L.append(f"- Peso neto · Lote · Caducidad: {gn(cl, 'fecha_duracion_minima') or '—'}")
     L.append(f"- {ETIQUETA_ECOEMBES}")
     L.append("**Opcional:**")
     L.append("- Tabla nutricional / %VRN → ver Bloque 2 (Ficha Técnica)")

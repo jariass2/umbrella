@@ -856,8 +856,10 @@ NOTAS PARA LA LISTA DE INGREDIENTES:
   - Do not exceed the recommended daily dose.
   - Food supplements should not be used as a substitute for a varied and balanced diet and a healthy lifestyle.
   - Keep out of reach of young children.
-- Distribuido por: _(pendiente: regenerar el pipeline con el agente Etiqueta bilingüe)_
-- Peso neto · Lote · Caducidad: _(pendiente: regenerar el pipeline con el agente Etiqueta bilingüe)_
+- Responsible operator: [NOMBRE RAZÓN SOCIAL DEL OPERADOR RESPONSABLE]
+- Manufactured by: [NOMBRE DEL FABRICANTE]
+- Distribuido por: —
+- Peso neto · Lote · Caducidad: Consumir preferentemente antes del fin de: MM/AAAA
 - Logo Ecoembes (Punto Verde) — gestión de residuos de envases
 **Opcional:**
 - Tabla nutricional / %VRN → ver Bloque 2 (Ficha Técnica)
@@ -1180,18 +1182,16 @@ Muestreo estadistico: cada 15 min tomar 3 sticks consecutivos. Controles: (a) pe
 
 ## Anexo — Configuración del Pipeline
 
-**Fecha de ejecución:** 29/05/2026  
-**Tiempo total de pipeline:** 0m 0s  
-**Coste estimado total:** —  
+**Fecha de ejecución:** 12/04/2026  
+**Tiempo total de pipeline:** 15m 53s  
 
-| Agente | Modelo | Temp | Tiempo | Tokens (in / out) | Coste est. | Endpoint |
-|---|---|---|---|---|---|---|
-| Agente 1 — KIC (Análisis de Ingredientes) | `anthropic/claude-haiku-4.5` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
-| Agente 2 — Regulatorio | `anthropic/claude-haiku-4.5` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
-| Agente 3 — Ficha Técnica | `anthropic/claude-sonnet-4.6` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
-| Agente 4 — Claims y Diferenciación | `anthropic/claude-haiku-4.5` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
-| Agente 5 — Etiqueta | `anthropic/claude-sonnet-4.6` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
-| Agente 6 — Formatos e Innovación | `anthropic/claude-haiku-4.5` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
-| Agente 7 — Documentación Interna | `anthropic/claude-haiku-4.5` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
-| Agente 8 — Plan QC | `anthropic/claude-sonnet-4.6` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
-| Agente 9 — Portfolio recomendado | `anthropic/claude-haiku-4.5` | `0.1` | — | — | — | `https://openrouter.ai/api/v1` |
+| Agente | Modelo | Tiempo | Endpoint |
+|---|---|---|---|
+| Agente 1 — KIC (Análisis de Ingredientes) | `minimaxai/minimax-m2.7` | 2m 3s | `https://integrate.api.nvidia.com/v1` |
+| Agente 2 — Regulatorio | `glm-5-turbo` | 1m 34s | `https://api.z.ai/api/coding/paas/v4` |
+| Agente 3 — Ficha Técnica | `minimaxai/minimax-m2.7` | 2m 55s | `https://integrate.api.nvidia.com/v1` |
+| Agente 4 — Claims y Diferenciación | `minimaxai/minimax-m2.7` | 10m 1s | `https://integrate.api.nvidia.com/v1` |
+| Agente 5 — Etiqueta | `glm-5-turbo` | 2m 14s | `https://api.z.ai/api/coding/paas/v4` |
+| Agente 6 — Formatos e Innovación | `glm-5-turbo` | 2m 0s | `https://api.z.ai/api/coding/paas/v4` |
+| Agente 7 — Documentación Interna | `glm-5-turbo` | 3m 4s | `https://api.z.ai/api/coding/paas/v4` |
+| Agente 8 — Plan QC | `glm-5-turbo` | 3m 8s | `https://api.z.ai/api/coding/paas/v4` |
