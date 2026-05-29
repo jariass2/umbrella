@@ -1040,6 +1040,90 @@ def fmt_formatos(d: dict) -> list[str]:
     return lines
 
 
+# ── Bloque 3 · Segmentos de mercado (Claims) ─────────────────────────────────
+
+def fmt_segmentos(clm: dict) -> list[str]:
+    """Segmentos de mercado adecuados para la fórmula. Usa la lista estructurada
+    `parte_f_segmentos_mercado` si el agente la emite; si no, cae a los públicos
+    objetivo de `parte_d_diferenciadores` (lo que existe hoy)."""
+    seg = clm.get("parte_f_segmentos_mercado", clm.get("segmentos_mercado", []))
+    pd = clm.get("parte_d_diferenciadores", {}) if isinstance(clm.get("parte_d_diferenciadores"), dict) else {}
+
+    lines = [_section("Segmentos de mercado", 3)]
+    if isinstance(seg, list) and seg:
+        headers = ["Segmento", "Necesidad principal", "Encaje con la fórmula", "Mensaje clave"]
+        rows = []
+        for s in seg:
+            if not isinstance(s, dict):
+                continue
+            rows.append([
+                s.get("segmento", s.get("nombre", "")),
+                s.get("necesidad_principal", s.get("necesidad", "")),
+                s.get("encaje_formula", s.get("encaje", "")),
+                s.get("mensaje_clave", s.get("mensaje", "")),
+            ])
+        lines += _table(headers, rows)
+        lines.append("")
+    elif pd.get("publico_objetivo_principal") or pd.get("publico_objetivo_secundario"):
+        if pd.get("publico_objetivo_principal"):
+            lines.append(f"**Público objetivo principal:** {pd['publico_objetivo_principal']}  ")
+        if pd.get("publico_objetivo_secundario"):
+            lines.append(f"**Público objetivo secundario:** {pd['publico_objetivo_secundario']}  ")
+        if pd.get("momento_consumo"):
+            lines.append(f"**Momento de consumo:** {pd['momento_consumo']}  ")
+        lines += ["", "*Segmentación detallada pendiente: regenera el pipeline para poblar la tabla de segmentos.*", ""]
+    else:
+        lines += ["*Pendiente: regenera el pipeline para poblar los segmentos de mercado.*", ""]
+    return lines
+
+
+# ── Bloque 3 · Formatos × Segmentos (Formatos) ───────────────────────────────
+
+def fmt_formatos_segmentos(fmt: dict) -> list[str]:
+    """Matriz formato × segmento. Usa `matriz_formato_segmento` si el agente la
+    emite; si no, deriva una matriz inicial del formato óptimo/alternativo y los
+    formatos de innovación ya presentes."""
+    lines = [_section("Formatos × Segmentos", 3)]
+    matriz = fmt.get("matriz_formato_segmento", [])
+    if isinstance(matriz, list) and matriz:
+        headers = ["Segmento", "Formato recomendado", "Por qué", "Innovación"]
+        rows = []
+        for m in matriz:
+            if not isinstance(m, dict):
+                continue
+            innov = m.get("es_innovacion", m.get("innovacion", ""))
+            innov_str = "✅" if innov is True else ("—" if innov in (False, "", None) else _val(innov))
+            rows.append([
+                m.get("segmento", ""),
+                m.get("formato_recomendado", m.get("formato", "")),
+                m.get("justificacion", m.get("motivo", "")),
+                innov_str,
+            ])
+        lines += _table(headers, rows)
+        lines.append("")
+        return lines
+
+    # Fallback: matriz inicial derivada de la recomendación de formatos existente.
+    rec = fmt.get("fase_4_recomendacion_final", {})
+    opt = rec.get("formato_optimo", {}) if isinstance(rec, dict) else {}
+    alt = rec.get("formato_alternativo", {}) if isinstance(rec, dict) else {}
+    opt_n = opt.get("nombre", "") if isinstance(opt, dict) else _val(opt)
+    alt_n = alt.get("nombre", "") if isinstance(alt, dict) else _val(alt)
+    rows = []
+    if opt_n:
+        rows.append(["Segmento principal", opt_n,
+                     (opt.get("justificacion_comercial", "") if isinstance(opt, dict) else "") or "Formato óptimo recomendado", "—"])
+    if alt_n:
+        rows.append(["Segmento alternativo", alt_n,
+                     (alt.get("escenario", "") if isinstance(alt, dict) else "") or "Escenario de coste/target distinto", "—"])
+    if rows:
+        lines += _table(["Segmento", "Formato recomendado", "Por qué", "Innovación"], rows)
+        lines += ["", "*Matriz inicial derivada del análisis de formatos. Regenera el pipeline para la matriz formato×segmento completa.*", ""]
+    else:
+        lines += ["*Pendiente: regenera el pipeline para poblar la matriz formato×segmento.*", ""]
+    return lines
+
+
 # ── Sección 7: Docs Internos ────────────────────────────────────────────────
 
 def fmt_docs_internos(d: dict) -> list[str]:
@@ -1540,8 +1624,10 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
         lines.append(_section("3. Información de Marketing", 2))
         if clm:
             lines += fmt_claims(clm)
+            lines += fmt_segmentos(clm)
         if fmt:
             lines += fmt_formatos(fmt)
+            lines += fmt_formatos_segmentos(fmt)
         if etq:
             lines += fmt_etiqueta(etq, nombre_producto=nombre_producto)
         lines.append("\n---")

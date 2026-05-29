@@ -24,7 +24,9 @@ except ImportError:
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from pipeline.report_composer import compose_informe, fmt_portfolio  # noqa: E402
+from pipeline.report_composer import (  # noqa: E402
+    compose_informe, fmt_portfolio, fmt_segmentos, fmt_formatos_segmentos,
+)
 
 OUTPUTS_DIR = Path(__file__).resolve().parent.parent / "outputs" / "v2"
 
@@ -148,6 +150,47 @@ def test_bloque6_fallback_sin_portfolio(tmp_path):
     assert "Agente 9" in texto  # mensaje de pendiente
 
 
+def test_marketing_secciones_en_bloque3(tmp_path):
+    texto = _informe(tmp_path)
+    assert "### Segmentos de mercado" in texto
+    assert "### Formatos × Segmentos" in texto
+
+
+def test_segmentos_render_estructurado():
+    clm = {"parte_f_segmentos_mercado": [
+        {"segmento": "Senior 60+", "necesidad_principal": "movilidad",
+         "encaje_formula": "colágeno + Mg", "mensaje_clave": "Muévete mejor"},
+    ]}
+    out = "\n".join(fmt_segmentos(clm))
+    assert "### Segmentos de mercado" in out
+    assert "Senior 60+" in out and "Muévete mejor" in out
+
+
+def test_segmentos_fallback_publico_objetivo():
+    clm = {"parte_d_diferenciadores": {"publico_objetivo_principal": "Deportistas 30-50"}}
+    out = "\n".join(fmt_segmentos(clm))
+    assert "Deportistas 30-50" in out
+
+
+def test_formatos_segmentos_matriz():
+    fmt = {"matriz_formato_segmento": [
+        {"segmento": "Joven lifestyle", "formato_recomendado": "Gominola",
+         "justificacion": "consumo lúdico", "es_innovacion": True},
+    ]}
+    out = "\n".join(fmt_formatos_segmentos(fmt))
+    assert "### Formatos × Segmentos" in out
+    assert "Joven lifestyle" in out and "✅" in out  # innovación marcada
+
+
+def test_formatos_segmentos_fallback_derivado():
+    fmt = {"fase_4_recomendacion_final": {
+        "formato_optimo": {"nombre": "Stick", "justificacion_comercial": "premium"},
+        "formato_alternativo": {"nombre": "Sobre", "escenario": "low cost"},
+    }}
+    out = "\n".join(fmt_formatos_segmentos(fmt))
+    assert "Stick" in out and "Sobre" in out
+
+
 if __name__ == "__main__":
     import tempfile
 
@@ -157,8 +200,12 @@ if __name__ == "__main__":
                    test_nutricional_no_se_repite, test_sin_doble_porcentaje,
                    test_ficha_tecnica_seis_secciones, test_ficha_tecnica_cabecera_fabricante,
                    test_vida_util_sin_meses_duplicado, test_etiqueta_layout_caras,
-                   test_etiqueta_bilingue, test_bloque6_fallback_sin_portfolio):
+                   test_etiqueta_bilingue, test_bloque6_fallback_sin_portfolio,
+                   test_marketing_secciones_en_bloque3):
             fn(tmp)
             print(f"✅ {fn.__name__}")
-        test_portfolio_render()
-        print("✅ test_portfolio_render")
+        for fn in (test_portfolio_render, test_segmentos_render_estructurado,
+                   test_segmentos_fallback_publico_objetivo, test_formatos_segmentos_matriz,
+                   test_formatos_segmentos_fallback_derivado):
+            fn()
+            print(f"✅ {fn.__name__}")

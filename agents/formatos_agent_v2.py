@@ -108,6 +108,14 @@ class Fase4RecomendacionFinal(BaseModel):
     condiciones_cambio_formato_futuro: list[str] = Field(default_factory=list)
 
 
+class FilaMatrizFormatoSegmento(BaseModel):
+    model_config = {"extra": "allow"}
+    segmento: str = ""
+    formato_recomendado: str = ""
+    justificacion: str = ""
+    es_innovacion: bool = False
+
+
 class FormatosAnalysis(BaseModel):
     """Contrato operacional del agente Formatos e Innovación."""
     model_config = {"extra": "allow"}
@@ -116,6 +124,7 @@ class FormatosAnalysis(BaseModel):
     fase_2_analisis_competencia: Fase2AnalisisCompetencia = Field(default_factory=Fase2AnalisisCompetencia)
     fase_3_innovacion_ingredientes: Fase3InnovacionIngredientes = Field(default_factory=Fase3InnovacionIngredientes)
     fase_4_recomendacion_final: Fase4RecomendacionFinal = Field(default_factory=Fase4RecomendacionFinal)
+    matriz_formato_segmento: list[FilaMatrizFormatoSegmento] = Field(default_factory=list)
     fuentes_consultadas: list[dict] = Field(default_factory=list)
     metadata: dict = Field(default_factory=lambda: {
         "version": "2.0",
@@ -125,7 +134,7 @@ class FormatosAnalysis(BaseModel):
 
 # ── Instructions ─────────────────────────────────────────────────────
 
-PROMPT_VERSION = "2.0.0"
+PROMPT_VERSION = "2.1.0"  # +Fase 5: matriz formato × segmento
 
 FORMATOS_INSTRUCTIONS = """\
 # ROL
@@ -206,6 +215,12 @@ Con toda la información anterior:
 2. Propón un formato alternativo para escenarios diferentes (ej: menor coste, target diferente)
 3. Indica condiciones para cambiar de formato en el futuro (ej: si se amplía la gama)
 
+## FASE 5 — Matriz formato × segmento
+Construye una matriz que asigne, para 2-4 segmentos de mercado relevantes, el formato más \
+adecuado a cada uno (incluyendo formatos de innovación cuando aporten diferenciación). Para \
+cada fila: segmento, formato recomendado, justificación y si es un formato de innovación \
+(es_innovacion true/false).
+
 # USO DE WEB_SEARCH
 NO uses web_search. Este agente no tiene acceso a herramientas externas. Toda la \
 evaluación se apoya en tu conocimiento del mercado y del comportamiento técnico de los \
@@ -255,6 +270,14 @@ Usa EXACTAMENTE estas claves de nivel superior:
       "escenario": "Alternativa para menor coste o target diferente"
     }
   },
+  "matriz_formato_segmento": [
+    {
+      "segmento": "Senior activo 60+",
+      "formato_recomendado": "Stick de polvo monodosis",
+      "justificacion": "Fácil de tomar, dosis alta sin tragar cápsulas, percepción de cuidado",
+      "es_innovacion": false
+    }
+  ],
   "fuentes_consultadas": [
     {"id": 1, "fuente": "nombre", "url": "", "tipo": "web_search|normativa|conocimiento_experto"}
   ],

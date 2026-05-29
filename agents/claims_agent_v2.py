@@ -92,6 +92,14 @@ class ParteDDiferenciadores(BaseModel):
     posicionamiento_precio_valor: str = ""
 
 
+class SegmentoMercado(BaseModel):
+    model_config = {"extra": "allow"}
+    segmento: str = ""
+    necesidad_principal: str = ""
+    encaje_formula: str = ""
+    mensaje_clave: str = ""
+
+
 class ClaimNoAplicable(BaseModel):
     model_config = {"extra": "allow"}
     claim: str = ""
@@ -114,6 +122,7 @@ class ClaimsAnalysis(BaseModel):
     parte_c_estructura_ppt: ParteCEstructuraPPT = Field(default_factory=ParteCEstructuraPPT)
     parte_d_diferenciadores: ParteDDiferenciadores = Field(default_factory=ParteDDiferenciadores)
     parte_e_advertencias_legales: ParteEAdvertenciasLegales = Field(default_factory=ParteEAdvertenciasLegales)
+    parte_f_segmentos_mercado: list[SegmentoMercado] = Field(default_factory=list)
     fuentes_consultadas: list[dict] = Field(default_factory=list)
     metadata: dict = Field(default_factory=lambda: {
         "version": "2.0",
@@ -123,7 +132,7 @@ class ClaimsAnalysis(BaseModel):
 
 # ── Instructions ─────────────────────────────────────────────────────
 
-PROMPT_VERSION = "2.0.0"
+PROMPT_VERSION = "2.1.0"  # +Parte F: segmentos de mercado estructurados
 
 CLAIMS_INSTRUCTIONS = """\
 # ROL
@@ -203,6 +212,12 @@ Lista explícitamente:
 - Claims que NO pueden usarse y por qué (no autorizados, dosis insuficiente, afirmación médica)
 - Ingredientes sin claim autorizado que podrían generar confusión
 - Mensajes de venta que deben evitarse en etiqueta o publicidad
+
+## FASE 6 — Segmentos de mercado (Parte F)
+Identifica 2-4 segmentos de mercado concretos para los que la fórmula encaja bien. \
+Para cada uno indica: nombre del segmento, necesidad principal que cubre (jobs-to-be-done), \
+por qué la fórmula encaja con ese segmento y el mensaje comercial clave. Sé específico para \
+ESTA fórmula (no segmentos genéricos); apóyate en el público objetivo de la Parte D.
 
 # USO DE HERRAMIENTAS DE BÚSQUEDA
 LÍMITE ESTRICTO: MÁXIMO 5 búsquedas en total (entre `web_search` y `search_pubmed`).
@@ -285,6 +300,14 @@ Usa EXACTAMENTE estas claves de nivel superior:
     "mensajes_prohibidos": ["Mensaje de venta que debe evitarse y por qué"],
     "ingredientes_sin_claim": ["Ingredientes presentes sin claim autorizado aplicable"]
   },
+  "parte_f_segmentos_mercado": [
+    {
+      "segmento": "Nombre del segmento (ej: Senior activo 60+)",
+      "necesidad_principal": "Necesidad/jobs-to-be-done que cubre la fórmula para ese segmento",
+      "encaje_formula": "Por qué esta fórmula encaja con ese segmento",
+      "mensaje_clave": "Mensaje comercial principal para ese segmento"
+    }
+  ],
   "fuentes_consultadas": [
     {"id": 1, "fuente": "nombre descriptivo", "url": "", "tipo": "web_search|normativa|conocimiento_experto"}
   ],

@@ -702,6 +702,15 @@ Extracto de Boswellia serrata estandarizado al 30% en ácido acetil-11-ceto-β-b
 [5] Directiva 2002/46/CE - Anexos I y II (vitaminas y minerales autorizados) ([enlace](https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:32002L0046)) — *normativa*
 [6] Mi conocimiento experto del Reglamento (CE) 1924/2006 y Reglamento (UE) 432/2012 ([enlace](N/A)) — *conocimiento_experto*
 
+### Segmentos de mercado
+
+**Público objetivo principal:** Personas activas de 35-60 años que realizan ejercicio físico regular y buscan apoyo a: (1) movilidad y flexibilidad articular, (2) recuperación muscular post-entrenamiento, (3) mantenimiento de masa muscular (prevención de sarcopenia), (4) vitalidad y reducción de fatiga percibida. Perfil sociodemográfico: urbano, nivel educativo medio-alto, dispuesto a invertir en salud preventiva.  
+**Público objetivo secundario:** Personas mayores de 60 años con déficit nutricional documentado (analíticas con déficit de hierro, zinc, B12), mujeres en peri/postmenopausia con riesgo de osteoporosis, vegetarianos/veganos con ingesta subóptima de hierro hemo y zinc, personas con síntomas iniciales de rigidez matutina o pérdida de masa muscular.  
+**Momento de consumo:** Con la comida principal del día (almuerzo o cena). Esta recomendación maximiza la absorción de nutrientes liposolubles (K2, astaxantina) que requieren presencia de grasas dietéticas, y reduce el riesgo de molestias gastrointestinales por el magnesio en ayunas. Evitar tomar con cafeína o té (inhibe absorción de hierro). Si se toma hierro, evitar consumir con lácteos o antiácidos.  
+
+*Segmentación detallada pendiente: regenera el pipeline para poblar la tabla de segmentos.*
+
+
 ### Formatos e innovación
 
 **Formato recomendado:** Stick de polvo monodosis (film metallizado barrera) - 14-16g de peso total  
@@ -764,6 +773,16 @@ Extracto de Boswellia serrata estandarizado al 30% en ácido acetil-11-ceto-β-b
 [2] Conocimiento experto en estabilidad de ingredientes en formatos de envasado — *conocimiento_experto*
 [3] Conocimiento experto en capacidades de formatos (volumen por cápsula, comprimido, gominola) — *conocimiento_experto*
 [4] Conocimiento experto en propiedades barrera de materiales de envasado (WVTR, OTR) — *conocimiento_experto*
+
+### Formatos × Segmentos
+
+| Segmento | Formato recomendado | Por qué | Innovación |
+|---|---|---|---|
+| Segmento principal | Stick de polvo monodosis (film metallizado barrera) - 14-16g de peso total | El stick monodosis es el formato de mayor crecimiento en colágeno premium en España (2024). Transmite innovación, conveniencia y permite cobrar un premium de 30-50% sobre pot a granel. Es compatible con distribución en farmacia, parafarmacia, herbolistería premium y e-commerce DTC. El momento de consumo ideal es desayuno o post-entreno (disuelto en agua, zumo o batido), alineado con hábito de consumidor de colágeno. La portabilidad permite venta en formatos viaje (7 sticks) y caja mensual (30 sticks). El posicionamiento trifocal (articulación+piel+sistémico) se refuerza con la percepción de formulación compleja que solo un stick puede transmitir visualmente. | — |
+| Segmento alternativo | Sobre de aluminio (polvo) en caja de 30 sobres | Alternativa para reducir coste de envasado un 25-35% frente al stick, orientada a canal farmacia con marca blanca o segundo escalón de gama. También válido si el target principal es mujer 45+ farmacéutica (menos sensible a estética lifestyle que al precio). Mantiene la viabilidad técnica completa pero sacrifica portabilidad y percepción premium. No recomendable como formato de lanzamiento si el objetivo es posicionamiento alto. | — |
+
+*Matriz inicial derivada del análisis de formatos. Regenera el pipeline para la matriz formato×segmento completa.*
+
 
 ### Propuesta de etiqueta
 
