@@ -23,8 +23,3 @@ markupsafe>=3.0,<4.0
 reportlab>=4.5,<5.0
 # Spanish hyphenation for justified body text (avoids ugly word gaps)
 pyphen>=0.14,<1.0
-
-# Legacy / optional (FastAPI + Streamlit kept until dead code is removed)
-fastapi>=0.115,<1.0
-uvicorn>=0.40,<1.0
-streamlit>=1.50,<2.0
