@@ -154,9 +154,72 @@ def _fmt_pct(v) -> str:
     if not s or s == "—":
         return "—"
     low = s.lower()
+    # 'N/A', 'NA', 'none'… no son porcentajes → guion, no 'N/A%'.
+    if low in ("n/a", "na", "n.a.", "none", "null", "no aplica"):
+        return "—"
     if "%" in s or "aplica" in low or "establec" in low or "ai:" in low or "vrn" in low:
         return s
     return f"{s}%"
+
+
+def _spec_val(v) -> str:
+    """Renderiza un valor de especificación que puede venir como dict
+    {'valor':…, 'metodo':…} en vez de string (bug de datos: salía el dict crudo)."""
+    if isinstance(v, dict):
+        valor = v.get("valor", v.get("value", v.get("especificacion", "")))
+        metodo = v.get("metodo", v.get("método", v.get("method", "")))
+        if valor and metodo:
+            return f"{valor} *(método: {metodo})*"
+        return _val(valor or metodo)
+    return _val(v)
+
+
+# ── Confidencialidad: dosis de ACTIVO (pública) vs dosis de materia prima ────
+# Xavier (2026-06-02): "la dosis quantitativa és secreta i no es diu mai".
+# La dosis de materia prima (dosis_formula_mg) revela la fórmula → NUNCA en
+# bloques cliente. Lo comunicable es el ACTIVO aportado ("En base Claim Actiu").
+
+def _parse_pct_activo(nombre: str):
+    """Extrae el % de estandarización/activo del nombre del ingrediente
+    (ej. '(30% AKBA)', '<95 % curcuminoides', '(2,5% ...)'). Devuelve float o None.
+
+    PUENTE: aproximación hasta conciliar con la Tabla Cuantitativa (Excel, 7b).
+    """
+    if not nombre:
+        return None
+    m = re.search(r"(\d+(?:[.,]\d+)?)\s*%", str(nombre))
+    if not m:
+        return None
+    try:
+        return float(m.group(1).replace(",", "."))
+    except ValueError:
+        return None
+
+
+def _dosis_activo(ing: dict) -> str:
+    """Dosis de ACTIVO aportado = dosis materia prima × %activo. Pública.
+
+    Nunca expone `dosis_formula_mg` (secreta). '—' si no se puede estimar
+    (excipientes, o ingredientes sin % de activo en el nombre)."""
+    mg = ing.get("dosis_formula_mg")
+    pct = _parse_pct_activo(ing.get("ingrediente", ""))
+    if mg in (None, "", 0) or pct is None:
+        return "—"
+    try:
+        activo = float(mg) * pct / 100.0
+    except (TypeError, ValueError):
+        return "—"
+    unidad = ing.get("dosis_formula_unidad", "") or "mg"
+    val = f"{activo:.2f}".rstrip("0").rstrip(".")
+    return f"{val} {unidad}".strip()
+
+
+# Nota al pie reutilizable para las tablas de dosis de activo.
+NOTA_DOSIS_ACTIVO = (
+    "*Dosis de activo aportado (no la dosis de materia prima, confidencial). "
+    "Estimada desde la estandarización; pendiente de conciliar con la Tabla "
+    "Cuantitativa. «—» = excipiente o activo sin estandarización declarada.*"
+)
 
 
 # ── Bloque 1 · Tabla maestra de ingredientes ────────────────────────────────
@@ -180,7 +243,7 @@ def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict) -> list[str]:
             ft_by_name[_norm(nm)] = i
 
     lines = [_section("Tabla de ingredientes", 3)]
-    headers = ["Ingrediente", "Dosis", "% NRV/VRN", "Forma química", "Biodisponibilidad", "Reg."]
+    headers = ["Ingrediente", "Dosis de activo", "% NRV/VRN", "Forma química", "Biodisponibilidad", "Reg."]
     rows = []
     for ing in kic.get("fase_2_ingredientes", []):
         if not isinstance(ing, dict):
@@ -189,7 +252,6 @@ def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict) -> list[str]:
         key = _norm(nombre)
         bio = ing.get("biodisponibilidad", {})
         bio_str = bio.get("nivel", "") if isinstance(bio, dict) else _val(bio)
-        dosis = f"{ing.get('dosis_formula_mg','')} {ing.get('dosis_formula_unidad','')}".strip()
 
         ft_i = ft_by_name.get(key, {})
         forma = ft_i.get("forma_quimica", ft_i.get("forma", "")) if isinstance(ft_i, dict) else ""
@@ -200,13 +262,15 @@ def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict) -> list[str]:
 
         rows.append([
             nombre,
-            dosis or "—",
+            _dosis_activo(ing),
             _fmt_pct(ing.get("porcentaje_nrv", "")),
             forma or "—",
             bio_str or "—",
             sem_str or "—",
         ])
     lines += _table(headers, rows)
+    lines.append("")
+    lines.append(NOTA_DOSIS_ACTIVO)
     lines.append("")
     return lines
 
@@ -518,7 +582,7 @@ def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
 
     # Tabla de activos por dosis (Active Claims Table)
     lines.append(_section("Tabla de activos por dosis", 4))
-    headers = ["Activo", "Cantidad / dosis", "% NRV/VRN", "Forma química"]
+    headers = ["Activo", "Dosis de activo", "% NRV/VRN", "Forma química"]
     ft_comp = ft.get("fase_2_composicion", {})
     ft_ings = ft_comp.get("ingredientes_activos", ft_comp.get("ingredientes", [])) if isinstance(ft_comp, dict) else []
     ft_by_name = {}
@@ -533,11 +597,13 @@ def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
         ft_i = ft_by_name.get(_norm(nombre), {})
         rows.append([
             nombre,
-            f"{ing.get('dosis_formula_mg','')} {ing.get('dosis_formula_unidad','')}".strip() or "—",
+            _dosis_activo(ing),
             _fmt_pct(ing.get("porcentaje_nrv", "")),
             (ft_i.get("forma_quimica", "") if isinstance(ft_i, dict) else "") or "—",
         ])
     lines += _table(headers, rows)
+    lines.append("")
+    lines.append(NOTA_DOSIS_ACTIVO)
     lines.append("")
 
     # Colección de posibles claims vs ingredientes (lo que pide Xavier)
@@ -633,7 +699,7 @@ def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
     fq = espec.get("especificaciones_fisicoquimicas", {}) if isinstance(espec, dict) else {}
     if isinstance(fq, dict) and fq:
         for k, v in fq.items():
-            lines.append(f"**{k.replace('_',' ').capitalize()}:** {_val(v)}  ")
+            lines.append(f"**{k.replace('_',' ').capitalize()}:** {_spec_val(v)}  ")
         lines.append("")
     # Identidad analítica desde QC
     ftir = qc.get("fase_1_ftir", {})
@@ -1586,11 +1652,10 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
         "",
         "---",
         "",
-        "## Fórmula analizada",
-        "",
-        "```",
-        formula.strip(),
-        "```",
+        "> **Confidencialidad:** la fórmula cuantitativa (dosis de materia prima) es "
+        "información reservada de Umbrella y solo figura en los bloques internos de "
+        "producción y calidad (4 y 5). Los bloques 1–3 muestran únicamente la "
+        "**dosis de activo aportado**.",
         "",
         "---",
     ]

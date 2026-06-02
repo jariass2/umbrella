@@ -191,6 +191,55 @@ def test_formatos_segmentos_fallback_derivado():
     assert "Stick" in out and "Sobre" in out
 
 
+# ── Fase 7a/7c: confidencialidad de dosis + depuración de datos ──────────────
+
+def test_parse_pct_activo():
+    from pipeline.report_composer import _parse_pct_activo
+    assert _parse_pct_activo("Extracto de Boswellia serrata (30% AKBA)") == 30.0
+    assert _parse_pct_activo("Astaxantina natural (2,5% en almidón)") == 2.5
+    assert _parse_pct_activo("Extracto de cúrcuma (<95 % curcuminoides)") == 95.0
+    assert _parse_pct_activo("Vitamina B6 HCl (Piridoxina HCl)") is None  # sin %
+    assert _parse_pct_activo("") is None
+
+
+def test_dosis_activo_no_expone_materia_prima():
+    from pipeline.report_composer import _dosis_activo
+    # 833.33 mg de Magchel al 12% → 100 mg de Mg activo (nunca 833.33).
+    out = _dosis_activo({"ingrediente": "Magchel (12% Mg)", "dosis_formula_mg": 833.33})
+    assert out == "100 mg"
+    assert "833" not in out
+    # Boswellia 166.67 mg al 30% → 50 mg AKBA.
+    assert _dosis_activo({"ingrediente": "Boswellia (30% AKBA)", "dosis_formula_mg": 166.67}) == "50 mg"
+    # Excipiente sin % → guion, no la dosis de materia prima.
+    assert _dosis_activo({"ingrediente": "Celulosa microcristalina", "dosis_formula_mg": 64.44}) == "—"
+
+
+def test_fmt_pct_na_no_imprime_porcentaje():
+    from pipeline.report_composer import _fmt_pct
+    assert _fmt_pct("N/A") == "—"
+    assert _fmt_pct("n/a") == "—"
+    assert _fmt_pct("161") == "161%"
+    assert _fmt_pct("26.7%") == "26.7%"
+
+
+def test_spec_val_dict_no_crudo():
+    from pipeline.report_composer import _spec_val
+    out = _spec_val({"valor": "Cápsula opaca", "metodo": "Inspección visual"})
+    assert "{'valor'" not in out
+    assert "Cápsula opaca" in out and "Inspección visual" in out
+    assert _spec_val("texto plano") == "texto plano"
+
+
+def test_dosis_de_activo_en_tablas_cliente(tmp_path):
+    texto = _informe(tmp_path)
+    # Cabecera renombrada en tabla maestra y tabla de activos FT.
+    assert "Dosis de activo" in texto
+    # Echo de fórmula con mg de materia prima eliminado de la cabecera.
+    assert "## Fórmula analizada" not in texto
+    # Nota de confidencialidad presente.
+    assert "Confidencialidad" in texto
+
+
 if __name__ == "__main__":
     import tempfile
 
@@ -201,11 +250,14 @@ if __name__ == "__main__":
                    test_ficha_tecnica_seis_secciones, test_ficha_tecnica_cabecera_fabricante,
                    test_vida_util_sin_meses_duplicado, test_etiqueta_layout_caras,
                    test_etiqueta_bilingue, test_bloque6_fallback_sin_portfolio,
-                   test_marketing_secciones_en_bloque3):
+                   test_marketing_secciones_en_bloque3,
+                   test_dosis_de_activo_en_tablas_cliente):
             fn(tmp)
             print(f"✅ {fn.__name__}")
         for fn in (test_portfolio_render, test_segmentos_render_estructurado,
                    test_segmentos_fallback_publico_objetivo, test_formatos_segmentos_matriz,
-                   test_formatos_segmentos_fallback_derivado):
+                   test_formatos_segmentos_fallback_derivado,
+                   test_parse_pct_activo, test_dosis_activo_no_expone_materia_prima,
+                   test_fmt_pct_na_no_imprime_porcentaje, test_spec_val_dict_no_crudo):
             fn()
             print(f"✅ {fn.__name__}")

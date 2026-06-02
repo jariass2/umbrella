@@ -153,6 +153,54 @@ Decisión: **agente LLM nuevo** (Agente 9). Implementado:
 
 **Orden sugerido:** 6a primero (resuelve ~80% de la queja de Xavier sin tocar LLMs ni esperar adjuntos) → 6b/6c/6d cuando lleguen los adjuntos y la decisión del portfolio.
 
+## Fase 7: Confidencialidad de dosis + depuración de datos (feedback Xavier ronda 2, 2026-06-02)
+
+**Feedback (traducido del catalán):**
+1. Estructura "molt millor" ✅ pero hay que **depurar los datos que salen**.
+2. 🔴 **La dosis cuantitativa es SECRETA y no debe aparecer nunca** ("o estem fotuts"). Distinguir **fórmula cuantitativa** (secreta) de **claims de activos** (público). Ref: `Excel Tabla Cuantitativa.xlsm`.
+3. Propuestas de innovación demasiado "locas" (ej. gominolas = chuches, contra el concepto de complemento). Menor.
+
+**Hallazgo del Excel (`Full1`):** dos columnas distintas que el report colapsa hoy en una:
+- `Dosis` = mg de **materia prima en la fórmula** (833,33mg Magchel, 166,67mg Boswellia, 80mg AstaMarine) → **SECRETO** (revela receta/blend/coste).
+- `Dosis Actiu` / `Claim Actiu` = **activo aportado** (100mg Mg, 50mg AKBA, 2mg astaxantina, 75mg curcuminoides) → **público** ("En base Claim Actiu"). `Dosis Actiu = Dosis × %Actiu/100`.
+- El Excel ya tiene cabeceras `Forma Química · Biodisponibilidad · REGA` (vacías) → Xavier lo trata como la tabla maestra canónica.
+
+**Problema en código:** `dosis_formula_mg` (la dosis secreta) se imprime 3× en bloques cliente:
+- Cabecera "Fórmula analizada" (echo del input, `report_composer.py`).
+- Bloque 1 tabla maestra, col `Dosis` (`report_composer.py:192`).
+- Bloque 2 "Tabla de activos por dosis" (`report_composer.py:536`).
+El modelo `IngredienteKIC` (`kic_agent_v2.py:96`) NO tiene campos de activo (`%actiu`, `nom_actiu`, `dosis_actiu`).
+
+### 7a. Quitar la dosis secreta de los bloques cliente (CRÍTICO, sin tocar LLMs) — ✅ PARCIAL (2026-06-02)
+- [x] Helper `_dosis_activo(ing)` + `_parse_pct_activo(nombre)` en composer: calcula `dosis_actiu = dosis_formula_mg × %actiu` (%actiu parseado del nombre, ej. "30% AKBA"); si no se puede, "—". Puente hasta 7b. Verificado vs Excel: cuadra 8/12 (Mg→100, AKBA→50, curcuminoides→75, astax→2, PEA→150, MCT→80, Digezyme→75, manzanilla→1.2).
+- [x] Bloque 1 tabla maestra (`fmt_tabla_maestra`): col `Dosis`→`Dosis de activo` + `% NRV/VRN`. Ya no imprime `dosis_formula_mg`. Nota al pie `NOTA_DOSIS_ACTIVO`.
+- [x] Bloque 2 "Tabla de activos por dosis" (`fmt_ficha_tecnica`): ídem, dosis de activo + nota.
+- [x] Echo "Fórmula analizada" (mg exactos) eliminado de la cabecera → sustituido por aviso de confidencialidad que remite a bloques 4-5.
+- [x] La fórmula cuantitativa completa (mg materia prima) ya vivía en Bloque 4 (Doc. Interna, datos NAVISION) y Bloque 5 (Plan de Calidad). Confirmado que solo aparece ahí.
+- [x] Tests: 5 nuevos (`_parse_pct_activo`, `_dosis_activo` no expone materia prima, header "Dosis de activo", sin "## Fórmula analizada", nota confidencialidad). Suite 40/40.
+- [ ] **PENDIENTE (fuga en texto libre de agentes, → 7b):** mg de materia prima siguen incrustados en texto LLM de bloques 1-3: advertencias KIC ("80 mg x 2.5%"), propuestas de mejora ("150 mg PEA", "extracto a 160-480 mg"), y etiquetas de la tabla de claims del agente Claims ("- 150 mg", "- 80 mg ingrediente"). No se arregla limpio en el composer; requiere ajustar prompts (expresar siempre en activo) o un scrub. Bambú diverge (nombre 85% sílice vs Excel 39,73% silicio).
+- [ ] Regenerar `outputs/run_36/informe_ejecutivo.md` desde JSON cuando se valide (no sobrescrito aún; artefacto histórico).
+
+### 7b. Fuente canónica robusta del activo (decisión + implementación) — ⏸️ BLOQUEADO (2026-06-02)
+**Bloqueante:** esperando que **Xavier confirme si podemos conseguir el Excel para cada fórmula**. La decisión depende de su respuesta.
+
+Contexto aprendido (2026-06-02): las fórmulas llegan como **PDF de producción** (ej. `Bloque 1 Discovert/Frmules per Validar/Formula 1 MIX 250188.pdf`). El PDF tiene columnas `% mezcla / g·lote / mg·dosis` = todas la **dosis de materia prima** (secreta); su columna "100%" es la proporción en la mezcla (mg/1680), NO el activo. El PDF **no trae** dosis de activo ni `%Actiu`; eso solo está en el Excel de Xavier (incl. excepciones como bambú 39,73% silicio vs 85% sílice del nombre).
+- [ ] DECISIÓN (tras respuesta de Xavier):
+  - Si **hay Excel por fórmula** → ingerir el Excel como tabla maestra canónica (fuente única, activo correcto, excepciones resueltas).
+  - Si **solo hay PDF** → pipeline calcula activo desde estandarización del nombre + **tabla de excepciones** sembrada del Excel (~2-3 casos: bambú, B6).
+- [ ] Implementar la opción elegida; el `_dosis_activo` puente pasa a leer el dato real.
+
+### 7c. Depurar datos sucios del output (punto 1) — ✅ PARCIAL (2026-06-02)
+- [x] **Bug render dict**: helper `_spec_val` formatea `{'valor':…, 'metodo':…}` como "valor *(método: …)*" en sección 4 de `fmt_ficha_tecnica`. Test `test_spec_val_dict_no_crudo`.
+- [x] **`N/A%`** literal en columna %VRN → `_fmt_pct` devuelve "—" para N/A/NA/none. Test `test_fmt_pct_na_no_imprime_porcentaje`.
+- [x] **Magnesio**: con 7a (dosis de activo) la tabla muestra solo 100 mg de Mg; desaparece la ambigüedad 833.33 vs 100.
+- [ ] **Incoherencia cúrcuma** `<95%` vs `95%`: es texto libre cruzado entre agentes KIC (`<95%`) y Claims (`95%`) → no reconciliable en composer. Defer a 7b (prompts).
+
+### 7d. Filtro de coherencia en propuestas de formato (punto 3, menor)
+- [ ] `formatos_agent_v2`: marcar propuestas disruptivas (`es_innovacion=true`) en sección aparte "exploratorias" o excluir formatos incompatibles con complemento alimentario (gominolas/chuches). Ajuste de prompt o filtro en `fmt_formatos`.
+
+**Orden:** 7a (resuelve el riesgo de IP, sin re-run) → 7c (bugs seguros) → 7b (decisión de arquitectura) → 7d (cosmético).
+
 ## Estado global (2026-05-29)
 6a ✅ · 6b ✅ · 6c ✅ (EN pendiente de re-run) · 6d ✅ (pendiente de re-run). Limpieza: Report Agent (antiguo "Agente 09") retirado; el "Agente 9" ahora es Portfolio.
 **Siguiente:** re-ejecutar el pipeline para poblar EN de etiqueta + Bloque 6 Portfolio; capacidades de marketing del Bloque 3 (segmentos, formatos×segmentos).
