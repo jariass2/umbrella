@@ -38,6 +38,7 @@ INTERACCION_EMOJI = {
 # El primer match gana — ordenar del más específico al más genérico.
 PRICING_PER_1M: list[tuple[str, float, float]] = [
     ("kimi-k2",           0.14,  0.60),
+    ("mimo-v2.5-pro",     0.435, 0.87),
     ("claude-haiku-4",    0.80,  4.00),
     ("claude-sonnet-4",   3.00, 15.00),
     ("claude-opus-4",    15.00, 75.00),
