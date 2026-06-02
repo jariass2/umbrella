@@ -50,7 +50,9 @@
   {% if status == 'completed' and data %}
   {% set headline = data | agent_headline(agent) %}
   <div class="result-card card-done" data-agent="{{ agent }}">
-    <div class="result-header" onclick="toggleCard(this)">
+    <div class="result-header" role="button" tabindex="0" aria-expanded="false"
+         onclick="toggleCard(this)"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(this);}">
       <div class="result-header-left">
         <span class="result-num">{{ loop.index }}</span>
         <div>

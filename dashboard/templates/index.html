@@ -68,6 +68,8 @@
       <div class="section-label">Historial</div>
       {% for run in runs %}
       <div class="history-item {{ 'active' if run.id == selected_run_id else '' }}"
+           role="button" tabindex="0"
+           aria-label="Ver análisis {{ run.product_name or 'Sin nombre' }} (#{{ run.id }})"
            hx-get="/run/{{ run.id }}" hx-target="#main-content" hx-swap="innerHTML">
         <div class="history-dot {% if run.status == 'completed' %}done{% elif run.status == 'running' %}running{% elif run.status == 'error' %}error{% elif run.status == 'cancelled' %}cancelled{% else %}other{% endif %}"></div>
         <div class="history-info">
@@ -139,6 +141,7 @@ function toggleCard(header) {
   if (!body) return;
   const expanded = body.classList.toggle('collapsed') === false;
   card.classList.toggle('expanded', expanded);
+  header.setAttribute('aria-expanded', expanded ? 'true' : 'false');
   const agent = card.dataset.agent;
   if (agent) {
     if (expanded) expandedAgents.add(agent); else expandedAgents.delete(agent);
@@ -152,10 +155,23 @@ function restoreExpanded() {
       if (body) {
         body.classList.remove('collapsed');
         card.classList.add('expanded');
+        const header = card.querySelector('.result-header');
+        if (header) header.setAttribute('aria-expanded', 'true');
       }
     }
   });
 }
+
+// Keyboard activation for history items (role=button divs with hx-get).
+// Enter/Space loads the run; Space's default scroll is suppressed.
+document.body.addEventListener('keydown', function(evt) {
+  if (evt.key !== 'Enter' && evt.key !== ' ') return;
+  const item = evt.target.closest && evt.target.closest('.history-item');
+  if (item && evt.target === item) {
+    evt.preventDefault();
+    item.click();
+  }
+});
 
 document.addEventListener('DOMContentLoaded', () => { renderMarkdown(); restoreExpanded(); });
 document.body.addEventListener('htmx:afterSwap', () => { renderMarkdown(); restoreExpanded(); });
