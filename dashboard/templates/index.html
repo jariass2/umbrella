@@ -57,6 +57,7 @@
         <button type="submit" class="btn-run" id="btn-run" {{ 'disabled' if pipeline_running else '' }}>
           {{ 'Analizando...' if pipeline_running else 'Analizar Fórmula' }}
         </button>
+        <div id="form-error" role="alert" aria-live="polite"></div>
       </div>
     </form>
 
@@ -158,6 +159,28 @@ function restoreExpanded() {
 
 document.addEventListener('DOMContentLoaded', () => { renderMarkdown(); restoreExpanded(); });
 document.body.addEventListener('htmx:afterSwap', () => { renderMarkdown(); restoreExpanded(); });
+
+// HTMX discards non-2xx responses by default, so /analyze validation errors
+// (returned with status 400) were swallowed and the user saw nothing. Route
+// those into #form-error instead of the default #main-content target so the
+// message is visible without wiping the pipeline view.
+document.body.addEventListener('htmx:beforeRequest', function(evt) {
+  if (evt.detail.requestConfig && evt.detail.requestConfig.path === '/analyze') {
+    const box = document.getElementById('form-error');
+    if (box) box.innerHTML = '';
+  }
+});
+document.body.addEventListener('htmx:beforeSwap', function(evt) {
+  const cfg = evt.detail.requestConfig;
+  if (cfg && cfg.path === '/analyze' && evt.detail.xhr.status === 400) {
+    const box = document.getElementById('form-error');
+    if (box) {
+      evt.detail.shouldSwap = true;
+      evt.detail.isError = false;
+      evt.detail.target = box;
+    }
+  }
+});
 
 // Custom confirm modal — replaces the native window.confirm used by hx-confirm.
 (function() {
