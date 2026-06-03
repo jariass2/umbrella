@@ -261,6 +261,21 @@ def test_tabla_maestra_usa_canonica(tmp_path):
     assert "833" not in out and "10.07" not in out  # nunca la materia prima
 
 
+def test_claim_en_espera_botanico():
+    from pipeline.report_composer import _claim_en_espera, fmt_claims
+    # "Ninguno autorizado" (texto del LLM para botánicos) = en espera.
+    assert _claim_en_espera({"texto_claim": "Ninguno autorizado"}) is True
+    assert _claim_en_espera({"texto_claim": "No autorizado"}) is True
+    # Un claim real NO está en espera.
+    assert _claim_en_espera({"texto_claim": "Magnesium contributes to..."}) is False
+    # En el render: botánico → etiqueta "En espera (botánico)", no "Ninguno autorizado".
+    out = "\n".join(fmt_claims({"parte_a_claims_regulatorios": {"claims_por_ingrediente": [
+        {"ingrediente": "Boswellia (30% AKBA)", "claims": [{"texto_claim": "Ninguno autorizado"}]},
+    ]}}))
+    assert "En espera (botánico)" in out
+    assert "Ninguno autorizado" not in out
+
+
 def test_dosis_de_activo_en_tablas_cliente(tmp_path):
     texto = _informe(tmp_path)
     # Cabecera renombrada en tabla maestra y tabla de activos FT.
@@ -297,3 +312,5 @@ if __name__ == "__main__":
         for fn in (test_tabla_maestra_usa_canonica,):
             fn(tmp)
             print(f"✅ {fn.__name__}")
+        test_claim_en_espera_botanico()
+        print("✅ test_claim_en_espera_botanico")

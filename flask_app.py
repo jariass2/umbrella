@@ -346,6 +346,22 @@ def _render_ficha_tecnica(data: dict) -> str:
     return "".join(parts) or '<p class="summary-empty">Sin ficha técnica.</p>'
 
 
+_SIN_CLAIM_MARKERS = (
+    "ninguno autorizado", "no autorizado", "sin claim", "n/a", "no aplica",
+    "en espera", "pendiente", "on hold",
+)
+_EN_ESPERA_LABEL = "En espera (botánico)"
+
+
+def _es_claim_vacio(texto) -> bool:
+    """True si el 'claim' indica que NO hay claim autorizado (botánico en espera
+    EFSA), en vez de un claim real."""
+    if not texto:
+        return True
+    low = str(texto).lower()
+    return any(m in low for m in _SIN_CLAIM_MARKERS)
+
+
 def _render_claims(data: dict) -> str:
     pa = data.get("parte_a_claims_regulatorios") or {}
     pb_root = data.get("parte_b_selling_points_comerciales") or {}
@@ -378,13 +394,16 @@ def _render_claims(data: dict) -> str:
                     claim_text = first.get("texto_claim") or first.get("texto") or first.get("claim") or str(first)
                 else:
                     claim_text = str(first)
-                n_extra = len(claims) - 1
-                more = f' <span class="summary-dim">(+{n_extra})</span>' if n_extra > 0 else ""
-                rows.append(
-                    f'<tr><td>{_esc(ing)}</td><td>{_esc(_truncate(claim_text, 160))}{more}</td></tr>'
-                )
+                if _es_claim_vacio(claim_text):
+                    rows.append(f'<tr><td>{_esc(ing)}</td><td class="summary-dim">{_EN_ESPERA_LABEL}</td></tr>')
+                else:
+                    n_extra = len(claims) - 1
+                    more = f' <span class="summary-dim">(+{n_extra})</span>' if n_extra > 0 else ""
+                    rows.append(
+                        f'<tr><td>{_esc(ing)}</td><td>{_esc(_truncate(claim_text, 160))}{more}</td></tr>'
+                    )
             else:
-                rows.append(f'<tr><td>{_esc(ing)}</td><td class="summary-dim">Sin claims</td></tr>')
+                rows.append(f'<tr><td>{_esc(ing)}</td><td class="summary-dim">{_EN_ESPERA_LABEL}</td></tr>')
 
     if rows:
         parts.append(

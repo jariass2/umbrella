@@ -675,14 +675,19 @@ def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
                 ref = str(c.get("referencia_efsa", c.get("referencia_reglamento", c.get("id_ue", ""))))
                 txt = str(c.get("texto_traduccion_es", c.get("texto_claim", c.get("texto", ""))))
                 blob = (ref + " " + txt).upper()
-                return "N/A" not in blob and "NO APLICA" not in blob and "SIN CLAIM" not in blob
+                # Botánicos "on hold": el agente escribe "Ninguno autorizado" /
+                # "No autorizado" → no es un claim válido, es estado en espera.
+                invalidos = ("N/A", "NO APLICA", "SIN CLAIM", "NINGUNO AUTORIZADO",
+                             "NO AUTORIZADO", "EN ESPERA", "ON HOLD", "PENDIENTE")
+                return not any(m in blob for m in invalidos)
 
             válidos = [c for c in cl if _es_valido(c)]
-            ejemplo = ""
             if válidos:
                 c0 = válidos[0]
-                ejemplo = c0.get("texto_traduccion_es", c0.get("texto_claim", c0.get("texto", "")))[:90]
-            rows.append([ic.get("ingrediente", ""), str(len(válidos)) if válidos else "—", ejemplo or "—"])
+                ejemplo = c0.get("texto_traduccion_es", c0.get("texto_claim", c0.get("texto", "")))[:90] or "—"
+                rows.append([ic.get("ingrediente", ""), str(len(válidos)), ejemplo])
+            else:
+                rows.append([ic.get("ingrediente", ""), "—", "En espera (botánico)"])
         lines += _table(headers, rows)
         lines.append("")
 
@@ -810,6 +815,21 @@ def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
 
 # ── Sección 4: Claims ───────────────────────────────────────────────────────
 
+_SIN_CLAIM_MARKERS = ("ninguno autorizado", "no autorizado", "sin claim",
+                      "n/a", "no aplica", "en espera", "on hold", "pendiente")
+
+
+def _claim_en_espera(c) -> bool:
+    """True si el 'claim' indica ausencia de claim autorizado (botánico en
+    espera EFSA) en vez de un claim real del Reg. (UE) 432/2012."""
+    if not isinstance(c, dict):
+        return not str(c).strip()
+    txt = str(c.get("texto_traduccion_es", c.get("texto_claim", c.get("texto", ""))))
+    ref = str(c.get("referencia_efsa", c.get("referencia_reglamento", c.get("id_ue", ""))))
+    blob = (txt + " " + ref).lower()
+    return (not txt.strip()) or any(m in blob for m in _SIN_CLAIM_MARKERS)
+
+
 def fmt_claims(d: dict) -> list[str]:
     lines = [_section("Claims y diferenciación comercial", 3)]
 
@@ -837,9 +857,14 @@ def fmt_claims(d: dict) -> list[str]:
             if not claims_list:
                 continue
             lines.append(f"**{nombre}**")
+            # Botánicos sin claim autorizado: mostrar estado, no una fila vacía.
+            válidos = [c for c in claims_list if not _claim_en_espera(c)]
+            if not válidos:
+                lines += ["*En espera (botánico) — sin claim autorizado en el Reg. (UE) 432/2012.*", ""]
+                continue
             headers = ["Texto del claim", "Condición de uso", "Ref. EFSA"]
             rows = []
-            for c in claims_list:
+            for c in válidos:
                 if isinstance(c, dict):
                     texto = c.get("texto_traduccion_es", c.get("texto_claim", c.get("texto", c.get("texto_oficial_en", ""))))
                     rows.append([
