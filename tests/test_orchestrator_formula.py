@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from pipeline.orchestrator import _enriquecer_formula  # noqa: E402
+from pipeline.orchestrator import _enriquecer_formula, _api_error_envelope  # noqa: E402
 
 F = "MIX 250188 C\n\n- Boswellia serrata Ext., 30% AKBA: 166.67mg\n- Vit. B6 HCl: 2.26mg"
 
@@ -50,6 +50,18 @@ def test_enriquece_con_activo_y_framing(tmp_path):
     assert "claims" in out.lower()
 
 
+def test_api_error_envelope_detecta_error_disfrazado_de_exito():
+    # El cuerpo de error de mimo que se guardó como "éxito" en run_38.
+    err = {"message": "Extra data: line 1 column 91 (char 90)",
+           "type": "BadRequestError", "param": None, "code": 400}
+    assert _api_error_envelope({"error": err, "_trazabilidad": {}}) == err
+    # Un resultado válido NO es un sobre de error.
+    assert _api_error_envelope({"parte_a_claims_regulatorios": {}}) is None
+    # 'error' como string (campo legítimo de algún schema) tampoco.
+    assert _api_error_envelope({"error": "ninguno"}) is None
+    assert _api_error_envelope([1, 2]) is None
+
+
 if __name__ == "__main__":
     import tempfile
     for fn in (test_sin_canonica_devuelve_formula_intacta,
@@ -58,3 +70,5 @@ if __name__ == "__main__":
         with tempfile.TemporaryDirectory() as d:
             fn(Path(d))
         print(f"✅ {fn.__name__}")
+    test_api_error_envelope_detecta_error_disfrazado_de_exito()
+    print("✅ test_api_error_envelope_detecta_error_disfrazado_de_exito")

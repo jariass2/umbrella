@@ -421,6 +421,17 @@ def _build_trace(agent: Agent, prompt_version: str | None,
     }
 
 
+def _api_error_envelope(data) -> dict | None:
+    """Si `data` es un sobre de error de API OpenAI-compatible
+    ({"error": {message|code, ...}}) devuelto como cuerpo, devuelve el dict de
+    error; si no, None. Permite distinguir un error disfrazado de éxito."""
+    if isinstance(data, dict) and isinstance(data.get("error"), dict):
+        e = data["error"]
+        if "message" in e or "code" in e:
+            return e
+    return None
+
+
 def run_agent(agent: Agent, prompt: str, label: str,
               output_model: type[BaseModel] | None = None,
               prompt_version: str | None = None) -> dict:
@@ -483,6 +494,18 @@ def run_agent(agent: Agent, prompt: str, label: str,
                 else:
                     print(f"⚠️  [{label}] respuesta top-level no es dict ({type(data).__name__}); se envuelve en _payload")
                     data = {"_payload": data}
+
+            # Algunos endpoints OpenAI-compatibles (p. ej. mimo) devuelven el
+            # error como CUERPO de respuesta ({"error": {message, code, ...}})
+            # en vez de lanzar excepción. Sin esta comprobación se guardaba como
+            # resultado válido (con _trazabilidad) y NO se reintentaba → el bloque
+            # salía vacío ("Sin claims"). Lo relanzamos para que el sistema de
+            # reintentos lo gestione (por defecto transitorio: 3 intentos).
+            err = _api_error_envelope(data)
+            if err is not None:
+                raise RuntimeError(
+                    f"API error {err.get('code', '')}: {err.get('message', err)}".strip()
+                )
 
             elapsed = time.time() - t0
             monitor_agent_end(label, success=True, duration_s=elapsed)
