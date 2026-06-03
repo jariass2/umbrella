@@ -190,11 +190,16 @@ def run_pipeline(
                 if isinstance(trace, dict):
                     duration = trace.get("duration_s")
 
+                # Un agente puede escribir su JSON pero con solo un dict de error
+                # (p. ej. fallo de parseo del LLM). No es "completado": marcarlo
+                # como error para que el dashboard no lo pinte OK con datos vacíos.
+                is_error = "error" in data and set(data.keys()) <= {"error", "_trazabilidad"}
+
                 seen_files.add(filename)
                 running_agents.discard(agent_key)
                 status_queue.put({
                     "agent": agent_key,
-                    "status": "completed",
+                    "status": "error" if is_error else "completed",
                     "data": data,
                     "output_md": md_content,
                     "duration_s": duration,

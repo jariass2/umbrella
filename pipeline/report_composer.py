@@ -38,6 +38,7 @@ INTERACCION_EMOJI = {
 # El primer match gana — ordenar del más específico al más genérico.
 PRICING_PER_1M: list[tuple[str, float, float]] = [
     ("kimi-k2",           0.14,  0.60),
+    ("mimo-v2.5-pro",     0.435, 0.87),
     ("claude-haiku-4",    0.80,  4.00),
     ("claude-sonnet-4",   3.00, 15.00),
     ("claude-opus-4",    15.00, 75.00),
@@ -153,19 +154,126 @@ def _fmt_pct(v) -> str:
     if not s or s == "—":
         return "—"
     low = s.lower()
+    # 'N/A', 'NA', 'none'… no son porcentajes → guion, no 'N/A%'.
+    if low in ("n/a", "na", "n.a.", "none", "null", "no aplica"):
+        return "—"
     if "%" in s or "aplica" in low or "establec" in low or "ai:" in low or "vrn" in low:
         return s
     return f"{s}%"
+
+
+def _spec_val(v) -> str:
+    """Renderiza un valor de especificación que puede venir como dict
+    {'valor':…, 'metodo':…} en vez de string (bug de datos: salía el dict crudo)."""
+    if isinstance(v, dict):
+        valor = v.get("valor", v.get("value", v.get("especificacion", "")))
+        metodo = v.get("metodo", v.get("método", v.get("method", "")))
+        if valor and metodo:
+            return f"{valor} *(método: {metodo})*"
+        return _val(valor or metodo)
+    return _val(v)
+
+
+# ── Confidencialidad: dosis de ACTIVO (pública) vs dosis de materia prima ────
+# Xavier (2026-06-02): "la dosis quantitativa és secreta i no es diu mai".
+# La dosis de materia prima (dosis_formula_mg) revela la fórmula → NUNCA en
+# bloques cliente. Lo comunicable es el ACTIVO aportado ("En base Claim Actiu").
+
+def _parse_pct_activo(nombre: str):
+    """Extrae el % de estandarización/activo del nombre del ingrediente
+    (ej. '(30% AKBA)', '<95 % curcuminoides', '(2,5% ...)'). Devuelve float o None.
+
+    PUENTE: aproximación hasta conciliar con la Tabla Cuantitativa (Excel, 7b).
+    """
+    if not nombre:
+        return None
+    m = re.search(r"(\d+(?:[.,]\d+)?)\s*%", str(nombre))
+    if not m:
+        return None
+    try:
+        return float(m.group(1).replace(",", "."))
+    except ValueError:
+        return None
+
+
+def _fmt_mg(valor, unidad: str = "mg") -> str:
+    """'50.0' -> '50 mg'; '1.4' -> '1.4 mg'. Sin ceros sobrantes."""
+    val = f"{float(valor):.2f}".rstrip("0").rstrip(".")
+    return f"{val} {unidad}".strip()
+
+
+def _dosis_activo(ing: dict, canonical: dict | None = None) -> str:
+    """Dosis de ACTIVO aportado. Pública. Nunca expone `dosis_formula_mg`.
+
+    Si hay dato canónico (de la ficha de fórmula de Xavier, vía
+    `formula_canonica.json`) se usa tal cual (autoritativo, incl. casos con
+    sobredosado como la B6). Si no, se estima desde la estandarización del
+    nombre (puente). '—' si no se puede.
+    """
+    if canonical and canonical.get("active_mg") not in (None, ""):
+        return _fmt_mg(canonical["active_mg"], canonical.get("unit", "mg"))
+
+    mg = ing.get("dosis_formula_mg")
+    pct = _parse_pct_activo(ing.get("ingrediente", ""))
+    if mg in (None, "", 0) or pct is None:
+        return "—"
+    try:
+        activo = float(mg) * pct / 100.0
+    except (TypeError, ValueError):
+        return "—"
+    return _fmt_mg(activo, ing.get("dosis_formula_unidad", "") or "mg")
+
+
+def _load_canonica(output_dir: str | None) -> list[dict]:
+    """Lista de ingredientes de `formula_canonica.json` (del FT PDF), o []."""
+    if not output_dir:
+        return []
+    path = os.path.join(output_dir, "formula_canonica.json")
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return []
+    ings = data.get("ingredients") if isinstance(data, dict) else None
+    return ings if isinstance(ings, list) else []
+
+
+def _alinear_canonica(kic_ings: list[dict], canonica: list[dict]) -> list[dict | None]:
+    """Empareja por índice cuando los conteos coinciden (KIC conserva el orden
+    del input). Si no coinciden, devuelve None por fila → cae al cálculo puente."""
+    if canonica and len(canonica) == len(kic_ings):
+        return list(canonica)
+    return [None] * len(kic_ings)
+
+
+# Nota al pie según la procedencia del dato.
+NOTA_DOSIS_ACTIVO_CANON = (
+    "*Dosis de activo aportado según la ficha de fórmula (no la dosis de materia "
+    "prima, confidencial). «—» = excipiente.*"
+)
+
+
+# Nota al pie reutilizable para las tablas de dosis de activo.
+NOTA_DOSIS_ACTIVO = (
+    "*Dosis de activo aportado (no la dosis de materia prima, confidencial). "
+    "Estimada desde la estandarización; pendiente de conciliar con la Tabla "
+    "Cuantitativa. «—» = excipiente o activo sin estandarización declarada.*"
+)
 
 
 # ── Bloque 1 · Tabla maestra de ingredientes ────────────────────────────────
 # Sustituye las 3-4 tablas de ingredientes que antes repetían dosis y %NRV
 # (KIC "Perfil", Regulatorio "Evaluación", Ficha Técnica "Composición").
 
-def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict) -> list[str]:
+def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict, canonica: list[dict] | None = None) -> list[str]:
     """Tabla ÚNICA de ingredientes fusionando los tres agentes:
     dosis/%NRV/biodisponibilidad (KIC) + forma química (Ficha Técnica) +
-    semáforo regulatorio (Regulatorio). Cruce por nombre normalizado."""
+    semáforo regulatorio (Regulatorio). Cruce por nombre normalizado.
+
+    `canonica` (de `formula_canonica.json`, FT PDF) aporta la dosis de activo
+    autoritativa, emparejada por índice (KIC conserva el orden del input)."""
     reg_by_name = {
         _norm(i.get("nombre", "")): i
         for i in reg.get("ingredientes", []) if isinstance(i, dict)
@@ -178,17 +286,18 @@ def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict) -> list[str]:
             nm = i.get("nombre_ingrediente", i.get("nombre", i.get("ingrediente", "")))
             ft_by_name[_norm(nm)] = i
 
+    kic_ings = [i for i in kic.get("fase_2_ingredientes", []) if isinstance(i, dict)]
+    canon_alineada = _alinear_canonica(kic_ings, canonica or [])
+    usa_canon = any(c is not None for c in canon_alineada)
+
     lines = [_section("Tabla de ingredientes", 3)]
-    headers = ["Ingrediente", "Dosis", "% NRV/VRN", "Forma química", "Biodisponibilidad", "Reg."]
+    headers = ["Ingrediente", "Dosis de activo", "% NRV/VRN", "Forma química", "Biodisponibilidad", "Reg."]
     rows = []
-    for ing in kic.get("fase_2_ingredientes", []):
-        if not isinstance(ing, dict):
-            continue
+    for idx, ing in enumerate(kic_ings):
         nombre = ing.get("ingrediente", "")
         key = _norm(nombre)
         bio = ing.get("biodisponibilidad", {})
         bio_str = bio.get("nivel", "") if isinstance(bio, dict) else _val(bio)
-        dosis = f"{ing.get('dosis_formula_mg','')} {ing.get('dosis_formula_unidad','')}".strip()
 
         ft_i = ft_by_name.get(key, {})
         forma = ft_i.get("forma_quimica", ft_i.get("forma", "")) if isinstance(ft_i, dict) else ""
@@ -199,13 +308,15 @@ def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict) -> list[str]:
 
         rows.append([
             nombre,
-            dosis or "—",
+            _dosis_activo(ing, canon_alineada[idx]),
             _fmt_pct(ing.get("porcentaje_nrv", "")),
             forma or "—",
             bio_str or "—",
             sem_str or "—",
         ])
     lines += _table(headers, rows)
+    lines.append("")
+    lines.append(NOTA_DOSIS_ACTIVO_CANON if usa_canon else NOTA_DOSIS_ACTIVO)
     lines.append("")
     return lines
 
@@ -484,7 +595,8 @@ def _ft_nutricional_rows(nut: dict) -> list[list[str]]:
 
 def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
                       reg: dict | None = None, clm: dict | None = None,
-                      nombre_producto: str = "", hoy: str = "") -> list[str]:
+                      nombre_producto: str = "", hoy: str = "",
+                      canonica: list[dict] | None = None) -> list[str]:
     """Renderiza la Ficha Técnica con el formato estándar de 6 secciones de
     Umbrella, cruzando datos de Ficha Técnica + QC + KIC + Regulatorio + Claims.
     Los campos de fabricación que no existen en los datos se marcan como
@@ -517,26 +629,29 @@ def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
 
     # Tabla de activos por dosis (Active Claims Table)
     lines.append(_section("Tabla de activos por dosis", 4))
-    headers = ["Activo", "Cantidad / dosis", "% NRV/VRN", "Forma química"]
+    headers = ["Activo", "Dosis de activo", "% NRV/VRN", "Forma química"]
     ft_comp = ft.get("fase_2_composicion", {})
     ft_ings = ft_comp.get("ingredientes_activos", ft_comp.get("ingredientes", [])) if isinstance(ft_comp, dict) else []
     ft_by_name = {}
     for i in (ft_ings if isinstance(ft_ings, list) else []):
         if isinstance(i, dict):
             ft_by_name[_norm(i.get("nombre_ingrediente", i.get("nombre", i.get("ingrediente", ""))))] = i
+    kic_ings = [i for i in kic.get("fase_2_ingredientes", []) if isinstance(i, dict)]
+    canon_alineada = _alinear_canonica(kic_ings, canonica or [])
+    usa_canon = any(c is not None for c in canon_alineada)
     rows = []
-    for ing in kic.get("fase_2_ingredientes", []):
-        if not isinstance(ing, dict):
-            continue
+    for idx, ing in enumerate(kic_ings):
         nombre = ing.get("ingrediente", "")
         ft_i = ft_by_name.get(_norm(nombre), {})
         rows.append([
             nombre,
-            f"{ing.get('dosis_formula_mg','')} {ing.get('dosis_formula_unidad','')}".strip() or "—",
+            _dosis_activo(ing, canon_alineada[idx]),
             _fmt_pct(ing.get("porcentaje_nrv", "")),
             (ft_i.get("forma_quimica", "") if isinstance(ft_i, dict) else "") or "—",
         ])
     lines += _table(headers, rows)
+    lines.append("")
+    lines.append(NOTA_DOSIS_ACTIVO_CANON if usa_canon else NOTA_DOSIS_ACTIVO)
     lines.append("")
 
     # Colección de posibles claims vs ingredientes (lo que pide Xavier)
@@ -560,14 +675,19 @@ def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
                 ref = str(c.get("referencia_efsa", c.get("referencia_reglamento", c.get("id_ue", ""))))
                 txt = str(c.get("texto_traduccion_es", c.get("texto_claim", c.get("texto", ""))))
                 blob = (ref + " " + txt).upper()
-                return "N/A" not in blob and "NO APLICA" not in blob and "SIN CLAIM" not in blob
+                # Botánicos "on hold": el agente escribe "Ninguno autorizado" /
+                # "No autorizado" → no es un claim válido, es estado en espera.
+                invalidos = ("N/A", "NO APLICA", "SIN CLAIM", "NINGUNO AUTORIZADO",
+                             "NO AUTORIZADO", "EN ESPERA", "ON HOLD", "PENDIENTE")
+                return not any(m in blob for m in invalidos)
 
             válidos = [c for c in cl if _es_valido(c)]
-            ejemplo = ""
             if válidos:
                 c0 = válidos[0]
-                ejemplo = c0.get("texto_traduccion_es", c0.get("texto_claim", c0.get("texto", "")))[:90]
-            rows.append([ic.get("ingrediente", ""), str(len(válidos)) if válidos else "—", ejemplo or "—"])
+                ejemplo = c0.get("texto_traduccion_es", c0.get("texto_claim", c0.get("texto", "")))[:90] or "—"
+                rows.append([ic.get("ingrediente", ""), str(len(válidos)), ejemplo])
+            else:
+                rows.append([ic.get("ingrediente", ""), "—", "En espera (botánico)"])
         lines += _table(headers, rows)
         lines.append("")
 
@@ -632,7 +752,7 @@ def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
     fq = espec.get("especificaciones_fisicoquimicas", {}) if isinstance(espec, dict) else {}
     if isinstance(fq, dict) and fq:
         for k, v in fq.items():
-            lines.append(f"**{k.replace('_',' ').capitalize()}:** {_val(v)}  ")
+            lines.append(f"**{k.replace('_',' ').capitalize()}:** {_spec_val(v)}  ")
         lines.append("")
     # Identidad analítica desde QC
     ftir = qc.get("fase_1_ftir", {})
@@ -695,6 +815,21 @@ def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
 
 # ── Sección 4: Claims ───────────────────────────────────────────────────────
 
+_SIN_CLAIM_MARKERS = ("ninguno autorizado", "no autorizado", "sin claim",
+                      "n/a", "no aplica", "en espera", "on hold", "pendiente")
+
+
+def _claim_en_espera(c) -> bool:
+    """True si el 'claim' indica ausencia de claim autorizado (botánico en
+    espera EFSA) en vez de un claim real del Reg. (UE) 432/2012."""
+    if not isinstance(c, dict):
+        return not str(c).strip()
+    txt = str(c.get("texto_traduccion_es", c.get("texto_claim", c.get("texto", ""))))
+    ref = str(c.get("referencia_efsa", c.get("referencia_reglamento", c.get("id_ue", ""))))
+    blob = (txt + " " + ref).lower()
+    return (not txt.strip()) or any(m in blob for m in _SIN_CLAIM_MARKERS)
+
+
 def fmt_claims(d: dict) -> list[str]:
     lines = [_section("Claims y diferenciación comercial", 3)]
 
@@ -722,9 +857,14 @@ def fmt_claims(d: dict) -> list[str]:
             if not claims_list:
                 continue
             lines.append(f"**{nombre}**")
+            # Botánicos sin claim autorizado: mostrar estado, no una fila vacía.
+            válidos = [c for c in claims_list if not _claim_en_espera(c)]
+            if not válidos:
+                lines += ["*En espera (botánico) — sin claim autorizado en el Reg. (UE) 432/2012.*", ""]
+                continue
             headers = ["Texto del claim", "Condición de uso", "Ref. EFSA"]
             rows = []
-            for c in claims_list:
+            for c in válidos:
                 if isinstance(c, dict):
                     texto = c.get("texto_traduccion_es", c.get("texto_claim", c.get("texto", c.get("texto_oficial_en", ""))))
                     rows.append([
@@ -1540,6 +1680,7 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
     doc = _load("agente_7_docs_internos_v2", output_dir)
     qc  = _load("agente_8_qc_v2", output_dir)
     prt = _load("agente_9_portfolio_v2", output_dir)
+    canonica = _load_canonica(output_dir)  # dosis de activo del FT PDF (si existe)
 
     # Mapa prefix → _trazabilidad (para tokens y coste en el Anexo)
     _trazab_map: dict[str, dict] = {
@@ -1585,11 +1726,10 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
         "",
         "---",
         "",
-        "## Fórmula analizada",
-        "",
-        "```",
-        formula.strip(),
-        "```",
+        "> **Confidencialidad:** la fórmula cuantitativa (dosis de materia prima) es "
+        "información reservada de Umbrella y solo figura en los bloques internos de "
+        "producción y calidad (4 y 5). Los bloques 1–3 muestran únicamente la "
+        "**dosis de activo aportado**.",
         "",
         "---",
     ]
@@ -1609,7 +1749,7 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
     if kic or reg or ft:
         lines.append(_section("1. Fórmula Cuantitativa", 2))
         if kic:
-            lines += fmt_tabla_maestra(kic, reg, ft)
+            lines += fmt_tabla_maestra(kic, reg, ft, canonica=canonica)
             lines += fmt_analisis_ingredientes(kic)
         if reg:
             lines += fmt_validacion_regulatoria(reg)
@@ -1622,7 +1762,8 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
     if ft:
         lines.append(_section("2. Ficha Técnica", 2))
         lines += fmt_ficha_tecnica(ft, qc=qc, kic=kic, reg=reg, clm=clm,
-                                   nombre_producto=nombre_producto, hoy=hoy)
+                                   nombre_producto=nombre_producto, hoy=hoy,
+                                   canonica=canonica)
         lines.append("\n---")
 
     # ── Bloque 3 · Información de Marketing ───────────────────────────

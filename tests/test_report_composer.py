@@ -191,6 +191,101 @@ def test_formatos_segmentos_fallback_derivado():
     assert "Stick" in out and "Sobre" in out
 
 
+# ── Fase 7a/7c: confidencialidad de dosis + depuración de datos ──────────────
+
+def test_parse_pct_activo():
+    from pipeline.report_composer import _parse_pct_activo
+    assert _parse_pct_activo("Extracto de Boswellia serrata (30% AKBA)") == 30.0
+    assert _parse_pct_activo("Astaxantina natural (2,5% en almidón)") == 2.5
+    assert _parse_pct_activo("Extracto de cúrcuma (<95 % curcuminoides)") == 95.0
+    assert _parse_pct_activo("Vitamina B6 HCl (Piridoxina HCl)") is None  # sin %
+    assert _parse_pct_activo("") is None
+
+
+def test_dosis_activo_no_expone_materia_prima():
+    from pipeline.report_composer import _dosis_activo
+    # 833.33 mg de Magchel al 12% → 100 mg de Mg activo (nunca 833.33).
+    out = _dosis_activo({"ingrediente": "Magchel (12% Mg)", "dosis_formula_mg": 833.33})
+    assert out == "100 mg"
+    assert "833" not in out
+    # Boswellia 166.67 mg al 30% → 50 mg AKBA.
+    assert _dosis_activo({"ingrediente": "Boswellia (30% AKBA)", "dosis_formula_mg": 166.67}) == "50 mg"
+    # Excipiente sin % → guion, no la dosis de materia prima.
+    assert _dosis_activo({"ingrediente": "Celulosa microcristalina", "dosis_formula_mg": 64.44}) == "—"
+
+
+def test_fmt_pct_na_no_imprime_porcentaje():
+    from pipeline.report_composer import _fmt_pct
+    assert _fmt_pct("N/A") == "—"
+    assert _fmt_pct("n/a") == "—"
+    assert _fmt_pct("161") == "161%"
+    assert _fmt_pct("26.7%") == "26.7%"
+
+
+def test_spec_val_dict_no_crudo():
+    from pipeline.report_composer import _spec_val
+    out = _spec_val({"valor": "Cápsula opaca", "metodo": "Inspección visual"})
+    assert "{'valor'" not in out
+    assert "Cápsula opaca" in out and "Inspección visual" in out
+    assert _spec_val("texto plano") == "texto plano"
+
+
+def test_dosis_activo_canonico_prevalece_sobre_calculo():
+    from pipeline.report_composer import _dosis_activo
+    # B6: cálculo daría 1,82 (2,26×80,5%), pero la canónica declara 1,40 (sobredosado).
+    ing = {"ingrediente": "Vitamina B6 (80,5%)", "dosis_formula_mg": 2.26}
+    assert _dosis_activo(ing, {"active_mg": 1.40, "unit": "mg"}) == "1.4 mg"
+    # Sin canónica → cae al cálculo puente.
+    assert _dosis_activo({"ingrediente": "Boswellia (30% AKBA)", "dosis_formula_mg": 166.67}) == "50 mg"
+
+
+def test_alinear_canonica_por_indice():
+    from pipeline.report_composer import _alinear_canonica
+    kic = [{"ingrediente": "a"}, {"ingrediente": "b"}]
+    canon = [{"active_mg": 1}, {"active_mg": 2}]
+    assert _alinear_canonica(kic, canon) == canon          # conteos iguales → empareja
+    assert _alinear_canonica(kic, [{"active_mg": 1}]) == [None, None]  # distinto → fallback
+
+
+def test_tabla_maestra_usa_canonica(tmp_path):
+    from pipeline.report_composer import fmt_tabla_maestra
+    kic = {"fase_2_ingredientes": [
+        {"ingrediente": "Vitamina B6 (80,5%)", "dosis_formula_mg": 2.26, "porcentaje_nrv": "161"},
+        {"ingrediente": "Extracto de bambú (85% sílice)", "dosis_formula_mg": 10.07},
+    ]}
+    canon = [{"active_mg": 1.40, "unit": "mg"}, {"active_mg": 4.0, "unit": "mg"}]
+    out = "\n".join(fmt_tabla_maestra(kic, {}, {}, canonica=canon))
+    assert "1.4 mg" in out          # B6 valor declarado, no el calculado 1.82
+    assert "4 mg" in out            # bambú silicio, no 8.56 del 85%
+    assert "según la ficha de fórmula" in out
+    assert "833" not in out and "10.07" not in out  # nunca la materia prima
+
+
+def test_claim_en_espera_botanico():
+    from pipeline.report_composer import _claim_en_espera, fmt_claims
+    # "Ninguno autorizado" (texto del LLM para botánicos) = en espera.
+    assert _claim_en_espera({"texto_claim": "Ninguno autorizado"}) is True
+    assert _claim_en_espera({"texto_claim": "No autorizado"}) is True
+    # Un claim real NO está en espera.
+    assert _claim_en_espera({"texto_claim": "Magnesium contributes to..."}) is False
+    # En el render: botánico → etiqueta "En espera (botánico)", no "Ninguno autorizado".
+    out = "\n".join(fmt_claims({"parte_a_claims_regulatorios": {"claims_por_ingrediente": [
+        {"ingrediente": "Boswellia (30% AKBA)", "claims": [{"texto_claim": "Ninguno autorizado"}]},
+    ]}}))
+    assert "En espera (botánico)" in out
+    assert "Ninguno autorizado" not in out
+
+
+def test_dosis_de_activo_en_tablas_cliente(tmp_path):
+    texto = _informe(tmp_path)
+    # Cabecera renombrada en tabla maestra y tabla de activos FT.
+    assert "Dosis de activo" in texto
+    # Echo de fórmula con mg de materia prima eliminado de la cabecera.
+    assert "## Fórmula analizada" not in texto
+    # Nota de confidencialidad presente.
+    assert "Confidencialidad" in texto
+
+
 if __name__ == "__main__":
     import tempfile
 
@@ -201,11 +296,21 @@ if __name__ == "__main__":
                    test_ficha_tecnica_seis_secciones, test_ficha_tecnica_cabecera_fabricante,
                    test_vida_util_sin_meses_duplicado, test_etiqueta_layout_caras,
                    test_etiqueta_bilingue, test_bloque6_fallback_sin_portfolio,
-                   test_marketing_secciones_en_bloque3):
+                   test_marketing_secciones_en_bloque3,
+                   test_dosis_de_activo_en_tablas_cliente):
             fn(tmp)
             print(f"✅ {fn.__name__}")
         for fn in (test_portfolio_render, test_segmentos_render_estructurado,
                    test_segmentos_fallback_publico_objetivo, test_formatos_segmentos_matriz,
-                   test_formatos_segmentos_fallback_derivado):
+                   test_formatos_segmentos_fallback_derivado,
+                   test_parse_pct_activo, test_dosis_activo_no_expone_materia_prima,
+                   test_fmt_pct_na_no_imprime_porcentaje, test_spec_val_dict_no_crudo,
+                   test_dosis_activo_canonico_prevalece_sobre_calculo,
+                   test_alinear_canonica_por_indice):
             fn()
             print(f"✅ {fn.__name__}")
+        for fn in (test_tabla_maestra_usa_canonica,):
+            fn(tmp)
+            print(f"✅ {fn.__name__}")
+        test_claim_en_espera_botanico()
+        print("✅ test_claim_en_espera_botanico")

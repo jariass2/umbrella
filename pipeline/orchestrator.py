@@ -193,6 +193,59 @@ def _load_formula(path: str | None, inline: str | None) -> tuple[str, str]:
     return FORMULA_EJEMPLO.strip(), "FORMULA_EJEMPLO (default hardcodeado)"
 
 
+def _fmt_mg(v) -> str:
+    """50.0 -> '50'; 1.4 -> '1.4'. Sin ceros sobrantes."""
+    try:
+        return f"{float(v):.2f}".rstrip("0").rstrip(".")
+    except (TypeError, ValueError):
+        return ""
+
+
+def _enriquecer_formula(F: str, output_dir: str) -> str:
+    """Añade a la fórmula la DOSIS DE ACTIVO de `formula_canonica.json` (FT PDF)
+    + instrucción de confidencialidad, para que los agentes razonen sobre el
+    activo y no filtren la dosis de materia prima en bloques cliente (7b.4).
+
+    Las líneas originales de F se conservan intactas (KIC sigue extrayendo
+    `dosis_formula_mg`; Docs/QC siguen teniendo la materia prima para los
+    bloques internos). Si no hay canónica con activos, devuelve F sin tocar.
+    """
+    path = os.path.join(output_dir, "formula_canonica.json")
+    if not os.path.exists(path):
+        return F
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return F
+    ings = data.get("ingredients", []) if isinstance(data, dict) else []
+    filas = []
+    for ing in ings:
+        if not isinstance(ing, dict) or ing.get("active_mg") in (None, ""):
+            continue
+        mg = _fmt_mg(ing["active_mg"])
+        if not mg:
+            continue
+        activo = ing.get("active_name") or ing.get("name", "")
+        filas.append(f"- {ing.get('name','')} → {mg} {ing.get('unit','mg')} de {activo}")
+    if not filas:
+        return F
+
+    bloque = "\n".join(filas)
+    return (
+        f"{F}\n\n"
+        "---\n"
+        "DOSIS DE ACTIVO APORTADO POR TOMA (dato autoritativo de la ficha de "
+        "fórmula). Usa SIEMPRE esta dosis de activo para dosis eficaz, %VRN, "
+        "claims, etiqueta y cualquier comunicación o análisis. La dosis de "
+        "materia prima/extracto que aparece arriba es CONFIDENCIAL y solo debe "
+        "usarse en documentación interna de producción y control de calidad: "
+        "NO la cites ni la reproduzcas en el análisis de ingredientes, la "
+        "validación regulatoria, los claims ni el marketing.\n"
+        f"{bloque}\n"
+    )
+
+
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="pipeline.orchestrator",
@@ -368,6 +421,17 @@ def _build_trace(agent: Agent, prompt_version: str | None,
     }
 
 
+def _api_error_envelope(data) -> dict | None:
+    """Si `data` es un sobre de error de API OpenAI-compatible
+    ({"error": {message|code, ...}}) devuelto como cuerpo, devuelve el dict de
+    error; si no, None. Permite distinguir un error disfrazado de éxito."""
+    if isinstance(data, dict) and isinstance(data.get("error"), dict):
+        e = data["error"]
+        if "message" in e or "code" in e:
+            return e
+    return None
+
+
 def run_agent(agent: Agent, prompt: str, label: str,
               output_model: type[BaseModel] | None = None,
               prompt_version: str | None = None) -> dict:
@@ -430,6 +494,18 @@ def run_agent(agent: Agent, prompt: str, label: str,
                 else:
                     print(f"⚠️  [{label}] respuesta top-level no es dict ({type(data).__name__}); se envuelve en _payload")
                     data = {"_payload": data}
+
+            # Algunos endpoints OpenAI-compatibles (p. ej. mimo) devuelven el
+            # error como CUERPO de respuesta ({"error": {message, code, ...}})
+            # en vez de lanzar excepción. Sin esta comprobación se guardaba como
+            # resultado válido (con _trazabilidad) y NO se reintentaba → el bloque
+            # salía vacío ("Sin claims"). Lo relanzamos para que el sistema de
+            # reintentos lo gestione (por defecto transitorio: 3 intentos).
+            err = _api_error_envelope(data)
+            if err is not None:
+                raise RuntimeError(
+                    f"API error {err.get('code', '')}: {err.get('message', err)}".strip()
+                )
 
             elapsed = time.time() - t0
             monitor_agent_end(label, success=True, duration_s=elapsed)
@@ -690,6 +766,11 @@ def main(argv: list[str] | None = None):
     # `run_agent` y `save_markdown` leen OUTPUT_DIR como global del módulo,
     # así que basta con reasignarlo antes de lanzar el DAG.
     OUTPUT_DIR = args.output_dir
+
+    # 7b.4: si el dashboard dejó `formula_canonica.json` (del FT PDF), enriquece
+    # la fórmula con la dosis de activo + framing de confidencialidad para todos
+    # los agentes. No-op si no existe.
+    F = _enriquecer_formula(F, OUTPUT_DIR)
 
     # Primera línea no vacía del texto se usa como etiqueta humana del run.
     titulo = next((ln.strip() for ln in F.splitlines() if ln.strip()), "fórmula")
