@@ -75,7 +75,7 @@
         {{ data | summary_html(agent) }}
       </div>
       {% if md_contents.get(agent) %}
-      <details class="md-details">
+      <details class="md-details" ontoggle="onReportToggle(this)">
         <summary>Ver informe completo</summary>
         <div class="md-content md-body" data-md="{{ md_contents[agent] | e }}"></div>
       </details>

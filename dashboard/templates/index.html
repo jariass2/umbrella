@@ -200,6 +200,17 @@ function renderMarkdown() {
 }
 
 const expandedAgents = new Set();
+// "Ver informe completo" (<details>) abiertos, por agente. Sin esto, el poll de
+// estado cada 2s re-renderiza #main-content y los cerraba solos mientras el
+// pipeline sigue en curso.
+const expandedReports = new Set();
+
+function onReportToggle(details) {
+  const card = details.closest('.result-card[data-agent]');
+  if (!card) return;
+  if (details.open) expandedReports.add(card.dataset.agent);
+  else expandedReports.delete(card.dataset.agent);
+}
 
 function toggleCard(header) {
   const card = header.closest('.result-card');
@@ -224,6 +235,11 @@ function restoreExpanded() {
         const header = card.querySelector('.result-header');
         if (header) header.setAttribute('aria-expanded', 'true');
       }
+    }
+    // Re-abrir "Ver informe completo" si estaba abierto antes del swap.
+    if (expandedReports.has(card.dataset.agent)) {
+      const det = card.querySelector('details.md-details');
+      if (det) det.open = true;
     }
   });
 }
