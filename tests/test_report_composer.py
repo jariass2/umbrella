@@ -230,6 +230,37 @@ def test_spec_val_dict_no_crudo():
     assert _spec_val("texto plano") == "texto plano"
 
 
+def test_dosis_activo_canonico_prevalece_sobre_calculo():
+    from pipeline.report_composer import _dosis_activo
+    # B6: cálculo daría 1,82 (2,26×80,5%), pero la canónica declara 1,40 (sobredosado).
+    ing = {"ingrediente": "Vitamina B6 (80,5%)", "dosis_formula_mg": 2.26}
+    assert _dosis_activo(ing, {"active_mg": 1.40, "unit": "mg"}) == "1.4 mg"
+    # Sin canónica → cae al cálculo puente.
+    assert _dosis_activo({"ingrediente": "Boswellia (30% AKBA)", "dosis_formula_mg": 166.67}) == "50 mg"
+
+
+def test_alinear_canonica_por_indice():
+    from pipeline.report_composer import _alinear_canonica
+    kic = [{"ingrediente": "a"}, {"ingrediente": "b"}]
+    canon = [{"active_mg": 1}, {"active_mg": 2}]
+    assert _alinear_canonica(kic, canon) == canon          # conteos iguales → empareja
+    assert _alinear_canonica(kic, [{"active_mg": 1}]) == [None, None]  # distinto → fallback
+
+
+def test_tabla_maestra_usa_canonica(tmp_path):
+    from pipeline.report_composer import fmt_tabla_maestra
+    kic = {"fase_2_ingredientes": [
+        {"ingrediente": "Vitamina B6 (80,5%)", "dosis_formula_mg": 2.26, "porcentaje_nrv": "161"},
+        {"ingrediente": "Extracto de bambú (85% sílice)", "dosis_formula_mg": 10.07},
+    ]}
+    canon = [{"active_mg": 1.40, "unit": "mg"}, {"active_mg": 4.0, "unit": "mg"}]
+    out = "\n".join(fmt_tabla_maestra(kic, {}, {}, canonica=canon))
+    assert "1.4 mg" in out          # B6 valor declarado, no el calculado 1.82
+    assert "4 mg" in out            # bambú silicio, no 8.56 del 85%
+    assert "según la ficha de fórmula" in out
+    assert "833" not in out and "10.07" not in out  # nunca la materia prima
+
+
 def test_dosis_de_activo_en_tablas_cliente(tmp_path):
     texto = _informe(tmp_path)
     # Cabecera renombrada en tabla maestra y tabla de activos FT.
@@ -258,6 +289,11 @@ if __name__ == "__main__":
                    test_segmentos_fallback_publico_objetivo, test_formatos_segmentos_matriz,
                    test_formatos_segmentos_fallback_derivado,
                    test_parse_pct_activo, test_dosis_activo_no_expone_materia_prima,
-                   test_fmt_pct_na_no_imprime_porcentaje, test_spec_val_dict_no_crudo):
+                   test_fmt_pct_na_no_imprime_porcentaje, test_spec_val_dict_no_crudo,
+                   test_dosis_activo_canonico_prevalece_sobre_calculo,
+                   test_alinear_canonica_por_indice):
             fn()
+            print(f"✅ {fn.__name__}")
+        for fn in (test_tabla_maestra_usa_canonica,):
+            fn(tmp)
             print(f"✅ {fn.__name__}")

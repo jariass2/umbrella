@@ -38,16 +38,27 @@
       <div class="ingredients-section" style="padding-top:12px">
         <div class="section-label">Ingredientes</div>
 
+        <div id="pdf-drop" class="pdf-drop">
+          <span>Arrastra el <strong>FT PDF</strong> o
+            <label class="pdf-link">selecciona<input type="file" id="pdf-input" accept="application/pdf" hidden></label>
+          </span>
+          <div id="pdf-status" class="pdf-status" role="status" aria-live="polite"></div>
+        </div>
+        <div class="ing-hint">Dosis = materia prima (interna) · Activo = aportado (público)</div>
+
         <div id="ingredients-list">
           {% for ing in ingredients %}
           <div class="ing-row">
             <input name="ing_name" placeholder="Ingrediente" value="{{ ing.name }}">
-            <input name="ing_dosage" class="ing-dose" placeholder="Dosis" value="{{ ing.dosage }}">
+            <input name="ing_dosage" class="ing-dose" placeholder="M.prima" title="Dosis de materia prima (interna)" value="{{ ing.dosage }}">
+            <input name="ing_active" class="ing-dose" placeholder="Activo" title="Dosis de activo (pública)" value="{{ ing.active or '' }}">
             <select name="ing_unit">
               {% for u in units %}
               <option value="{{ u }}" {{ 'selected' if u == ing.unit else '' }}>{{ u }}</option>
               {% endfor %}
             </select>
+            <input type="hidden" name="ing_active_name" value="{{ ing.active_name or '' }}">
+            <input type="hidden" name="ing_pct" value="{{ ing.pct or '' }}">
             <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
           </div>
           {% endfor %}
@@ -110,21 +121,76 @@
 </div>
 
 <script>
-document.getElementById('add-ingredient-btn').addEventListener('click', function() {
+const UNITS = {{ units|tojson }};
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, c => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function makeIngredientRow(ing) {
+  ing = ing || {};
   const row = document.createElement('div');
   row.className = 'ing-row';
+  const opts = UNITS.map(u =>
+    `<option value="${esc(u)}" ${u === (ing.unit || 'mg') ? 'selected' : ''}>${esc(u)}</option>`).join('');
   row.innerHTML = `
-    <input name="ing_name" placeholder="Ingrediente" value="">
-    <input name="ing_dosage" class="ing-dose" placeholder="Dosis" value="">
-    <select name="ing_unit">
-      {% for u in units %}
-      <option value="{{ u }}">{{ u }}</option>
-      {% endfor %}
-    </select>
+    <input name="ing_name" placeholder="Ingrediente" value="${esc(ing.name)}">
+    <input name="ing_dosage" class="ing-dose" placeholder="M.prima" title="Dosis de materia prima (interna)" value="${esc(ing.dosage)}">
+    <input name="ing_active" class="ing-dose" placeholder="Activo" title="Dosis de activo (pública)" value="${esc(ing.active)}">
+    <select name="ing_unit">${opts}</select>
+    <input type="hidden" name="ing_active_name" value="${esc(ing.active_name)}">
+    <input type="hidden" name="ing_pct" value="${esc(ing.pct)}">
     <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
   `;
-  document.getElementById('ingredients-list').appendChild(row);
+  return row;
+}
+
+document.getElementById('add-ingredient-btn').addEventListener('click', function() {
+  document.getElementById('ingredients-list').appendChild(makeIngredientRow());
 });
+
+// ── Arrastre del FT PDF → pre-rellena el formulario (el usuario revisa y lanza) ──
+function populateFromPdf(data) {
+  const pn = document.querySelector('[name=product_name]');
+  if (pn && data.product_name) pn.value = data.product_name;
+  const list = document.getElementById('ingredients-list');
+  list.innerHTML = '';
+  (data.ingredients || []).forEach(ing => list.appendChild(makeIngredientRow(ing)));
+}
+
+function uploadPdf(file) {
+  if (!file) return;
+  const status = document.getElementById('pdf-status');
+  if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    status.textContent = '⚠️ El archivo no es un PDF.'; return;
+  }
+  status.textContent = 'Leyendo ' + file.name + '…';
+  const fd = new FormData();
+  fd.append('pdf', file);
+  fetch('/parse-formula-pdf', { method: 'POST', body: fd })
+    .then(r => r.json().then(j => ({ ok: r.ok, j })))
+    .then(({ ok, j }) => {
+      if (!ok) { status.textContent = '⚠️ ' + (j.error || 'No se pudo leer el PDF.'); return; }
+      populateFromPdf(j);
+      status.textContent = '✓ ' + (j.ingredients || []).length + ' ingredientes — revisa y lanza.';
+    })
+    .catch(e => { status.textContent = '⚠️ ' + e; });
+}
+
+(function() {
+  const drop = document.getElementById('pdf-drop');
+  const input = document.getElementById('pdf-input');
+  if (!drop) return;
+  input.addEventListener('change', () => uploadPdf(input.files[0]));
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => {
+    e.preventDefault(); drop.classList.add('dragover');
+  }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => {
+    e.preventDefault(); drop.classList.remove('dragover');
+  }));
+  drop.addEventListener('drop', e => uploadPdf(e.dataTransfer.files[0]));
+})();
 
 function renderMarkdown() {
   document.querySelectorAll('.md-body[data-md]').forEach(el => {

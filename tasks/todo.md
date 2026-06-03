@@ -181,14 +181,19 @@ El modelo `IngredienteKIC` (`kic_agent_v2.py:96`) NO tiene campos de activo (`%a
 - [ ] **PENDIENTE (fuga en texto libre de agentes, → 7b):** mg de materia prima siguen incrustados en texto LLM de bloques 1-3: advertencias KIC ("80 mg x 2.5%"), propuestas de mejora ("150 mg PEA", "extracto a 160-480 mg"), y etiquetas de la tabla de claims del agente Claims ("- 150 mg", "- 80 mg ingrediente"). No se arregla limpio en el composer; requiere ajustar prompts (expresar siempre en activo) o un scrub. Bambú diverge (nombre 85% sílice vs Excel 39,73% silicio).
 - [ ] Regenerar `outputs/run_36/informe_ejecutivo.md` desde JSON cuando se valide (no sobrescrito aún; artefacto histórico).
 
-### 7b. Fuente canónica robusta del activo (decisión + implementación) — ⏸️ BLOQUEADO (2026-06-02)
-**Bloqueante:** esperando que **Xavier confirme si podemos conseguir el Excel para cada fórmula**. La decisión depende de su respuesta.
+### 7b. Ingesta del FT PDF con dosis activa → dashboard (DESBLOQUEADO 2026-06-03)
+**Resuelto:** Xavier envía una **versión del FT PDF con la dosis activa añadida** (`…/Frmules per Validar/FT Formula 1 MIX 250188 (1).pdf`, 3/6). Formato canónico:
+- Nombre codifica activo y %: "Boswellia serrata Ext., **30% AKBA**", "Bamboo Extract (85% Silica), **39,73% Silicon**".
+- Columna **dosis activa** (`mg/3 Cap`, "Main Active or Excipient") = PÚBLICA. Última columna `mg/3 Cap` = **materia prima** = SECRETA.
+- B6 = caso especial: activo declarado 1,40 ≠ 2,26×80,5% (sobredosado de vitamina). **DECISIÓN del usuario: mostrar SIEMPRE el valor de Xavier** → no calcular, leer del PDF.
+- Parser de-riesgado con `pypdfium2` (ya instalado): regex `código · nombre · 7 columnas numéricas`; activo=col 1, materia prima=col 5. 12/12 filas OK.
 
-Contexto aprendido (2026-06-02): las fórmulas llegan como **PDF de producción** (ej. `Bloque 1 Discovert/Frmules per Validar/Formula 1 MIX 250188.pdf`). El PDF tiene columnas `% mezcla / g·lote / mg·dosis` = todas la **dosis de materia prima** (secreta); su columna "100%" es la proporción en la mezcla (mg/1680), NO el activo. El PDF **no trae** dosis de activo ni `%Actiu`; eso solo está en el Excel de Xavier (incl. excepciones como bambú 39,73% silicio vs 85% sílice del nombre).
-- [ ] DECISIÓN (tras respuesta de Xavier):
-  - Si **hay Excel por fórmula** → ingerir el Excel como tabla maestra canónica (fuente única, activo correcto, excepciones resueltas).
-  - Si **solo hay PDF** → pipeline calcula activo desde estandarización del nombre + **tabla de excepciones** sembrada del Excel (~2-3 casos: bambú, B6).
-- [ ] Implementar la opción elegida; el `_dosis_activo` puente pasa a leer el dato real.
+**Arquitectura (artefacto canónico):** el dato activo del PDF debe llegar al composer. El pipeline hoy: form rows → `rows_to_formula` → texto → agentes extraen dosis → composer. Plan: PDF → parser → datos canónicos persistidos como `formula_canonica.json` en el `output_dir` del run; el composer lo lee como autoritativo (sustituye el puente `_dosis_activo` de 7a cuando existe); la materia prima sigue solo en bloques 4-5.
+
+- [x] **7b.1 Parser** `dashboard/utils/ft_pdf_parser.py`: `parse_ft_pdf(bytes|path) -> {product_name, dosage, version, ingredients:[{code, name, active_name, pct_active, active_mg, raw_mg, unit}]}` con `pypdfium2`. Tests `tests/test_ft_pdf_parser.py` (12 ingredientes, B6 1,40, bambú 4,00/silicio); se omiten si el PDF no está (no se commitea, es confidencial). 2026-06-03.
+- [x] **7b.2 Dashboard drag-and-drop**: zona de arrastre + `<input file>` en `index.html` + endpoint `POST /parse-formula-pdf` (devuelve JSON) que parsea y **pre-rellena** las filas (nombre + materia prima + **activo visible** + ocultos active_name/pct). Campo "Activo" añadido a la fila. CSS `.pdf-drop`. Verificado con test_client (12 ingredientes). 2026-06-03.
+- [x] **7b.3 Artefacto canónico + composer**: `/analyze` lee `ing_active`/`ing_active_name`/`ing_pct`, construye y escribe `formula_canonica.json` en `output_dir`. Composer: `_load_canonica` + `_alinear_canonica` (empareja por índice, KIC conserva orden) + `_dosis_activo(ing, canonical)` usa el dato del PDF como autoritativo, si no cae al puente 7a. Nota al pie cambia a "según la ficha de fórmula". Tests: B6→1,40, bambú→4,00, nunca materia prima. Suite 48/48. 2026-06-03.
+- [ ] **7b.4 (después)** Pasar la dosis activa también a los AGENTES (regulatorio/claims razonan sobre activo, no extracto) vía texto de fórmula enriquecido. Cierra de paso las fugas de mg en texto libre.
 
 ### 7c. Depurar datos sucios del output (punto 1) — ✅ PARCIAL (2026-06-02)
 - [x] **Bug render dict**: helper `_spec_val` formatea `{'valor':…, 'metodo':…}` como "valor *(método: …)*" en sección 4 de `fmt_ficha_tecnica`. Test `test_spec_val_dict_no_crudo`.

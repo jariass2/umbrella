@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from queue import Queue
 
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from markupsafe import Markup
 
 from dashboard.api.runner import AGENT_ORDER, run_pipeline
@@ -23,6 +23,7 @@ from dashboard.utils.formula_parser import (
     VALID_UNITS, validate_ingredient, rows_to_formula, parse_formula,
     MAX_PRODUCT_NAME_LEN, MAX_INGREDIENTS,
 )
+from dashboard.utils.ft_pdf_parser import parse_ft_pdf
 
 THIS_DIR = Path(__file__).resolve().parent
 app = Flask(
@@ -874,6 +875,44 @@ def index():
     )
 
 
+def _fmt_num(v) -> str:
+    """1660.0 -> '1660', 166.666 -> '166.67'. Para pre-rellenar el formulario."""
+    try:
+        return f"{float(v):.2f}".rstrip("0").rstrip(".")
+    except (TypeError, ValueError):
+        return ""
+
+
+@app.route("/parse-formula-pdf", methods=["POST"])
+def parse_formula_pdf():
+    """Parsea un FT PDF arrastrado y devuelve JSON para pre-rellenar el formulario.
+
+    La dosis que se muestra como 'Dosis' es la de materia prima (interna); la
+    dosis de activo va aparte. Ambas viajan al /analyze para la fórmula canónica.
+    """
+    f = request.files.get("pdf")
+    if not f or not f.filename:
+        return jsonify({"error": "No se recibió ningún PDF."}), 400
+    try:
+        data = parse_ft_pdf(f.read())
+    except Exception as exc:  # parser robusto, pero el PDF puede no ser del formato
+        return jsonify({"error": f"No se pudo leer el PDF: {exc}"}), 400
+
+    ingredients = [{
+        "name": ing["name"],
+        "dosage": _fmt_num(ing["raw_mg"]),      # materia prima (interna)
+        "active": _fmt_num(ing["active_mg"]),   # dosis de activo (pública)
+        "active_name": ing.get("active_name", ""),
+        "pct": ing.get("pct_active", ""),
+        "unit": ing.get("unit", "mg"),
+    } for ing in data.get("ingredients", [])]
+
+    return jsonify({
+        "product_name": data.get("product_name", ""),
+        "ingredients": ingredients,
+    })
+
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
     init_db()
@@ -881,6 +920,12 @@ def analyze():
     names = request.form.getlist("ing_name")
     dosages = request.form.getlist("ing_dosage")
     units = request.form.getlist("ing_unit")
+    actives = request.form.getlist("ing_active")
+    active_names = request.form.getlist("ing_active_name")
+    pcts = request.form.getlist("ing_pct")
+
+    def _at(lst, i):
+        return lst[i] if i < len(lst) else ""
 
     errors = []
     if not product_name:
@@ -888,22 +933,36 @@ def analyze():
     elif len(product_name) > MAX_PRODUCT_NAME_LEN:
         errors.append(f"Nombre de producto demasiado largo (máx. {MAX_PRODUCT_NAME_LEN}).")
 
-    rows = list(zip(names, dosages, units))
-    if len(rows) > MAX_INGREDIENTS:
+    if len(names) > MAX_INGREDIENTS:
         return (
-            f'<div class="error-msg">Demasiados ingredientes ({len(rows)} > {MAX_INGREDIENTS}).</div>',
+            f'<div class="error-msg">Demasiados ingredientes ({len(names)} > {MAX_INGREDIENTS}).</div>',
             400,
         )
 
     valid_ingredients = []
-    for name, dosage, unit in rows:
+    canonica = []  # alineada con valid_ingredients (mismo orden que la fórmula)
+    for i, name in enumerate(names):
+        dosage, unit = _at(dosages, i).strip(), _at(units, i)
         if not name.strip():
             continue
         err = validate_ingredient(name, dosage, unit)
         if err:
             errors.append(f"{name[:60]}: {err}")
-        else:
-            valid_ingredients.append({"name": name.strip(), "dosage": dosage.strip(), "unit": unit})
+            continue
+        valid_ingredients.append({"name": name.strip(), "dosage": dosage, "unit": unit})
+        active_raw = _at(actives, i).strip().replace(",", ".")
+        try:
+            active_mg = float(active_raw) if active_raw else None
+        except ValueError:
+            active_mg = None
+        canonica.append({
+            "name": name.strip(),
+            "raw_mg": float(dosage.replace(",", ".")) if unit in ("mg",) else None,
+            "active_mg": active_mg,
+            "active_name": _at(active_names, i).strip(),
+            "pct_active": _at(pcts, i).strip(),
+            "unit": unit,
+        })
 
     if errors:
         safe = Markup("<br>").join(errors)
@@ -916,6 +975,14 @@ def analyze():
     run_id = create_run(product_name, formula_text)
     output_dir = os.path.join(PROJECT_ROOT, "outputs", f"run_{run_id}")
     set_run_output_dir(run_id, output_dir)
+
+    # Fórmula canónica (dosis de activo del FT PDF) → el composer la usa como
+    # autoritativa. Solo se escribe si hay al menos un valor de activo.
+    if any(c["active_mg"] is not None for c in canonica):
+        os.makedirs(output_dir, exist_ok=True)
+        with open(os.path.join(output_dir, "formula_canonica.json"), "w", encoding="utf-8") as fc:
+            json.dump({"product_name": product_name, "ingredients": canonica},
+                      fc, ensure_ascii=False, indent=2)
 
     # Start pipeline in background
     thread = threading.Thread(
