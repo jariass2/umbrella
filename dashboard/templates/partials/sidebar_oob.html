@@ -10,12 +10,15 @@
   {% for ing in ingredients %}
   <div class="ing-row">
     <input name="ing_name" placeholder="Ingrediente" value="{{ ing.name }}">
-    <input name="ing_dosage" class="ing-dose" placeholder="Dosis" value="{{ ing.dosage }}">
+    <input name="ing_dosage" class="ing-dose" placeholder="M.prima" title="Dosis de materia prima (interna)" value="{{ ing.dosage }}">
+    <input name="ing_active" class="ing-dose" placeholder="Activo" title="Dosis de activo (pública)" value="{{ ing.active or '' }}">
     <select name="ing_unit">
       {% for u in units %}
       <option value="{{ u }}" {{ 'selected' if u == ing.unit else '' }}>{{ u }}</option>
       {% endfor %}
     </select>
+    <input type="hidden" name="ing_active_name" value="{{ ing.active_name or '' }}">
+    <input type="hidden" name="ing_pct" value="{{ ing.pct or '' }}">
     <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
   </div>
   {% endfor %}

@@ -1070,6 +1070,17 @@ def load_run(run_id):
         product_name, parsed = parse_formula(run_data["formula_text"])
         if parsed:
             ingredients = parsed
+        # La fórmula canónica (dosis de activo del FT PDF) vive en disco
+        # separada del `formula_text` (que solo trae materia prima). La
+        # mergemos por índice para que el campo "Activo" se rellene al
+        # recargar un run desde el historial.
+        canonica = _load_canonica(run_data.get("output_dir"))
+        if canonica is not None:
+            for i, ing in enumerate(ingredients):
+                if i < len(canonica):
+                    ing["active"] = _fmt_num(canonica[i].get("active_mg"))
+                    ing["active_name"] = canonica[i].get("active_name") or ""
+                    ing["pct"] = canonica[i].get("pct_active") or ""
 
     main_html = render_template("partials/main_content.html", **ctx)
     oob_html = render_template(
@@ -1080,6 +1091,28 @@ def load_run(run_id):
         pipeline_running=ctx.get("pipeline_running", False),
     )
     return main_html + oob_html
+
+
+def _load_canonica(output_dir: str | None) -> list[dict] | None:
+    """Lee la lista de ingredientes canónicos del output_dir (si existe).
+
+    Devuelve None si el archivo no está (run antiguo, pre-Fase 7) — en ese
+    caso el formulario simplemente no tendrá datos de activo, comportamiento
+    aceptable. La lista vacía sí se devuelve (con `[]`) para distinguir de
+    "no se pudo leer" (None) y permitir que el caller haga `len(canonica)`.
+    """
+    if not output_dir:
+        return None
+    path = os.path.join(output_dir, "formula_canonica.json")
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, json.JSONDecodeError):
+        return None
+    ings = data.get("ingredients") if isinstance(data, dict) else None
+    return ings if isinstance(ings, list) else []
 
 
 _FONTS = Path(__file__).resolve().parent / "dashboard" / "static" / "fonts"
@@ -1135,13 +1168,16 @@ def download_report(run_id):
         pass  # already registered on a previous request
 
     # ── colour palette ─────────────────────────────────────────────────
-    NAVY   = HexColor('#0A1432')
-    BLUE   = HexColor('#2850A0')
-    MUTED  = HexColor('#8294B0')
-    RULE   = HexColor('#C8D0E0')
-    BODY   = HexColor('#282E38')
-    BG     = HexColor('#F5F6F8')
-    BORDER = HexColor('#DCDFE6')
+    NAVY      = HexColor('#0A1432')
+    BLUE      = HexColor('#2850A0')
+    MUTED     = HexColor('#8294B0')
+    RULE      = HexColor('#C8D0E0')
+    BODY      = HexColor('#282E38')
+    BG        = HexColor('#F5F6F8')
+    BORDER    = HexColor('#DCDFE6')
+    ZEBRA     = HexColor('#EEF1F6')   # filas alternas en tablas de datos
+    HEADER_TXT = HexColor('#FFFFFF')  # texto blanco sobre cabecera navy
+    CODE_BG   = HexColor('#F8F9FB')   # fondo de bloques de código
 
     # ── paragraph styles ───────────────────────────────────────────────
     # Body justified (TA_JUSTIFY) for long descriptions; bullets and tables
@@ -1152,10 +1188,16 @@ def download_report(run_id):
 
     body_s   = S('body',   fontSize=10, leading=15, textColor=BODY,  alignment=TA_JUSTIFY, spaceAfter=3*mm, hyphenationLang='es_ES', hyphenationMinWordLength=6)
     bullet_s = S('bul',    fontSize=10, leading=15, textColor=BODY,  alignment=TA_JUSTIFY, leftIndent=18, bulletIndent=6, firstLineIndent=0, spaceAfter=2*mm, hyphenationLang='es_ES', hyphenationMinWordLength=6)
-    h1_s     = S('h1',     fontSize=16, leading=21, textColor=NAVY,  fontName='Helvetica-Bold', spaceAfter=4*mm, spaceBefore=2*mm)
-    h2_s     = S('h2',     fontSize=13, leading=17, textColor=NAVY,  fontName='Helvetica-Bold', spaceAfter=2*mm, spaceBefore=4*mm)
-    h3_s     = S('h3',     fontSize=11, leading=15, textColor=NAVY,  fontName='Helvetica-Bold', spaceAfter=1*mm, spaceBefore=2*mm)
-    h4_s     = S('h4',     fontSize=10, leading=14, textColor=BLUE,  fontName='Helvetica-Bold', spaceAfter=1*mm, spaceBefore=2*mm)
+    # Jerarquía de cabeceras: tamaño decreciente + cambio de color/estilo en cada
+    # nivel para que se segreguen visualmente sin necesidad de reglas adicionales.
+    #   H1 (sección principal) → navy 18pt bold + page break
+    #   H2 (subsección)        → navy 14pt bold + regla fina gris
+    #   H3 (ingrediente)       → MUTED 12pt bold (color más suave que H2)
+    #   H4 (etiqueta)          → BLUE 10pt italic (diferente estilo, no solo color)
+    h1_s     = S('h1',     fontSize=18, leading=23, textColor=NAVY,  fontName='Helvetica-Bold',    spaceAfter=3*mm, spaceBefore=4*mm)
+    h2_s     = S('h2',     fontSize=14, leading=18, textColor=NAVY,  fontName='Helvetica-Bold',    spaceAfter=2*mm, spaceBefore=5*mm)
+    h3_s     = S('h3',     fontSize=12, leading=15, textColor=MUTED, fontName='Helvetica-Bold',    spaceAfter=1*mm, spaceBefore=3*mm)
+    h4_s     = S('h4',     fontSize=10, leading=14, textColor=BLUE,  fontName='Helvetica-Oblique', spaceAfter=1*mm, spaceBefore=2*mm)
     quote_s  = S('quote',  fontSize=10, leading=15, textColor=MUTED, alignment=TA_JUSTIFY, leftIndent=12, fontName='Helvetica-Oblique', spaceAfter=2*mm)
     sec_s    = S('sec',    fontSize=14, leading=19, textColor=NAVY,  fontName='Helvetica-Bold')
     cov_t_s  = S('cov_t',  fontSize=28, leading=34, textColor=NAVY,  fontName='Helvetica-Bold')
@@ -1164,6 +1206,8 @@ def download_report(run_id):
     code_s   = S('code',   fontSize=7.5, leading=11, textColor=HexColor('#374151'), fontName='Courier')
     tbl_hd_s = S('tbl_hd', fontSize=9, leading=12, fontName='Helvetica-Bold', textColor=BODY)
     tbl_bd_s = S('tbl_bd', fontSize=9, leading=12, textColor=BODY, alignment=TA_LEFT)
+    # Cabecera de tabla "invertida": blanco sobre fondo navy.
+    tbl_hd_inv_s = S('tbl_hd_inv', fontSize=9, leading=12, fontName='Helvetica-Bold', textColor=HEADER_TXT)
 
     # ── color-emoji → DejaVu-safe coloured glyph ──────────────────────
     # DejaVu Sans doesn't ship colour emoji (🔵🟦🟧🟥✅⚠️…) so we swap them
@@ -1248,15 +1292,65 @@ def download_report(run_id):
             for l in capped
         )
         p = Paragraph(f'<font name="Courier" size="7.5">{safe}</font>', code_s)
-        t = Table([[p]], colWidths=[165 * mm])
+        t = Table([[p]], colWidths=[CONTENT_W])
+        # Look de "caja de código": acento azul a la izquierda, fondo muy
+        # claro, sin recuadro completo (más limpio que BOX en informes).
         t.setStyle(TableStyle([
-            ('BACKGROUND',   (0,0), (-1,-1), BG),
-            ('BOX',          (0,0), (-1,-1), 0.5, BORDER),
-            ('LEFTPADDING',  (0,0), (-1,-1), 7),
-            ('RIGHTPADDING', (0,0), (-1,-1), 7),
-            ('TOPPADDING',   (0,0), (-1,-1), 6),
-            ('BOTTOMPADDING',(0,0), (-1,-1), 6),
+            ('BACKGROUND',   (0,0), (-1,-1), CODE_BG),
+            ('LINEBEFORE',   (0,0), (0,-1), 0.6, BLUE),
+            ('LEFTPADDING',  (0,0), (-1,-1), 10),
+            ('RIGHTPADDING', (0,0), (-1,-1), 9),
+            ('TOPPADDING',   (0,0), (-1,-1), 7),
+            ('BOTTOMPADDING',(0,0), (-1,-1), 7),
         ]))
+        return t
+
+    def _styled_table(rows: list, col_widths: list, has_header: bool = True) -> Table:
+        """Tabla con estilo de informe profesional: cabecera navy con texto
+        blanco, filas de datos con zebra, líneas finas, padding generoso.
+
+        rows: lista de filas; cada fila es lista de Paragraph (o strings).
+              Si `has_header`, la primera fila es cabecera.
+        col_widths: anchos por columna en mm.
+        """
+        n_rows = len(rows)
+        n_cols = max(len(r) for r in rows) if rows else len(col_widths)
+
+        style = [
+            ('VALIGN',       (0,0), (-1,-1), 'TOP'),
+            ('LEFTPADDING',  (0,0), (-1,-1), 6),
+            ('RIGHTPADDING', (0,0), (-1,-1), 6),
+            ('TOPPADDING',   (0,0), (-1,-1), 5),
+            ('BOTTOMPADDING',(0,0), (-1,-1), 5),
+        ]
+
+        if has_header and n_rows >= 1:
+            style.extend([
+                ('BACKGROUND', (0,0), (-1,0), NAVY),
+            ])
+
+        # Zebra en filas de datos: alterna ZEBRA en filas 1, 3, 5…
+        if n_rows > 1:
+            data_start = 1 if has_header else 0
+            for i in range(data_start, n_rows):
+                if (i - data_start) % 2 == 1:
+                    style.append(('BACKGROUND', (0,i), (-1,i), ZEBRA))
+
+        # Separador fino entre filas (orden importa: lo pondremos antes de
+        # las reglas más prominentes para que estas las sobrescriban).
+        style.append(('LINEBELOW', (0,0), (-1,-1), 0.3, RULE))
+
+        # Regla gruesa bajo la cabecera (look "profesional" — separa el
+        # bloque de título del bloque de datos).
+        if has_header and n_rows > 1:
+            style.append(('LINEBELOW', (0,0), (-1,0), 0.8, NAVY))
+        # Regla de cierre al final de la tabla.
+        if n_rows >= 1:
+            style.append(('LINEBELOW', (0,-1), (-1,-1), 0.5, NAVY))
+
+        t = Table(rows, colWidths=col_widths,
+                  repeatRows=1 if has_header else 0)
+        t.setStyle(TableStyle(style))
         return t
 
     # ── markdown → Platypus flowables ─────────────────────────────────
@@ -1281,15 +1375,21 @@ def download_report(run_id):
                 [Paragraph(num, toc_num_s), Paragraph(rl(title), toc_txt_s)]
                 for num, title in toc_items
             ]
-            t = Table(rows, colWidths=[12 * mm, 153 * mm])
-            t.setStyle(TableStyle([
+            t = Table(rows, colWidths=[12 * mm, CONTENT_W - 12 * mm])
+            # Zebra + regla fina bajo cada item (no en la última) para que el
+            # índice se lea de un vistazo sin perder ligereza visual.
+            style = [
                 ('VALIGN',       (0,0), (-1,-1), 'TOP'),
-                ('LEFTPADDING',  (0,0), (-1,-1), 0),
-                ('RIGHTPADDING', (0,0), (-1,-1), 0),
+                ('LEFTPADDING',  (0,0), (-1,-1), 4),
+                ('RIGHTPADDING', (0,0), (-1,-1), 4),
                 ('TOPPADDING',   (0,0), (-1,-1), 5),
                 ('BOTTOMPADDING',(0,0), (-1,-1), 5),
                 ('LINEBELOW',    (0,0), (-1,-2), 0.2, RULE),
-            ]))
+            ]
+            for i in range(len(rows)):
+                if i % 2 == 1:
+                    style.append(('BACKGROUND', (0,i), (-1,i), ZEBRA))
+            t.setStyle(TableStyle(style))
             fl.append(t)
             fl.append(Spacer(1, 4 * mm))
             toc_items, in_toc = [], False
@@ -1307,23 +1407,65 @@ def download_report(run_id):
                 in_table = False
                 return
             n_cols = max(len(r) for r in table_rows)
-            col_w = 165 * mm / max(n_cols, 1)
+
+            # Ancho por columna basado en contenido. Dos modos:
+            #   * NARROW (body_max < NARROW_BODY_THRESHOLD): los valores son
+            #     cortos ("ALTA", "✓", "4.5", "100 mg"). En estos casos el
+            #     body marca el ancho real y la cabecera puede envolver si
+            #     es larga. Sin esto, columnas como "Punt." o "Coste" reciben
+            #     el ancho de su cabecera (17.5mm para 5 chars) aunque su
+            #     contenido apenas ocupe 4-5mm, dejando un hueco visual feo.
+            #   * NORMAL: la columna lleva descripciones o datos no triviales.
+            #     Usamos max(header_needs, body_needs) para que ni la cabecera
+            #     ("Biodisponibilidad", "Compatibilidad") ni el body se
+            #     trunque.
+            # BODY_CAP limita el body ideal: una celda de 80 chars no debe
+            # devorar la tabla — se queda en BODY_CAP×CHAR_REG y el texto
+            # envuelve en más líneas.
+            NARROW_BODY_THRESHOLD = 6
+            CHAR_BOLD = 1.5   # mm/char promedio Helvetica-Bold 9pt
+            CHAR_REG  = 1.0   # mm/char promedio Helvetica 9pt
+            COL_PAD   = 10    # mm totales de padding interno
+            BODY_CAP  = 25    # chars: a partir de ahí, el texto envuelve
+            MIN_W     = 12    # mm mínimo por columna
+            MAX_W     = 50    # mm máximo por columna
+
+            ideal = []
+            for ci in range(n_cols):
+                header_len = len(table_rows[0][ci]) if (table_rows and ci < len(table_rows[0])) else 0
+                body_max = 0
+                for row in table_rows[1:]:
+                    if ci < len(row):
+                        body_max = max(body_max, len(row[ci]))
+                h_w = header_len * CHAR_BOLD + COL_PAD
+                b_w = min(BODY_CAP, body_max) * CHAR_REG + COL_PAD
+                if body_max < NARROW_BODY_THRESHOLD:
+                    col_ideal = b_w
+                else:
+                    col_ideal = max(h_w, b_w)
+                ideal.append(min(MAX_W, max(MIN_W, col_ideal)))
+
+            # Escalar proporcionalmente para encajar exactamente en CONTENT_W.
+            # Si tras escalar alguna columna cae por debajo de MIN_W, rebalancear
+            # tomando el déficit de la columna más grande.
+            total = sum(ideal) or 1
+            col_widths = [w * (CONTENT_W / total) for w in ideal]
+            for i, w in enumerate(col_widths):
+                if w < MIN_W:
+                    deficit = MIN_W - w
+                    col_widths[i] = MIN_W
+                    biggest = max((j for j in range(n_cols) if j != i),
+                                  key=lambda j: col_widths[j])
+                    col_widths[biggest] -= deficit
+
             rl_rows = []
             for ri, row in enumerate(table_rows):
-                st = tbl_hd_s if ri == 0 else tbl_bd_s
+                # Cabecera: blanco sobre navy. Cuerpo: estilo normal.
+                st = tbl_hd_inv_s if ri == 0 else tbl_bd_s
                 rl_rows.append([safe_paragraph(rl(c), st) for c in row])
-            t = Table(rl_rows, colWidths=[col_w] * n_cols, repeatRows=1)
-            t.setStyle(TableStyle([
-                ('GRID',         (0,0), (-1,-1), 0.3, RULE),
-                ('BACKGROUND',   (0,0), (-1,0),  BG),
-                ('TOPPADDING',   (0,0), (-1,-1), 3),
-                ('BOTTOMPADDING',(0,0), (-1,-1), 3),
-                ('LEFTPADDING',  (0,0), (-1,-1), 4),
-                ('RIGHTPADDING', (0,0), (-1,-1), 4),
-                ('VALIGN',       (0,0), (-1,-1), 'TOP'),
-            ]))
+            t = _styled_table(rl_rows, col_widths, has_header=True)
             fl.append(t)
-            fl.append(Spacer(1, 3 * mm))
+            fl.append(Spacer(1, 4 * mm))
             table_rows, in_table = [], False
 
         for raw in md_text.split('\n'):
@@ -1406,7 +1548,11 @@ def download_report(run_id):
             if m:
                 flush_code()
                 flush_toc()
-                fl.append(safe_paragraph('• ' + rl(m.group(1)), bullet_s))
+                # Viñeta en azul corporativo para alinear con el look de informe.
+                fl.append(safe_paragraph(
+                    f'<font color="#2850A0">•</font> {rl(m.group(1))}',
+                    bullet_s,
+                ))
                 continue
 
             # numbered list
@@ -1419,7 +1565,11 @@ def download_report(run_id):
                     title = link_m.group(1) if link_m else item
                     toc_items.append((m.group(1), title))
                     continue
-                fl.append(safe_paragraph(f'{m.group(1)}. ' + rl(m.group(2)), bullet_s))
+                # Numeración en azul + negrita para destacar la secuencia.
+                fl.append(safe_paragraph(
+                    f'<font color="#2850A0"><b>{m.group(1)}.</b></font> {rl(m.group(2))}',
+                    bullet_s,
+                ))
                 continue
 
             # empty line
@@ -1440,6 +1590,8 @@ def download_report(run_id):
 
     # ── page callbacks (header / footer) ──────────────────────────────
     PW, PH = A4
+    SIDE_MARGIN = 15 * mm                       # más estrecho que el 22mm por defecto
+    CONTENT_W   = PW - 2 * SIDE_MARGIN          # 180mm en A4 — ancho útil de tablas y textos
 
     def _first_page(canvas, doc):
         # Portada limpia: sin header ni número de página.
@@ -1449,10 +1601,10 @@ def download_report(run_id):
         canvas.saveState()
         canvas.setFont('Helvetica', 8)
         canvas.setFillColor(MUTED)
-        canvas.drawString(22 * mm, PH - 14 * mm, 'Umbrella — Análisis Regulatorio')
+        canvas.drawString(SIDE_MARGIN, PH - 14 * mm, 'Umbrella — Análisis Regulatorio')
         canvas.setStrokeColor(RULE)
         canvas.setLineWidth(0.4)
-        canvas.line(22 * mm, PH - 17 * mm, PW - 22 * mm, PH - 17 * mm)
+        canvas.line(SIDE_MARGIN, PH - 17 * mm, PW - SIDE_MARGIN, PH - 17 * mm)
         canvas.drawCentredString(PW / 2, 12 * mm, f'Página {doc.page}')
         canvas.restoreState()
 
@@ -1460,7 +1612,7 @@ def download_report(run_id):
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
         buf, pagesize=A4,
-        leftMargin=22 * mm, rightMargin=22 * mm,
+        leftMargin=SIDE_MARGIN, rightMargin=SIDE_MARGIN,
         topMargin=22 * mm, bottomMargin=20 * mm,
     )
 
