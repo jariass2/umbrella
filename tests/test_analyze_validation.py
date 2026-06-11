@@ -99,9 +99,14 @@ def test_load_run_rellena_campo_activo_desde_canonica(client, tmp_path):
         __import__("json").dumps(canonica, ensure_ascii=False), encoding="utf-8"
     )
 
-    resp = client.get(f"/run/{run_id}")
+    # Flujo real: el click en el historial dispara HTMX. Simulamos con
+    # HX-Request: true para que load_run() devuelva el fragmento (no el
+    # redirect a /?run_id=). Ver también: el header HX-Push-Url para que
+    # el navegador sincronice la URL tras el click.
+    resp = client.get(f"/run/{run_id}", headers={"HX-Request": "true"})
     assert resp.status_code == 200
     body = resp.get_data(as_text=True)
+    assert resp.headers.get("HX-Push-Url") == f"/run/{run_id}"
 
     # El partial OOB debe incluir los inputs `ing_active` con el valor de la
     # canónica — no un value vacío.
@@ -120,9 +125,36 @@ def test_load_run_sin_canonica_no_falla(client):
     formula_text = "Legacy\n- Vit C: 80 mg"
     run_id = store.create_run("Legacy", formula_text)
 
-    resp = client.get(f"/run/{run_id}")
+    resp = client.get(f"/run/{run_id}", headers={"HX-Request": "true"})
     assert resp.status_code == 200
     body = resp.get_data(as_text=True)
     # El partial sigue exponiendo el campo Activo, simplemente sin valor.
     assert 'name="ing_active"' in body
     assert 'placeholder="Activo"' in body
+
+
+# ── Regresión: una request directa a /run/<id> (sin HX-Request) debe
+# redirigir a /?run_id=<id> en vez de devolver un fragmento sin <head>.
+# El fragmento dejaría la página sin stylesheets, layout destruido, todo
+# en texto plano. Found by /qa on 2026-06-11. ────────────────────────────
+
+def test_load_run_directo_redirige_a_home(client):
+    """Sin HX-Request, /run/<id> devuelve 302 a /?run_id=<id> para que la
+    página se renderice con el <head> completo y los stylesheets."""
+    formula_text = "Producto X\n- Vit C: 80 mg"
+    run_id = store.create_run("Producto X", formula_text)
+
+    resp = client.get(f"/run/{run_id}")
+    assert resp.status_code == 302
+    assert resp.headers["Location"].endswith(f"/?run_id={run_id}")
+
+
+def test_load_run_con_hx_request_devuelve_fragmento_y_push_url(client):
+    """Con HX-Request, /run/<id> devuelve 200 + fragmento + HX-Push-Url para
+    que HTMX sincronice la URL del navegador tras el click."""
+    formula_text = "Producto X\n- Vit C: 80 mg"
+    run_id = store.create_run("Producto X", formula_text)
+
+    resp = client.get(f"/run/{run_id}", headers={"HX-Request": "true"})
+    assert resp.status_code == 200
+    assert resp.headers.get("HX-Push-Url") == f"/run/{run_id}"

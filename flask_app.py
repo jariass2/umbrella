@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from queue import Queue
 
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, make_response
 from markupsafe import Markup
 
 from dashboard.api.runner import AGENT_ORDER, run_pipeline
@@ -1090,7 +1090,17 @@ def load_run(run_id):
         units=VALID_UNITS,
         pipeline_running=ctx.get("pipeline_running", False),
     )
-    return main_html + oob_html
+    # Si la request viene de HTMX (click en el historial), devolver solo el
+    # fragmento main + sidebar OOB y avisar a HTMX para que sincronice la URL
+    # con pushState (sino refresh o compartir-enlace vuelve al home en blanco).
+    # Si la request es directa (URL copiada, refresh, deep-link), NO devolver
+    # un fragmento sin <head> — la página quedaría sin stylesheets. En ese
+    # caso redirigir a /?run_id=<id> que sí renderiza el index.html completo.
+    if request.headers.get("HX-Request"):
+        resp = make_response(main_html + oob_html)
+        resp.headers["HX-Push-Url"] = f"/run/{run_id}"
+        return resp
+    return redirect(url_for("index", run_id=run_id))
 
 
 def _load_canonica(output_dir: str | None) -> list[dict] | None:
