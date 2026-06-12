@@ -138,13 +138,14 @@ def _fuentes(fuentes: list, level: int = 3) -> list[str]:
 def _norm(s) -> str:
     """Normaliza un nombre de ingrediente para cruzar datos entre agentes.
 
-    minúsculas + sin acentos + sin paréntesis + espacios colapsados.
+    minúsculas + sin acentos + sin paréntesis + sin sufijo '→ ...' + espacios colapsados.
     """
     if not s:
         return ""
     s = str(s).lower().strip()
     s = "".join(c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c))
     s = re.sub(r"\([^)]*\)", "", s)
+    s = re.sub(r"\s*→.*$", "", s)  # el agente Regulatorio incrusta dosis tras "→"
     return re.sub(r"\s+", " ", s).strip()
 
 
@@ -291,7 +292,7 @@ def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict, canonica: list[dict] | Non
     usa_canon = any(c is not None for c in canon_alineada)
 
     lines = [_section("Tabla de ingredientes", 3)]
-    headers = ["Ingrediente", "Dosis de activo", "% NRV/VRN", "Forma química", "Biodisponibilidad", "Reg."]
+    headers = ["#", "Ingrediente", "Nom Actiu", "% Actiu", "Dosis de activo", "% NRV/VRN", "Forma química", "Biodisponibilidad", "Reg."]
     rows = []
     for idx, ing in enumerate(kic_ings):
         nombre = ing.get("ingrediente", "")
@@ -306,9 +307,18 @@ def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict, canonica: list[dict] | Non
         sem = reg_i.get("semaforo", "") if isinstance(reg_i, dict) else ""
         sem_str = f"{SEMAFORO.get(sem, '')} {sem}".strip()
 
+        canon_i = canon_alineada[idx]
+        nom_actiu = canon_i.get("active_name", "") if canon_i else ""
+        pct_actiu = canon_i.get("pct_active", "") if canon_i else ""
+        if pct_actiu:
+            pct_actiu = f"{pct_actiu}%"
+
         rows.append([
+            str(idx + 1),
             nombre,
-            _dosis_activo(ing, canon_alineada[idx]),
+            nom_actiu or "—",
+            pct_actiu or "—",
+            _dosis_activo(ing, canon_i),
             _fmt_pct(ing.get("porcentaje_nrv", "")),
             forma or "—",
             bio_str or "—",
@@ -1489,11 +1499,11 @@ def fmt_qc(d: dict) -> list[str]:
                 for ensayo in items:
                     if isinstance(ensayo, dict):
                         rows.append([
-                            ensayo.get("parametro", categoria)[:40],
-                            ensayo.get("justificacion", "")[:60],
-                            ensayo.get("especificacion", ensayo.get("criterio", ""))[:80],
-                            ensayo.get("metodo", ensayo.get("referencia_metodologica", ""))[:60],
-                            ensayo.get("frecuencia", ""),
+                            _val(ensayo.get("parametro", categoria))[:40],
+                            _val(ensayo.get("justificacion", ensayo.get("activo_a_controlar", "")))[:60],
+                            _spec_val(ensayo.get("especificacion", ensayo.get("criterio", "")))[:80],
+                            _method_str(ensayo.get("metodo", ensayo.get("referencia_metodologica", ""))),
+                            _val(ensayo.get("frecuencia", "")),
                         ])
             elif isinstance(items, dict):
                 crit = items.get("criterios_microbiologicos", [])
