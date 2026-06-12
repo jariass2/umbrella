@@ -62,11 +62,78 @@ def test_api_error_envelope_detecta_error_disfrazado_de_exito():
     assert _api_error_envelope([1, 2]) is None
 
 
+# ── Regresión: recorte de F y slim Regulatorio para Claims (QA 2026-06-12).
+# Claims tarda 9+ min porque el input (47K tokens) se reinyecta en cada tool
+# call del agent loop. La materia prima confidencial y la normativa detallada
+# de Regulatorio son ruido para Claims. ───────────────────────────────────
+
+from pipeline.orchestrator import _F_para_claims, ctx_claims  # noqa: E402
+
+
+def test_F_para_claims_recorta_materia_prima(tmp_path):
+    """Claims NO debe recibir la sección confidencial de materia prima.
+
+    Verifica que la versión recortada de F solo contiene cabecera del
+    producto + bloque de activos (sin la tabla de materia prima detallada).
+    La instrucción de CONFIDENCIALIDAD se mantiene porque protege contra
+    fugas de materia prima en el output del agente.
+    """
+    canonica = {
+        "ingredients": [
+            {"name": "Boswellia serrata Ext., 30% AKBA", "raw_mg": 166.67,
+             "active_mg": 50.0, "active_name": "AKBA", "pct_active": "30", "unit": "mg"},
+        ]
+    }
+    F_enriquecido = _enriquecer_formula(F, _canonica(tmp_path, canonica["ingredients"]))
+    recortado = _F_para_claims(F_enriquecido)
+    # El bloque de activos SÍ debe estar (es lo que Claims necesita).
+    assert "50 mg de AKBA" in recortado
+    # La materia prima detallada NO debe aparecer (es confidencial para Claims).
+    assert "166.67mg" not in recortado
+    assert "2.26mg" not in recortado
+    # La instrucción de confidencialidad SÍ se mantiene (defensa en profundidad).
+    assert "CONFIDENCIAL" in recortado
+
+
+def test_F_para_claims_sin_canónica_devuelve_F(tmp_path):
+    """Si no hay canónica (run antiguo), F no se modifica."""
+    F_sin = "Producto\n- Vit C: 100 mg"
+    assert _F_para_claims(F_sin) == F_sin
+
+
+def test_ctx_claims_ultra_slim_sin_normativa_detalle():
+    """El contexto Regulatorio para Claims no debe incluir normativa_aplicable,
+    evaluacion_cuantitativa, advertencias_etiquetado ni condiciones — esos
+    los construye Claims desde su propio conocimiento del Reg. UE 432/2012."""
+    reg = {
+        "clasificacion_producto": {"tipo": "complemento_alimentario"},
+        "ingredientes": [{
+            "nombre": "Vit C",
+            "semaforo": "✅",
+            "dictamen": "PERMITIDO",
+            "normativa_aplicable": ["Reglamento CE 1924/2006", "RD 1487/2009"],
+            "evaluacion_cuantitativa": {"dosis_formula": "100 mg"},
+            "condiciones": "ninguna",
+            "advertencias_etiquetado": "ninguna",
+        }],
+    }
+    out = ctx_claims({"Regulatorio": reg})
+    # Lo esencial: semáforo + dictamen (accionable para Claims).
+    assert "PERMITIDO" in out
+    assert "✅" in out
+    # Lo descartable: normativa, condiciones, advertencias.
+    assert "1924/2006" not in out
+    assert "evaluacion_cuantitativa" not in out
+
+
 if __name__ == "__main__":
     import tempfile
     for fn in (test_sin_canonica_devuelve_formula_intacta,
                test_canonica_sin_activos_no_modifica,
-               test_enriquece_con_activo_y_framing):
+               test_enriquece_con_activo_y_framing,
+               test_F_para_claims_recorta_materia_prima,
+               test_F_para_claims_sin_canónica_devuelve_F,
+               test_ctx_claims_ultra_slim_sin_normativa_detalle):
         with tempfile.TemporaryDirectory() as d:
             fn(Path(d))
         print(f"✅ {fn.__name__}")

@@ -673,11 +673,56 @@ def ctx_ft(results: dict) -> str:
 
 
 def ctx_claims(results: dict) -> str:
-    """Contexto Regulatorio reducido para Claims."""
+    """Contexto Regulatorio reducido para Claims.
+
+    Claims NO necesita el JSON completo de Regulatorio (normativa_aplicable,
+    evaluacion_cuantitativa, etc. — todo eso lo construye Claims desde cero
+    con el Reg. UE 432/2012 en su propio prompt). Solo el semáforo + dictamen
+    corto por ingrediente es accionable aquí; un JSON de 30K chars con
+    información redundante se come 8K tokens de input × N iteraciones del
+    agent loop (= 4-5K de cada tool call acumulado). Ver QA 2026-06-12.
+    """
     reg = results.get("Regulatorio")
     if not reg:
         return ""
-    return f"CONTEXTO REGULATORIO:\n{json.dumps(_slim_reg(reg), ensure_ascii=False)}"
+    ultra_slim_ings = [
+        {
+            "nombre":   ing.get("nombre"),
+            "semaforo": ing.get("semaforo"),
+            "dictamen": ing.get("dictamen"),
+        }
+        for ing in reg.get("ingredientes", [])
+    ]
+    ultra_slim = {
+        "clasificacion_producto": reg.get("clasificacion_producto"),
+        "ingredientes":           ultra_slim_ings,
+    }
+    return f"CONTEXTO REGULATORIO:\n{json.dumps(ultra_slim, ensure_ascii=False)}"
+
+
+def _F_para_claims(F: str) -> str:
+    """Recorta la fórmula enriquecida para Claims.
+
+    Claims trabaja sobre la DOSIS DE ACTIVO (no de materia prima), que es
+    además dato confidencial que no debe citar. La sección de materia prima
+    en F (las líneas "- Ingrediente: Nmg" originales) le sirve a KIC/
+    Regulatorio/FichaTéc/Docs/QC, pero para Claims es ruido que se reinyecta
+    en cada iteración del agent loop (10+ tool calls acumulan este input).
+    Devolvemos solo el nombre del producto + bloque de activos.
+    """
+    # Cortamos desde el primer "---" si existe (separador antes del bloque
+    # de activos enriquecido), si no desde la última línea "- " (materia prima).
+    if "---" in F:
+        # Antes de "---" solo va el nombre del producto; después, el bloque
+        # de activos enriquecido. Las líneas de materia prima están mezcladas
+        # con la cabecera — separamos por líneas.
+        head, _, tail = F.partition("---")
+        # Conservamos solo la primera línea no vacía (nombre del producto)
+        # y descartamos las líneas de materia prima.
+        first_nonempty = next((ln for ln in head.splitlines() if ln.strip()), "")
+        if "DOSIS DE ACTIVO APORTADO" in tail:
+            return f"{first_nonempty}\n\n---{tail}"
+    return F
 
 
 def ctx_etiqueta(results: dict) -> str:
@@ -863,7 +908,7 @@ def main(argv: list[str] | None = None):
 
             fut_claims = pool.submit(
                 _run_step, "Claims", "Agente 4: Claims v2", 4, CLAIMS_INSTRUCTIONS,
-                f"Genera los claims regulatorios y selling points del siguiente producto:\n\n{F}\n\n{ctx_claims(r)}")
+                f"Genera los claims regulatorios y selling points del siguiente producto:\n\n{_F_para_claims(F)}\n\n{ctx_claims(r)}")
 
             _collect(fut_ft, r, timings)
             _collect(fut_claims, r, timings)
