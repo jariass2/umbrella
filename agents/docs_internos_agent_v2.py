@@ -172,9 +172,9 @@ Para cada paso indica:
 - Controles en proceso
 - Si es un punto crítico de control (PCC)
 
-Usa web_search si necesitas confirmar condiciones de mezcla para ingredientes específicos:
-- "[ingrediente] mixing conditions powder blending temperature"
-- "vitamin C stability manufacturing conditions"
+Apóyate en tu conocimiento técnico estándar del sector. Si un ingrediente exige \
+condiciones de mezcla muy específicas que no domines con certeza, decláralo como supuesto \
+en el paso correspondiente (campo "descripcion") en lugar de inventarlas.
 
 ## FASE 3 — Mapa de reactividad por formato
 Para los 2-3 formatos más relevantes:

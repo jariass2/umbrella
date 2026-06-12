@@ -152,7 +152,7 @@ class KICAnalysis(BaseModel):
 
 # ── Instructions ─────────────────────────────────────────────────────
 
-PROMPT_VERSION = "2.0.0"
+PROMPT_VERSION = "2.1.0"
 
 KIC_INSTRUCTIONS = """\
 # ROL
@@ -181,6 +181,16 @@ Para CADA ingrediente, analiza en este orden:
 Clasifica en: VITAMINA, MINERAL, EXTRACTO_VEGETAL, AMINOÁCIDO, PROBIÓTICO, \
 ENZIMA, ÁCIDO_GRASO, FIBRA, ADITIVO_TECNOLÓGICO, EXCIPIENTE, AROMA, OTRO.
 Esta tipología debe ser coherente con la que usará el agente regulatorio downstream.
+
+EXTRACTO_VEGETAL es SOLO para material de origen botánico (planta/raíz/hoja/resina/ \
+fruto y sus extractos: Boswellia serrata, cúrcuma, etc.). NO clasifiques como \
+EXTRACTO_VEGETAL ingredientes de origen animal, microbiano o biotecnológico. Reglas fijas:
+- Ácido hialurónico / hialuronato sódico → OTRO (fermentación biotecnológica u origen animal)
+- Péptidos de colágeno / colágeno hidrolizado → OTRO (origen animal: bovino/porcino/aviario/marino)
+- Astaxantina → OTRO (oleorresina de microalga Haematococcus pluvialis; Novel Food)
+- Aminoácidos sueltos (L-glicina, L-glutamina, etc.) → AMINOÁCIDO, nunca EXTRACTO_VEGETAL
+Una tipología errónea aquí propaga el error al agente regulatorio y puede provocar un \
+dictamen de prohibición falso. Acierta en la tipología.
 
 ### 2b. Función tecnológica y nutricional
 - Rol primario y secundario (si existe)

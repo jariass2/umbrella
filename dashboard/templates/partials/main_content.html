@@ -1,0 +1,151 @@
+<div class="main-title">Pipeline de Análisis</div>
+
+<!-- Pipeline DAG -->
+<div class="pipeline-dag">
+  {% for wave in agent_waves %}
+  {% if not loop.first %}
+  <div class="wave-arrow">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+      <path d="M4 10h12M12 5l6 5-6 5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  {% endif %}
+  <div class="wave-group">
+    <div class="wave-label">Ola {{ loop.index }}</div>
+    <div class="wave-agents">
+      {% for agent in wave %}
+      {% set status = agent_statuses.get(agent, 'waiting') %}
+      <div class="agent-card status-{{ status }}">
+        <div class="agent-icon">
+          {% if status == 'completed' %}✓
+          {% elif status == 'running' %}
+            <svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="10" height="10">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+          {% elif status == 'error' %}✕
+          {% else %}–
+          {% endif %}
+        </div>
+        <div class="agent-name">{{ agent }}</div>
+        <div class="agent-status-text">
+          {% if status == 'completed' %}Completado
+          {% elif status == 'running' %}Ejecutando
+          {% elif status == 'error' %}Error
+          {% else %}En espera
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Result Cards -->
+<div class="results">
+  {% for agent in agent_order %}
+  {% set status = agent_statuses.get(agent, 'waiting') %}
+  {% set data = agent_results.get(agent) %}
+
+  {% if status == 'completed' and data %}
+  {% set headline = data | agent_headline(agent) %}
+  <div class="result-card card-done" data-agent="{{ agent }}">
+    <div class="result-header" role="button" tabindex="0" aria-expanded="false"
+         onclick="toggleCard(this)"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCard(this);}">
+      <div class="result-header-left">
+        <span class="result-num">{{ loop.index }}</span>
+        <div>
+          <div class="result-title">{{ agent_labels[agent] }}</div>
+          {% if headline %}<div class="result-headline">{{ headline }}</div>{% endif %}
+        </div>
+      </div>
+      <div class="result-header-right">
+        {% set warnings = data.get('avisos') or data.get('warnings') or data.get('advertencias') %}
+        {% if warnings and warnings is iterable and warnings is not string and warnings|length > 0 %}
+        <span class="badge badge-warn">{{ warnings|length }} avisos</span>
+        {% else %}
+        <span class="badge badge-ok">OK</span>
+        {% endif %}
+        <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+      </div>
+    </div>
+    <div class="result-body collapsed">
+      <div class="summary-content">
+        {{ data | summary_html(agent) }}
+      </div>
+      {% if md_contents.get(agent) %}
+      <details class="md-details" ontoggle="onReportToggle(this)">
+        <summary>Ver informe completo</summary>
+        <div class="md-content md-body" data-md="{{ md_contents[agent] | e }}"></div>
+      </details>
+      {% endif %}
+    </div>
+  </div>
+
+  {% elif status == 'running' %}
+  <div class="result-card card-running">
+    <div class="result-header">
+      <div class="result-header-left">
+        <span class="result-num">{{ loop.index }}</span>
+        <div><div class="result-title">{{ agent_labels[agent] }}</div></div>
+      </div>
+      <div class="result-header-right">
+        <span class="badge badge-run">Ejecutando</span>
+      </div>
+    </div>
+    <div class="result-placeholder">Resultados disponibles al completar el agente.</div>
+  </div>
+
+  {% elif status == 'error' %}
+  <div class="result-card card-error">
+    <div class="result-header">
+      <div class="result-header-left">
+        <span class="result-num">{{ loop.index }}</span>
+        <div><div class="result-title">{{ agent_labels[agent] }}</div></div>
+      </div>
+      <div class="result-header-right">
+        <span class="badge badge-err">Error</span>
+      </div>
+    </div>
+    <div class="result-placeholder" style="color:var(--error)">El agente falló durante la ejecución.</div>
+  </div>
+
+  {% else %}
+  <div class="result-card card-waiting">
+    <div class="result-header">
+      <div class="result-header-left">
+        <span class="result-num">{{ loop.index }}</span>
+        <div><div class="result-title" style="color:var(--text-muted);font-weight:500">{{ agent_labels[agent] }}</div></div>
+      </div>
+      <div class="result-header-right"><span class="badge badge-dim">En espera</span></div>
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+</div>
+
+<!-- Download bar -->
+{% if not pipeline_running and agent_results %}
+<div class="download-bar">
+  <div class="download-label">
+    {% if all_completed %}
+    <span class="download-check">✓</span> Informe completo generado
+    {% else %}
+    <span class="download-check" style="color:var(--warn)">!</span> Informe parcial (algunos agentes fallaron)
+    {% endif %}
+  </div>
+  <a href="/download/{{ run_id }}" class="btn-download">Descargar Informe (PDF)</a>
+</div>
+{% endif %}
+
+<!-- Stop control + auto-poll when pipeline is running -->
+{% if pipeline_running and run_id %}
+<div class="stop-bar">
+  <span class="stop-label">Análisis en curso...</span>
+  <button class="btn-stop"
+          hx-post="/stop/{{ run_id }}"
+          hx-swap="none">Detener análisis</button>
+</div>
+<div hx-get="/pipeline-status/{{ run_id }}" hx-trigger="every 2s" hx-target="#main-content" hx-swap="innerHTML"></div>
+{% endif %}

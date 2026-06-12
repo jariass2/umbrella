@@ -1,20 +1,6 @@
-"""
-Pipeline v2 completo: 9 agentes en cadena
-KIC → Regulatorio → Ficha Técnica → Claims → Etiqueta → Formatos → Docs Internos → QC → Informe
+"""Pipeline v2 completo: 8 agentes en cadena + composición programática del informe."""
 
-Cada agente recibe SOLO el contexto que necesita (dependencias mínimas):
-  1 KIC            → solo fórmula
-  2 Regulatorio    → KIC
-  3 Ficha Técnica  → KIC + Regulatorio
-  4 Claims         → Regulatorio
-  5 Etiqueta       → Claims + Ficha Técnica
-  6 Formatos       → solo fórmula
-  7 Docs Internos  → solo fórmula
-  8 QC             → solo fórmula
-  9 Informe        → todos los anteriores
-
-Guarda cada resultado en JSON (para la cadena) y en Markdown (para lectura humana).
-"""
+from __future__ import annotations
 
 import argparse
 import json
@@ -51,7 +37,13 @@ from agents.etiqueta_agent_v2 import ETIQUETA_INSTRUCTIONS, EtiquetaAnalysis, PR
 from agents.formatos_agent_v2 import FORMATOS_INSTRUCTIONS, FormatosAnalysis, PROMPT_VERSION as FORMATOS_PROMPT_VERSION
 from agents.docs_internos_agent_v2 import DOCS_INTERNOS_INSTRUCTIONS, DocsInternosAnalysis, PROMPT_VERSION as DOCS_PROMPT_VERSION
 from agents.qc_agent_v2 import QC_INSTRUCTIONS, PlanQCAnalysis, PROMPT_VERSION as QC_PROMPT_VERSION
-from pipeline.config import get_agent_config, AGENT_PREFIXES, print_pipeline_config
+from agents.portfolio_agent_v2 import PORTFOLIO_INSTRUCTIONS, PortfolioAnalysis, PROMPT_VERSION as PORTFOLIO_PROMPT_VERSION
+from pipeline.config import (
+    get_agent_config,
+    get_search_max_queries,
+    AGENT_PREFIXES,
+    print_pipeline_config,
+)
 from pipeline.report_composer import compose_informe
 
 # Mapa de modelos Pydantic por clave de agente (None = sin modelo, usa json_mode)
@@ -64,6 +56,7 @@ AGENT_OUTPUT_MODELS: dict[str, type[BaseModel] | None] = {
     "Formatos": FormatosAnalysis,
     "Docs Internos": DocsInternosAnalysis,
     "QC": PlanQCAnalysis,
+    "Portfolio": PortfolioAnalysis,
 }
 
 AGENT_PROMPT_VERSIONS: dict[str, str] = {
@@ -75,6 +68,7 @@ AGENT_PROMPT_VERSIONS: dict[str, str] = {
     "Formatos": FORMATOS_PROMPT_VERSION,
     "Docs Internos": DOCS_PROMPT_VERSION,
     "QC": QC_PROMPT_VERSION,
+    "Portfolio": PORTFOLIO_PROMPT_VERSION,
 }
 
 # Agentes que necesitan búsqueda web (el resto trabaja solo con la fórmula)
@@ -199,6 +193,59 @@ def _load_formula(path: str | None, inline: str | None) -> tuple[str, str]:
     return FORMULA_EJEMPLO.strip(), "FORMULA_EJEMPLO (default hardcodeado)"
 
 
+def _fmt_mg(v) -> str:
+    """50.0 -> '50'; 1.4 -> '1.4'. Sin ceros sobrantes."""
+    try:
+        return f"{float(v):.2f}".rstrip("0").rstrip(".")
+    except (TypeError, ValueError):
+        return ""
+
+
+def _enriquecer_formula(F: str, output_dir: str) -> str:
+    """Añade a la fórmula la DOSIS DE ACTIVO de `formula_canonica.json` (FT PDF)
+    + instrucción de confidencialidad, para que los agentes razonen sobre el
+    activo y no filtren la dosis de materia prima en bloques cliente (7b.4).
+
+    Las líneas originales de F se conservan intactas (KIC sigue extrayendo
+    `dosis_formula_mg`; Docs/QC siguen teniendo la materia prima para los
+    bloques internos). Si no hay canónica con activos, devuelve F sin tocar.
+    """
+    path = os.path.join(output_dir, "formula_canonica.json")
+    if not os.path.exists(path):
+        return F
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return F
+    ings = data.get("ingredients", []) if isinstance(data, dict) else []
+    filas = []
+    for ing in ings:
+        if not isinstance(ing, dict) or ing.get("active_mg") in (None, ""):
+            continue
+        mg = _fmt_mg(ing["active_mg"])
+        if not mg:
+            continue
+        activo = ing.get("active_name") or ing.get("name", "")
+        filas.append(f"- {ing.get('name','')} → {mg} {ing.get('unit','mg')} de {activo}")
+    if not filas:
+        return F
+
+    bloque = "\n".join(filas)
+    return (
+        f"{F}\n\n"
+        "---\n"
+        "DOSIS DE ACTIVO APORTADO POR TOMA (dato autoritativo de la ficha de "
+        "fórmula). Usa SIEMPRE esta dosis de activo para dosis eficaz, %VRN, "
+        "claims, etiqueta y cualquier comunicación o análisis. La dosis de "
+        "materia prima/extracto que aparece arriba es CONFIDENCIAL y solo debe "
+        "usarse en documentación interna de producción y control de calidad: "
+        "NO la cites ni la reproduzcas en el análisis de ingredientes, la "
+        "validación regulatoria, los claims ni el marketing.\n"
+        f"{bloque}\n"
+    )
+
+
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="pipeline.orchestrator",
@@ -238,6 +285,7 @@ def make_agent(name: str, env_prefix: str,
             id=cfg.model,
             api_key=cfg.api_key,
             base_url=cfg.base_url,
+            temperature=cfg.temperature,
             request_params={"timeout": 300},
         ),
         tools=tools,
@@ -328,6 +376,24 @@ def _validate_defensively(data: dict, output_model: type[BaseModel] | None, labe
         print(f"⚠️  [{label}] drift contra schema {output_model.__name__}: {msg}")
 
 
+def _collect_tool_calls(agent: Agent) -> dict[str, int]:
+    """Suma el `call_count` de cada toolkit del agente, agrupado por nombre lógico."""
+    counts: dict[str, int] = {}
+    for tool in getattr(agent, "tools", []) or []:
+        n = getattr(tool, "call_count", None)
+        if n is None:
+            continue
+        # Nombre lógico estable para reporting (no el nombre de la clase Python).
+        cls_name = type(tool).__name__
+        label = {
+            "MonitoredPubmedTools": "pubmed",
+            "MonitoredDuckDuckGoTools": "duckduckgo",
+            "TavilySearchTools": "tavily",
+        }.get(cls_name, cls_name)
+        counts[label] = counts.get(label, 0) + int(n)
+    return counts
+
+
 def _build_trace(agent: Agent, prompt_version: str | None,
                  attempt: int, transient_count: int, deterministic_count: int,
                  elapsed: float, input_tokens: int = 0,
@@ -336,10 +402,13 @@ def _build_trace(agent: Agent, prompt_version: str | None,
     from datetime import datetime, timezone
     model_id = getattr(getattr(agent, "model", None), "id", None)
     base_url = getattr(getattr(agent, "model", None), "base_url", None)
+    temperature = getattr(getattr(agent, "model", None), "temperature", None)
+    tool_calls = _collect_tool_calls(agent)
     return {
         "prompt_version": prompt_version,
         "model": model_id,
         "base_url": base_url,
+        "temperature": temperature,
         "timestamp_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "duration_s": round(elapsed, 2),
         "attempts": attempt,
@@ -347,7 +416,20 @@ def _build_trace(agent: Agent, prompt_version: str | None,
         "deterministic_retries": deterministic_count,
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
+        "tool_calls": tool_calls,
+        "tool_calls_total": sum(tool_calls.values()) if tool_calls else 0,
     }
+
+
+def _api_error_envelope(data) -> dict | None:
+    """Si `data` es un sobre de error de API OpenAI-compatible
+    ({"error": {message|code, ...}}) devuelto como cuerpo, devuelve el dict de
+    error; si no, None. Permite distinguir un error disfrazado de éxito."""
+    if isinstance(data, dict) and isinstance(data.get("error"), dict):
+        e = data["error"]
+        if "message" in e or "code" in e:
+            return e
+    return None
 
 
 def run_agent(agent: Agent, prompt: str, label: str,
@@ -394,6 +476,37 @@ def run_agent(agent: Agent, prompt: str, label: str,
             else:
                 raise ValueError(f"Respuesta inesperada del agente: type={type(content).__name__}")
 
+            if not isinstance(data, dict):
+                if isinstance(data, list):
+                    dicts = [x for x in data if isinstance(x, dict) and x]
+                    if len(dicts) == 1:
+                        print(f"⚠️  [{label}] respuesta top-level era lista; se extrae el único dict")
+                        data = dicts[0]
+                    elif len(dicts) > 1:
+                        print(f"⚠️  [{label}] respuesta top-level era lista con {len(dicts)} dicts; se fusionan")
+                        merged = {}
+                        for d in dicts:
+                            merged.update(d)
+                        data = merged
+                    else:
+                        print(f"⚠️  [{label}] respuesta top-level no es dict ({type(data).__name__}); se envuelve en _payload")
+                        data = {"_payload": data}
+                else:
+                    print(f"⚠️  [{label}] respuesta top-level no es dict ({type(data).__name__}); se envuelve en _payload")
+                    data = {"_payload": data}
+
+            # Algunos endpoints OpenAI-compatibles (p. ej. mimo) devuelven el
+            # error como CUERPO de respuesta ({"error": {message, code, ...}})
+            # en vez de lanzar excepción. Sin esta comprobación se guardaba como
+            # resultado válido (con _trazabilidad) y NO se reintentaba → el bloque
+            # salía vacío ("Sin claims"). Lo relanzamos para que el sistema de
+            # reintentos lo gestione (por defecto transitorio: 3 intentos).
+            err = _api_error_envelope(data)
+            if err is not None:
+                raise RuntimeError(
+                    f"API error {err.get('code', '')}: {err.get('message', err)}".strip()
+                )
+
             elapsed = time.time() - t0
             monitor_agent_end(label, success=True, duration_s=elapsed)
 
@@ -402,12 +515,19 @@ def run_agent(agent: Agent, prompt: str, label: str,
             _validate_defensively(data, output_model, label)
 
             # Capturar tokens del modelo antes de inyectar trazabilidad
+            # response.metrics es un Dict[str, list] (Agno agrega valores por mensaje),
+            # no un objeto. Hay que sumar las listas.
             input_tokens = 0
             output_tokens = 0
             if hasattr(response, "metrics") and response.metrics:
                 m = response.metrics
-                input_tokens = getattr(m, "input_tokens", 0) or 0
-                output_tokens = getattr(m, "output_tokens", 0) or 0
+                def _sum_metric(key: str) -> int:
+                    v = m.get(key) if isinstance(m, dict) else getattr(m, key, 0)
+                    if isinstance(v, list):
+                        return sum(int(x or 0) for x in v)
+                    return int(v or 0)
+                input_tokens = _sum_metric("input_tokens")
+                output_tokens = _sum_metric("output_tokens")
                 total_tokens = input_tokens + output_tokens
                 print(f"📊 Tokens: {input_tokens} in + {output_tokens} out = {total_tokens} total | ⏱️ {elapsed:.1f}s")
 
@@ -553,11 +673,56 @@ def ctx_ft(results: dict) -> str:
 
 
 def ctx_claims(results: dict) -> str:
-    """Contexto Regulatorio reducido para Claims."""
+    """Contexto Regulatorio reducido para Claims.
+
+    Claims NO necesita el JSON completo de Regulatorio (normativa_aplicable,
+    evaluacion_cuantitativa, etc. — todo eso lo construye Claims desde cero
+    con el Reg. UE 432/2012 en su propio prompt). Solo el semáforo + dictamen
+    corto por ingrediente es accionable aquí; un JSON de 30K chars con
+    información redundante se come 8K tokens de input × N iteraciones del
+    agent loop (= 4-5K de cada tool call acumulado). Ver QA 2026-06-12.
+    """
     reg = results.get("Regulatorio")
     if not reg:
         return ""
-    return f"CONTEXTO REGULATORIO:\n{json.dumps(_slim_reg(reg), ensure_ascii=False)}"
+    ultra_slim_ings = [
+        {
+            "nombre":   ing.get("nombre"),
+            "semaforo": ing.get("semaforo"),
+            "dictamen": ing.get("dictamen"),
+        }
+        for ing in reg.get("ingredientes", [])
+    ]
+    ultra_slim = {
+        "clasificacion_producto": reg.get("clasificacion_producto"),
+        "ingredientes":           ultra_slim_ings,
+    }
+    return f"CONTEXTO REGULATORIO:\n{json.dumps(ultra_slim, ensure_ascii=False)}"
+
+
+def _F_para_claims(F: str) -> str:
+    """Recorta la fórmula enriquecida para Claims.
+
+    Claims trabaja sobre la DOSIS DE ACTIVO (no de materia prima), que es
+    además dato confidencial que no debe citar. La sección de materia prima
+    en F (las líneas "- Ingrediente: Nmg" originales) le sirve a KIC/
+    Regulatorio/FichaTéc/Docs/QC, pero para Claims es ruido que se reinyecta
+    en cada iteración del agent loop (10+ tool calls acumulan este input).
+    Devolvemos solo el nombre del producto + bloque de activos.
+    """
+    # Cortamos desde el primer "---" si existe (separador antes del bloque
+    # de activos enriquecido), si no desde la última línea "- " (materia prima).
+    if "---" in F:
+        # Antes de "---" solo va el nombre del producto; después, el bloque
+        # de activos enriquecido. Las líneas de materia prima están mezcladas
+        # con la cabecera — separamos por líneas.
+        head, _, tail = F.partition("---")
+        # Conservamos solo la primera línea no vacía (nombre del producto)
+        # y descartamos las líneas de materia prima.
+        first_nonempty = next((ln for ln in head.splitlines() if ln.strip()), "")
+        if "DOSIS DE ACTIVO APORTADO" in tail:
+            return f"{first_nonempty}\n\n---{tail}"
+    return F
 
 
 def ctx_etiqueta(results: dict) -> str:
@@ -592,10 +757,18 @@ def ctx_etiqueta(results: dict) -> str:
 
 
 def _run_step(key: str, label: str, env_prefix: int,
-               instructions: str, prompt: str):
+               instructions: str, prompt: str,
+               started_event: threading.Event | None = None):
     """Ejecuta un agente individual (para usar dentro de ThreadPoolExecutor)."""
     use_search = key in AGENTS_WITH_SEARCH
-    agent = make_agent(label, AGENT_PREFIXES[env_prefix], use_search=use_search)
+    prefix = AGENT_PREFIXES[env_prefix]
+    agent = make_agent(label, prefix, use_search=use_search)
+    # Sustituye placeholders soportados en el prompt. Usamos .replace() porque los
+    # prompts contienen ejemplos JSON con llaves `{}` que romperían str.format().
+    if "{search_max}" in instructions:
+        instructions = instructions.replace(
+            "{search_max}", str(get_search_max_queries(prefix))
+        )
     agent.instructions = instructions
     t0 = time.time()
     output_model = AGENT_OUTPUT_MODELS.get(key)
@@ -604,6 +777,8 @@ def _run_step(key: str, label: str, env_prefix: int,
     sem = _get_semaphore(base_url)
     print(f"⏳ [{label}] esperando slot en endpoint ({base_url})...")
     with sem:
+        if started_event is not None:
+            started_event.set()
         print(f"🔓 [{label}] slot adquirido")
         data = run_agent(agent, prompt, label,
                          output_model=output_model,
@@ -637,6 +812,11 @@ def main(argv: list[str] | None = None):
     # así que basta con reasignarlo antes de lanzar el DAG.
     OUTPUT_DIR = args.output_dir
 
+    # 7b.4: si el dashboard dejó `formula_canonica.json` (del FT PDF), enriquece
+    # la fórmula con la dosis de activo + framing de confidencialidad para todos
+    # los agentes. No-op si no existe.
+    F = _enriquecer_formula(F, OUTPUT_DIR)
+
     # Primera línea no vacía del texto se usa como etiqueta humana del run.
     titulo = next((ln.strip() for ln in F.splitlines() if ln.strip()), "fórmula")
 
@@ -659,17 +839,24 @@ def main(argv: list[str] | None = None):
     #   Claims → Regulatorio
     #   Etiqueta → Claims + Ficha Técnica
 
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    max_workers = max(1, int(os.environ.get("PIPELINE_MAX_WORKERS", "4")))
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
 
-        # Wave 1: agentes sin dependencias — arrancan todos en paralelo
-        monitor_wave(1, "KIC + Formatos + Docs Internos + QC (paralelo)")
+        # Wave 1: KIC arranca primero (path crítico → Regulatorio lo espera).
+        # Los demás se lanzan solo después de que KIC haya adquirido su slot
+        # en el semáforo del endpoint, garantizando que no le ganen la plaza.
+        monitor_wave(1, "KIC + Formatos + Docs Internos + QC + Portfolio (paralelo)")
         print(f"\n{'─'*60}")
-        print("  WAVE 1: KIC + Formatos + Docs Internos + QC (paralelo)")
+        print("  WAVE 1: KIC + Formatos + Docs Internos + QC + Portfolio (paralelo)")
         print(f"{'─'*60}")
 
+        kic_slot_acquired = threading.Event()
         fut_kic = pool.submit(
             _run_step, "KIC", "Agente 1: KIC v2", 1, KIC_INSTRUCTIONS,
-            f"Analiza la siguiente fórmula:\n\n{F}")
+            f"Analiza la siguiente fórmula:\n\n{F}", kic_slot_acquired)
+
+        # Esperar a que KIC tenga su slot (máx. 60 s por si el endpoint tarda)
+        kic_slot_acquired.wait(timeout=60)
 
         fut_formatos = pool.submit(
             _run_step, "Formatos", "Agente 6: Formatos v2", 6, FORMATOS_INSTRUCTIONS,
@@ -682,6 +869,10 @@ def main(argv: list[str] | None = None):
         fut_qc = pool.submit(
             _run_step, "QC", "Agente 8: QC v2", 8, QC_INSTRUCTIONS,
             f"Define el plan de control de calidad del siguiente producto:\n\n{F}")
+
+        fut_portfolio = pool.submit(
+            _run_step, "Portfolio", "Agente 9: Portfolio v2", 9, PORTFOLIO_INSTRUCTIONS,
+            f"Propón un portfolio de productos a aconsejar al cliente a partir del siguiente producto ancla:\n\n{F}")
 
         # Wave 2: Regulatorio arranca en cuanto KIC termina (sin esperar a Formatos/Docs/QC)
         kic_ok = _collect(fut_kic, r, timings)
@@ -701,6 +892,7 @@ def main(argv: list[str] | None = None):
         _collect(fut_formatos, r, timings)
         _collect(fut_docs, r, timings)
         _collect(fut_qc, r, timings)
+        _collect(fut_portfolio, r, timings)
 
         # Wave 3: FT + Claims en paralelo (en cuanto Regulatorio termina)
         reg_ok = _collect(fut_reg, r, timings) if fut_reg else False
@@ -716,7 +908,7 @@ def main(argv: list[str] | None = None):
 
             fut_claims = pool.submit(
                 _run_step, "Claims", "Agente 4: Claims v2", 4, CLAIMS_INSTRUCTIONS,
-                f"Genera los claims regulatorios y selling points del siguiente producto:\n\n{F}\n\n{ctx_claims(r)}")
+                f"Genera los claims regulatorios y selling points del siguiente producto:\n\n{_F_para_claims(F)}\n\n{ctx_claims(r)}")
 
             _collect(fut_ft, r, timings)
             _collect(fut_claims, r, timings)
@@ -742,7 +934,7 @@ def main(argv: list[str] | None = None):
     t_pipeline_total = time.time() - t_pipeline_start
     agent_models = {
         AGENT_PREFIXES[i]: get_agent_config(AGENT_PREFIXES[i])
-        for i in range(1, 9)
+        for i in range(1, len(AGENT_PREFIXES) + 1)
     }
     compose_informe(
         F,
@@ -754,10 +946,11 @@ def main(argv: list[str] | None = None):
 
     ok = [k for k, v in r.items() if v]
     fail = [k for k in AGENT_OUTPUT_MODELS if k not in ok]
+    total = len(AGENT_OUTPUT_MODELS)
 
-    monitor_pipeline(f"Pipeline completado — {len(ok)}/8 agentes exitosos")
+    monitor_pipeline(f"Pipeline completado — {len(ok)}/{total} agentes exitosos")
     print(f"\n{'='*60}")
-    print(f"  Pipeline v2 completado — {len(ok)}/8 agentes exitosos")
+    print(f"  Pipeline v2 completado — {len(ok)}/{total} agentes exitosos")
     if fail:
         print(f"  ⚠️  Fallaron: {', '.join(fail)}")
     print(f"  Outputs en: {OUTPUT_DIR}/")

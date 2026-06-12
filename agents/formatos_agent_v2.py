@@ -108,6 +108,14 @@ class Fase4RecomendacionFinal(BaseModel):
     condiciones_cambio_formato_futuro: list[str] = Field(default_factory=list)
 
 
+class FilaMatrizFormatoSegmento(BaseModel):
+    model_config = {"extra": "allow"}
+    segmento: str = ""
+    formato_recomendado: str = ""
+    justificacion: str = ""
+    es_innovacion: bool = False
+
+
 class FormatosAnalysis(BaseModel):
     """Contrato operacional del agente Formatos e Innovación."""
     model_config = {"extra": "allow"}
@@ -116,6 +124,7 @@ class FormatosAnalysis(BaseModel):
     fase_2_analisis_competencia: Fase2AnalisisCompetencia = Field(default_factory=Fase2AnalisisCompetencia)
     fase_3_innovacion_ingredientes: Fase3InnovacionIngredientes = Field(default_factory=Fase3InnovacionIngredientes)
     fase_4_recomendacion_final: Fase4RecomendacionFinal = Field(default_factory=Fase4RecomendacionFinal)
+    matriz_formato_segmento: list[FilaMatrizFormatoSegmento] = Field(default_factory=list)
     fuentes_consultadas: list[dict] = Field(default_factory=list)
     metadata: dict = Field(default_factory=lambda: {
         "version": "2.0",
@@ -125,7 +134,7 @@ class FormatosAnalysis(BaseModel):
 
 # ── Instructions ─────────────────────────────────────────────────────
 
-PROMPT_VERSION = "2.0.0"
+PROMPT_VERSION = "2.1.0"  # +Fase 5: matriz formato × segmento
 
 FORMATOS_INSTRUCTIONS = """\
 # ROL
@@ -180,16 +189,18 @@ Para cada formato analiza:
 Asigna una puntuación global 0-10 a cada formato.
 
 ## FASE 2 — Análisis de competencia y tendencias
-Usa web_search para investigar:
-- ¿Cuál es el formato predominante para productos inmunitarios (vitamina C + zinc + D3)?
-- ¿Qué marcas líderes existen y qué formato usan?
-- ¿Cuál es la tendencia emergente en este segmento (2023-2025)?
+Apóyate en tu conocimiento del mercado de complementos alimentarios en España y UE \
+hasta tu fecha de corte para identificar:
+- Formato predominante en la categoría del producto (ej: inmunidad → stick/sobre vs cápsula)
+- Marcas líderes referenciales y formato que usan
+- Tendencias estructurales del segmento (no efímeras): personalización, monodosis, \
+  formatos clean-label, premiumización en farmacia, etc.
 - Oportunidades de diferenciación por formato
 
-Consultas sugeridas:
-- "immune supplement vitamin C zinc D3 format market trends 2024"
-- "complemento inmunidad vitamina C zinc formato mercado España"
-- "immune complex supplement stick sachets capsules market Spain pharmacy"
+Importante: este agente NO tiene web_search. No cites datos de mercado que requieran \
+verificación en tiempo real (cuotas exactas, lanzamientos del último trimestre, precios). \
+Si una afirmación necesitaría verificación de mercado actualizada, márcala como supuesto \
+("a confirmar con estudio de mercado") en lugar de presentarla como un dato cerrado.
 
 ## FASE 3 — Innovación de ingredientes
 Analiza cómo esta fórmula se diferencia de productos similares en el mercado:
@@ -204,10 +215,17 @@ Con toda la información anterior:
 2. Propón un formato alternativo para escenarios diferentes (ej: menor coste, target diferente)
 3. Indica condiciones para cambiar de formato en el futuro (ej: si se amplía la gama)
 
+## FASE 5 — Matriz formato × segmento
+Construye una matriz que asigne, para 2-4 segmentos de mercado relevantes, el formato más \
+adecuado a cada uno (incluyendo formatos de innovación cuando aporten diferenciación). Para \
+cada fila: segmento, formato recomendado, justificación y si es un formato de innovación \
+(es_innovacion true/false).
+
 # USO DE WEB_SEARCH
-Usa web_search con moderación. Límite: MÁXIMO 1 búsqueda en total.
-Solo busca tendencias de mercado si necesitas datos actualizados de 2024-2025 para la Fase 2. \
-NO busques estabilidad de ingredientes por formato — usa tu conocimiento técnico.
+NO uses web_search. Este agente no tiene acceso a herramientas externas. Toda la \
+evaluación se apoya en tu conocimiento del mercado y del comportamiento técnico de los \
+formatos. Las afirmaciones que requieran verificación de mercado en tiempo real deben \
+declararse explícitamente como supuestos a confirmar.
 
 # FORMATO DE SALIDA
 Responde SIEMPRE como JSON válido, sin fences markdown, sin texto antes ni después.
@@ -225,6 +243,14 @@ Usa EXACTAMENTE estas claves de nivel superior:
         "desventajas_clave": ["desventaja 1"]
       }
     ]
+  },
+  "fase_2_analisis_competencia": {
+    "formato_predominante": "Formato dominante en la categoría",
+    "marcas_lideres": [
+      {"marca": "Marca referencial", "formato": "stick / cápsula / vial", "posicionamiento": "premium farmacia / lifestyle"}
+    ],
+    "tendencias_2024_2025": ["tendencia estructural 1", "tendencia estructural 2"],
+    "oportunidades_diferenciacion": "Síntesis de oportunidades de diferenciación por formato"
   },
   "fase_3_innovacion_ingredientes": {
     "propuesta_innovacion": "Narrativa de innovación para el producto",
@@ -244,6 +270,14 @@ Usa EXACTAMENTE estas claves de nivel superior:
       "escenario": "Alternativa para menor coste o target diferente"
     }
   },
+  "matriz_formato_segmento": [
+    {
+      "segmento": "Senior activo 60+",
+      "formato_recomendado": "Stick de polvo monodosis",
+      "justificacion": "Fácil de tomar, dosis alta sin tragar cápsulas, percepción de cuidado",
+      "es_innovacion": false
+    }
+  ],
   "fuentes_consultadas": [
     {"id": 1, "fuente": "nombre", "url": "", "tipo": "web_search|normativa|conocimiento_experto"}
   ],

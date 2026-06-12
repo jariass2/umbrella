@@ -4,11 +4,14 @@ Lee los JSON de los 8 agentes y genera un documento markdown profesional.
 Sin llamadas a LLM — composición puramente programática.
 """
 
+from __future__ import annotations
+
 import json
 import os
+import re
+import unicodedata
+from collections import OrderedDict
 from datetime import date
-
-OUTPUT_DIR = "outputs/v2"
 
 SEMAFORO = {
     "PERMITIDO": "✅",
@@ -35,6 +38,7 @@ INTERACCION_EMOJI = {
 # El primer match gana — ordenar del más específico al más genérico.
 PRICING_PER_1M: list[tuple[str, float, float]] = [
     ("kimi-k2",           0.14,  0.60),
+    ("mimo-v2.5-pro",     0.435, 0.87),
     ("claude-haiku-4",    0.80,  4.00),
     ("claude-sonnet-4",   3.00, 15.00),
     ("claude-opus-4",    15.00, 75.00),
@@ -65,11 +69,16 @@ def _format_cost(usd: float) -> str:
     return f"${usd:.4f}"
 
 
-def _load(filename: str) -> dict:
-    path = f"{OUTPUT_DIR}/{filename}.json"
+def _load(filename: str, output_dir: str) -> dict:
+    path = os.path.join(output_dir, f"{filename}.json")
     if os.path.exists(path):
         with open(path, encoding="utf-8") as f:
-            return json.load(f)
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                return {}
+        if isinstance(data, dict):
+            return data
     return {}
 
 
@@ -92,10 +101,33 @@ def _section(title: str, level: int = 2) -> str:
     return f"\n{'#' * level} {title}\n"
 
 
-def _fuentes(fuentes: list) -> list[str]:
+def _kv_block(data: dict, fields: list[tuple[str, str]], suffix: str = "  ") -> list[str]:
+    """Emit "**label:** value{suffix}" lines for each (key, label) where data[key] is truthy."""
+    out: list[str] = []
+    for key, label in fields:
+        val = data.get(key)
+        if val:
+            out.append(f"**{label}:** {val}{suffix}")
+    return out
+
+
+def _labeled_list(label: str, items, *, blank_after: bool = True) -> list[str]:
+    """Emit '**label:**' + '- item' lines. Accepts list, scalar, or empty."""
+    if not items:
+        return []
+    seq = items if isinstance(items, list) else [items]
+    if not seq:
+        return []
+    out = [f"**{label}:**"] + [f"- {x}" for x in seq]
+    if blank_after:
+        out.append("")
+    return out
+
+
+def _fuentes(fuentes: list, level: int = 3) -> list[str]:
     if not fuentes:
         return []
-    lines = [_section("Fuentes consultadas", 3)]
+    lines = [_section("Fuentes consultadas", level)]
     for f in fuentes:
         url = f.get("url", "")
         link = f" ([enlace]({url}))" if url else ""
@@ -103,10 +135,199 @@ def _fuentes(fuentes: list) -> list[str]:
     return lines
 
 
-# ── Sección 1: KIC ─────────────────────────────────────────────────────────
+def _norm(s) -> str:
+    """Normaliza un nombre de ingrediente para cruzar datos entre agentes.
 
-def fmt_kic(d: dict) -> list[str]:
-    lines = [_section("1. Análisis de Composición de Ingredientes (KIC)")]
+    minúsculas + sin acentos + sin paréntesis + espacios colapsados.
+    """
+    if not s:
+        return ""
+    s = str(s).lower().strip()
+    s = "".join(c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c))
+    s = re.sub(r"\([^)]*\)", "", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def _fmt_pct(v) -> str:
+    """Formatea un %NRV/VRN evitando el doble '%%' y los 'no aplica%'."""
+    s = _val(v, "")
+    if not s or s == "—":
+        return "—"
+    low = s.lower()
+    # 'N/A', 'NA', 'none'… no son porcentajes → guion, no 'N/A%'.
+    if low in ("n/a", "na", "n.a.", "none", "null", "no aplica"):
+        return "—"
+    if "%" in s or "aplica" in low or "establec" in low or "ai:" in low or "vrn" in low:
+        return s
+    return f"{s}%"
+
+
+def _spec_val(v) -> str:
+    """Renderiza un valor de especificación que puede venir como dict
+    {'valor':…, 'metodo':…} en vez de string (bug de datos: salía el dict crudo)."""
+    if isinstance(v, dict):
+        valor = v.get("valor", v.get("value", v.get("especificacion", "")))
+        metodo = v.get("metodo", v.get("método", v.get("method", "")))
+        if valor and metodo:
+            return f"{valor} *(método: {metodo})*"
+        return _val(valor or metodo)
+    return _val(v)
+
+
+# ── Confidencialidad: dosis de ACTIVO (pública) vs dosis de materia prima ────
+# Xavier (2026-06-02): "la dosis quantitativa és secreta i no es diu mai".
+# La dosis de materia prima (dosis_formula_mg) revela la fórmula → NUNCA en
+# bloques cliente. Lo comunicable es el ACTIVO aportado ("En base Claim Actiu").
+
+def _parse_pct_activo(nombre: str):
+    """Extrae el % de estandarización/activo del nombre del ingrediente
+    (ej. '(30% AKBA)', '<95 % curcuminoides', '(2,5% ...)'). Devuelve float o None.
+
+    PUENTE: aproximación hasta conciliar con la Tabla Cuantitativa (Excel, 7b).
+    """
+    if not nombre:
+        return None
+    m = re.search(r"(\d+(?:[.,]\d+)?)\s*%", str(nombre))
+    if not m:
+        return None
+    try:
+        return float(m.group(1).replace(",", "."))
+    except ValueError:
+        return None
+
+
+def _fmt_mg(valor, unidad: str = "mg") -> str:
+    """'50.0' -> '50 mg'; '1.4' -> '1.4 mg'. Sin ceros sobrantes."""
+    val = f"{float(valor):.2f}".rstrip("0").rstrip(".")
+    return f"{val} {unidad}".strip()
+
+
+def _dosis_activo(ing: dict, canonical: dict | None = None) -> str:
+    """Dosis de ACTIVO aportado. Pública. Nunca expone `dosis_formula_mg`.
+
+    Si hay dato canónico (de la ficha de fórmula de Xavier, vía
+    `formula_canonica.json`) se usa tal cual (autoritativo, incl. casos con
+    sobredosado como la B6). Si no, se estima desde la estandarización del
+    nombre (puente). '—' si no se puede.
+    """
+    if canonical and canonical.get("active_mg") not in (None, ""):
+        return _fmt_mg(canonical["active_mg"], canonical.get("unit", "mg"))
+
+    mg = ing.get("dosis_formula_mg")
+    pct = _parse_pct_activo(ing.get("ingrediente", ""))
+    if mg in (None, "", 0) or pct is None:
+        return "—"
+    try:
+        activo = float(mg) * pct / 100.0
+    except (TypeError, ValueError):
+        return "—"
+    return _fmt_mg(activo, ing.get("dosis_formula_unidad", "") or "mg")
+
+
+def _load_canonica(output_dir: str | None) -> list[dict]:
+    """Lista de ingredientes de `formula_canonica.json` (del FT PDF), o []."""
+    if not output_dir:
+        return []
+    path = os.path.join(output_dir, "formula_canonica.json")
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return []
+    ings = data.get("ingredients") if isinstance(data, dict) else None
+    return ings if isinstance(ings, list) else []
+
+
+def _alinear_canonica(kic_ings: list[dict], canonica: list[dict]) -> list[dict | None]:
+    """Empareja por índice cuando los conteos coinciden (KIC conserva el orden
+    del input). Si no coinciden, devuelve None por fila → cae al cálculo puente."""
+    if canonica and len(canonica) == len(kic_ings):
+        return list(canonica)
+    return [None] * len(kic_ings)
+
+
+# Nota al pie según la procedencia del dato.
+NOTA_DOSIS_ACTIVO_CANON = (
+    "*Dosis de activo aportado según la ficha de fórmula (no la dosis de materia "
+    "prima, confidencial). «—» = excipiente.*"
+)
+
+
+# Nota al pie reutilizable para las tablas de dosis de activo.
+NOTA_DOSIS_ACTIVO = (
+    "*Dosis de activo aportado (no la dosis de materia prima, confidencial). "
+    "Estimada desde la estandarización; pendiente de conciliar con la Tabla "
+    "Cuantitativa. «—» = excipiente o activo sin estandarización declarada.*"
+)
+
+
+# ── Bloque 1 · Tabla maestra de ingredientes ────────────────────────────────
+# Sustituye las 3-4 tablas de ingredientes que antes repetían dosis y %NRV
+# (KIC "Perfil", Regulatorio "Evaluación", Ficha Técnica "Composición").
+
+def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict, canonica: list[dict] | None = None) -> list[str]:
+    """Tabla ÚNICA de ingredientes fusionando los tres agentes:
+    dosis/%NRV/biodisponibilidad (KIC) + forma química (Ficha Técnica) +
+    semáforo regulatorio (Regulatorio). Cruce por nombre normalizado.
+
+    `canonica` (de `formula_canonica.json`, FT PDF) aporta la dosis de activo
+    autoritativa, emparejada por índice (KIC conserva el orden del input)."""
+    reg_by_name = {
+        _norm(i.get("nombre", "")): i
+        for i in reg.get("ingredientes", []) if isinstance(i, dict)
+    }
+    ft_comp = ft.get("fase_2_composicion", {})
+    ft_ings = ft_comp.get("ingredientes_activos", ft_comp.get("ingredientes", [])) if isinstance(ft_comp, dict) else []
+    ft_by_name: dict[str, dict] = {}
+    for i in (ft_ings if isinstance(ft_ings, list) else []):
+        if isinstance(i, dict):
+            nm = i.get("nombre_ingrediente", i.get("nombre", i.get("ingrediente", "")))
+            ft_by_name[_norm(nm)] = i
+
+    kic_ings = [i for i in kic.get("fase_2_ingredientes", []) if isinstance(i, dict)]
+    canon_alineada = _alinear_canonica(kic_ings, canonica or [])
+    usa_canon = any(c is not None for c in canon_alineada)
+
+    lines = [_section("Tabla de ingredientes", 3)]
+    headers = ["Ingrediente", "Dosis de activo", "% NRV/VRN", "Forma química", "Biodisponibilidad", "Reg."]
+    rows = []
+    for idx, ing in enumerate(kic_ings):
+        nombre = ing.get("ingrediente", "")
+        key = _norm(nombre)
+        bio = ing.get("biodisponibilidad", {})
+        bio_str = bio.get("nivel", "") if isinstance(bio, dict) else _val(bio)
+
+        ft_i = ft_by_name.get(key, {})
+        forma = ft_i.get("forma_quimica", ft_i.get("forma", "")) if isinstance(ft_i, dict) else ""
+
+        reg_i = reg_by_name.get(key, {})
+        sem = reg_i.get("semaforo", "") if isinstance(reg_i, dict) else ""
+        sem_str = f"{SEMAFORO.get(sem, '')} {sem}".strip()
+
+        rows.append([
+            nombre,
+            _dosis_activo(ing, canon_alineada[idx]),
+            _fmt_pct(ing.get("porcentaje_nrv", "")),
+            forma or "—",
+            bio_str or "—",
+            sem_str or "—",
+        ])
+    lines += _table(headers, rows)
+    lines.append("")
+    lines.append(NOTA_DOSIS_ACTIVO_CANON if usa_canon else NOTA_DOSIS_ACTIVO)
+    lines.append("")
+    return lines
+
+
+# ── Bloque 1 · Análisis de ingredientes (KIC, sin tabla ni mejoras) ──────────
+
+def fmt_analisis_ingredientes(d: dict) -> list[str]:
+    """Detalle función/mecanismo por ingrediente + matriz de interacciones +
+    coherencia/sinergia. La tabla de dosis vive en la maestra; los gaps y
+    sugerencias se consolidan en 'Propuestas de mejora'."""
+    lines = [_section("Análisis de ingredientes", 3)]
 
     c = d.get("fase_1_clasificacion", {})
     lines += [
@@ -118,26 +339,9 @@ def fmt_kic(d: dict) -> list[str]:
         lines.append(f"**Objetivos secundarios:** {', '.join(obj_sec)}  ")
     lines.append("")
 
-    # Tabla de ingredientes
-    lines.append(_section("Perfil de ingredientes", 3))
-    headers = ["Ingrediente", "Tipología", "Dosis", "% NRV", "Biodisponibilidad", "Evaluación dosis"]
-    rows = []
     for ing in d.get("fase_2_ingredientes", []):
-        bio = ing.get("biodisponibilidad", {})
-        dos = ing.get("dosificacion", {})
-        rows.append([
-            ing.get("ingrediente", ""),
-            ing.get("tipologia", ""),
-            f"{ing.get('dosis_formula_mg','')} {ing.get('dosis_formula_unidad','')}".strip(),
-            f"{ing.get('porcentaje_nrv', '')}%",
-            bio.get("nivel", "") if isinstance(bio, dict) else _val(bio),
-            dos.get("evaluacion", "") if isinstance(dos, dict) else _val(dos),
-        ])
-    lines += _table(headers, rows)
-    lines.append("")
-
-    # Detalle de función y mecanismo por ingrediente
-    for ing in d.get("fase_2_ingredientes", []):
+        if not isinstance(ing, dict):
+            continue
         lines.append(f"**{ing.get('ingrediente','')}**")
         fn = ing.get("funcion_tecnologica_nutricional", {})
         if isinstance(fn, dict):
@@ -162,10 +366,9 @@ def fmt_kic(d: dict) -> list[str]:
             lines.append(f"- *Advertencias de formulación:* {adv_text}")
         lines.append("")
 
-    # Interacciones
     interacciones = d.get("fase_3_interacciones_cruzadas", [])
     if interacciones:
-        lines.append(_section("Matriz de interacciones", 3))
+        lines.append(_section("Matriz de interacciones", 4))
         headers = ["Par de ingredientes", "Tipo", "Relevancia", "Descripción"]
         rows = []
         for ix in interacciones:
@@ -183,41 +386,21 @@ def fmt_kic(d: dict) -> list[str]:
         lines += _table(headers, rows)
         lines.append("")
 
-    # Valoración global
     vg = d.get("fase_4_valoracion_global", {})
     if vg:
-        lines.append(_section("Valoración global de la fórmula", 3))
+        lines.append(_section("Valoración global de la fórmula", 4))
         lines.append(f"**Coherencia funcional:** {_val(vg.get('coherencia_funcional'))}  ")
         lines.append(f"**Potencial sinérgico:** {_val(vg.get('potencial_sinergetico'))}  ")
         lines.append("")
-        for campo, label in [
-            ("gaps_funcionales", "Gaps funcionales"),
-            ("riesgos_formulacion", "Riesgos de formulación"),
-            ("sugerencias_mejora", "Sugerencias de mejora"),
-        ]:
-            items = vg.get(campo, [])
-            if items:
-                lines.append(f"**{label}:**")
-                for x in items:
-                    if isinstance(x, dict):
-                        text = x.get("gap", x.get("riesgo", x.get("sugerencia", x.get("detalle", str(x)))))
-                        detail = x.get("detalle", x.get("descripcion", ""))
-                        accion = x.get("accion_sugerida", "")
-                        lines.append(f"- **{text}**" + (f": {detail}" if detail else ""))
-                        if accion:
-                            lines.append(f"  - *Acción:* {accion}")
-                    else:
-                        lines.append(f"- {x}")
-                lines.append("")
 
-    lines += _fuentes(d.get("fuentes_consultadas", []))
+    lines += _fuentes(d.get("fuentes_consultadas", []), level=4)
     return lines
 
 
-# ── Sección 2: Regulatorio ─────────────────────────────────────────────────
+# ── Bloque 1 · Validación regulatoria (sin re-imprimir dosis ni mejoras) ─────
 
-def fmt_regulatorio(d: dict) -> list[str]:
-    lines = [_section("2. Validación Regulatoria")]
+def fmt_validacion_regulatoria(d: dict) -> list[str]:
+    lines = [_section("Validación regulatoria", 3)]
 
     ev = d.get("evaluacion_global", {})
     viab = ev.get("viabilidad", "")
@@ -234,19 +417,12 @@ def fmt_regulatorio(d: dict) -> list[str]:
         lines += [f"- {b}" for b in bloqueantes]
         lines.append("")
 
-    modif = ev.get("modificaciones_recomendadas", [])
-    if modif:
-        lines.append("**Modificaciones recomendadas:**")
-        lines += [f"- {m}" for m in modif]
-        lines.append("")
-
-    # Tabla por ingrediente
-    lines.append(_section("Evaluación por ingrediente", 3))
-    headers = ["Ingrediente", "Estado", "Normativa", "Condiciones / Advertencias"]
+    # Tabla por ingrediente: normativa + condiciones. El semáforo y la dosis
+    # ya están en la tabla maestra → aquí solo lo que aporta el regulatorio.
+    lines.append(_section("Estatus regulatorio por ingrediente", 4))
+    headers = ["Ingrediente", "Normativa aplicable", "Condiciones / Advertencias"]
     rows = []
     for ing in d.get("ingredientes", []):
-        sem = ing.get("semaforo", "")
-        emoji_sem = SEMAFORO.get(sem, "")
         normativa = ing.get("normativa_aplicable", "")
         if isinstance(normativa, list):
             normativa = "; ".join(normativa[:2])
@@ -255,202 +431,407 @@ def fmt_regulatorio(d: dict) -> list[str]:
             cond = "; ".join(cond[:2])
         rows.append([
             ing.get("nombre", ""),
-            f"{emoji_sem} {sem}",
-            normativa[:80],
-            cond[:100] if cond else ing.get("dictamen", "")[:100],
+            normativa[:90],
+            cond[:120] if cond else ing.get("dictamen", "")[:120],
         ])
     lines += _table(headers, rows)
     lines.append("")
 
-    # Advertencias obligatorias
     adv = ev.get("advertencias_obligatorias_producto", [])
     if adv:
-        lines.append(_section("Advertencias obligatorias en etiqueta", 3))
+        lines.append(_section("Advertencias obligatorias en etiqueta", 4))
         lines += [f"- {a}" for a in adv]
         lines.append("")
 
-    lines += _fuentes(d.get("fuentes_consultadas", []))
+    lines += _fuentes(d.get("fuentes_consultadas", []), level=4)
     return lines
 
 
-# ── Sección 3: Ficha Técnica ────────────────────────────────────────────────
+# ── Bloque 1 · Propuestas de mejora (consolida KIC + Regulatorio) ────────────
 
-def fmt_ficha_tecnica(d: dict) -> list[str]:
-    lines = [_section("3. Ficha Técnica")]
+def fmt_propuestas_mejora(kic: dict, reg: dict) -> list[str]:
+    """Consolida en un único bloque, sin duplicados, las recomendaciones de
+    formulación de KIC (gaps/riesgos/sugerencias) y las modificaciones del
+    agente Regulatorio."""
 
-    id_ = d.get("fase_1_identificacion", {})
-    if id_:
-        for campo, label in [
-            ("denominacion_legal", "Denominación legal"),
-            ("nombre_comercial", "Nombre comercial"),
-            ("tipo_producto", "Tipo de producto"),
-            ("forma_presentacion", "Forma de presentación"),
-            ("publico_objetivo", "Público objetivo"),
-        ]:
-            val = id_.get(campo)
-            if val:
-                lines.append(f"**{label}:** {val}  ")
+    def _extract(x) -> tuple[str, str, str]:
+        if isinstance(x, dict):
+            texto = x.get("gap", x.get("riesgo", x.get("sugerencia",
+                     x.get("modificacion", x.get("detalle", "")))))
+            detalle = x.get("detalle", x.get("descripcion", ""))
+            accion = x.get("accion_sugerida", x.get("accion", ""))
+            return str(texto), str(detalle), str(accion)
+        return str(x), "", ""
+
+    vg = kic.get("fase_4_valoracion_global", {}) or {}
+    items: list[tuple[str, str, str, str]] = []  # (categoria, texto, detalle, accion)
+    for campo, cat in [
+        ("gaps_funcionales", "Gaps funcionales"),
+        ("riesgos_formulacion", "Riesgos de formulación"),
+        ("sugerencias_mejora", "Sugerencias de mejora"),
+    ]:
+        for x in (vg.get(campo, []) or []):
+            t, det, acc = _extract(x)
+            items.append((cat, t, det, acc))
+    for x in ((reg.get("evaluacion_global", {}) or {}).get("modificaciones_recomendadas", []) or []):
+        t, det, acc = _extract(x)
+        items.append(("Modificaciones regulatorias", t, det, acc))
+
+    if not items:
+        return []
+
+    # Dedup por clave normalizada del texto (captura repeticiones exactas/casi).
+    seen: set[str] = set()
+    by_cat: "OrderedDict[str, list[tuple[str, str, str]]]" = OrderedDict()
+    for cat, t, det, acc in items:
+        key = _norm(t)[:60]
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        by_cat.setdefault(cat, []).append((t, det, acc))
+
+    lines = [
+        _section("Propuestas de mejora (IA)", 3),
+        "*Consolidado de los análisis de composición (KIC) y regulatorio, sin duplicados.*",
+        "",
+    ]
+    for cat, lst in by_cat.items():
+        lines.append(f"**{cat}:**")
+        for t, det, acc in lst:
+            lines.append(f"- **{t}**" + (f": {det}" if det else ""))
+            if acc:
+                lines.append(f"  - *Acción:* {acc}")
         lines.append("")
+    return lines
 
-    # Composición
-    comp = d.get("fase_2_composicion", {})
-    if comp:
-        lines.append(_section("Composición cualitativa y cuantitativa", 3))
-        ingredientes = comp.get("ingredientes_activos", comp.get("ingredientes", []))
-        if isinstance(ingredientes, list) and ingredientes:
-            headers = ["Ingrediente", "Forma química", "Por dosis", "Por 100g", "% NRV", "Estado reg."]
-            rows = []
-            for ing in ingredientes:
-                if isinstance(ing, dict):
-                    nombre = ing.get("nombre_ingrediente", ing.get("nombre", ing.get("ingrediente", "")))
-                    forma = ing.get("forma_quimica", ing.get("forma", ""))
-                    rows.append([
-                        nombre,
-                        forma,
-                        _val(ing.get("cantidad_por_dosis", ing.get("dosis", ""))),
-                        _val(ing.get("cantidad_por_100g", "")),
-                        _val(ing.get("porcentaje_nrv", ing.get("nrv", ""))),
-                        _val(ing.get("semaforo_regulatorio", ing.get("estado", ""))),
-                    ])
-            if rows:
-                lines += _table(headers, rows)
-                lines.append("")
 
-    # Información nutricional
-    nut = d.get("fase_3_informacion_nutricional", {})
-    if nut:
-        lines.append(_section("Información nutricional", 3))
-        # Try standard list format first
-        tabla = nut.get("tabla_nutricional", nut.get("tabla", []))
-        # Try nested dict format (seccion_obligatoria + vitaminas_minerales)
-        tab_por_dosis = nut.get("tabla_nutricional_por_dosis", {})
-        filas_rows = []
-        if isinstance(tabla, list) and tabla:
-            for fila in tabla:
-                if isinstance(fila, dict):
-                    filas_rows.append([
-                        fila.get("parametro", fila.get("nutriente", fila.get("nombre", ""))),
-                        _val(fila.get("cantidad_por_dosis", fila.get("por_dosis", fila.get("valor_por_dosis", "")))),
-                        _val(fila.get("pct_vrn_dosis", fila.get("porcentaje_vrd", fila.get("vrd", "")))),
-                    ])
-        elif isinstance(tab_por_dosis, dict):
-            NUTRIENTE_LABELS = {
-                "valor_energetico_kj": "Valor energético (kJ)",
-                "valor_energetico_kcal": "Valor energético (kcal)",
-                "grasas_g": "Grasas (g)", "acidos_grasos_saturados_g": "— de las cuales saturadas (g)",
-                "hidratos_de_carbono_g": "Hidratos de carbono (g)", "azucares_g": "— de los cuales azúcares (g)",
-                "fibra_g": "Fibra (g)", "proteinas_g": "Proteínas (g)", "sal_g": "Sal (g)",
-            }
-            # Macronutrients (plain values, no VRN%)
-            sec = tab_por_dosis.get("seccion_obligatoria", {})
-            if isinstance(sec, dict):
-                for k, v in sec.items():
-                    if k == "metodo_calculo":
-                        continue
-                    label = NUTRIENTE_LABELS.get(k, k.replace("_", " ").capitalize())
-                    filas_rows.append([label, _val(v), "—"])
-            # Vitamins & minerals (dicts with nombre_etiqueta, cantidad_por_dosis, porcentaje_nrv)
-            vit = tab_por_dosis.get("vitaminas_minerales", {})
-            if isinstance(vit, dict):
-                for k, v in vit.items():
-                    if isinstance(v, dict):
-                        label = v.get("nombre_etiqueta", k)
-                        unidad = v.get("unidad", "")
-                        label_str = f"{label} ({unidad})" if unidad and unidad not in label else label
-                        cant = v.get("cantidad_por_dosis", v.get("por_dosis", ""))
-                        eq = v.get("equivalencia_ui", "")
-                        cant_str = f"{cant} ({eq})" if eq else cant
-                        vrn = v.get("porcentaje_nrv", v.get("pct_vrn", ""))
-                        filas_rows.append([label_str, _val(cant_str), _val(vrn)])
-        if filas_rows:
-            headers = ["Nutriente", "Por dosis", "% VRN*"]
-            lines += _table(headers, filas_rows)
-            lines.append("*\\* % Valores de Referencia de la Nutrición*")
-            lines.append("")
 
-    # Alérgenos
-    alerg = d.get("fase_4_alergenos", {})
-    if alerg:
-        lines.append(_section("Alérgenos", 3))
-        presentes = alerg.get("presentes", alerg.get("alergenos_presentes", []))
-        trazas = alerg.get("trazas", alerg.get("posibles_trazas", []))
-        if presentes:
-            lines.append(f"**Contiene:** {', '.join(presentes) if isinstance(presentes, list) else presentes}")
-        if trazas:
-            lines.append(f"**Puede contener trazas de:** {', '.join(trazas) if isinstance(trazas, list) else trazas}")
-        dec = alerg.get("declaracion_etiqueta", alerg.get("declaracion", ""))
-        if dec:
-            if isinstance(dec, dict):
-                dec_text = dec.get("texto_recomendado", dec.get("texto", str(dec)))
-                dec_trazas = dec.get("texto_trazas", "")
-                lines.append(f"**Declaración:** {dec_text}")
-                if dec_trazas:
-                    lines.append(f"**Trazas posibles:** {dec_trazas}")
+# ── Plantilla de Ficha Técnica (formato estándar Umbrella, 6 secciones) ──────
+# Cabecera del fabricante y textos normativos deterministas: son plantilla, NO
+# los inventa el LLM. Espejo del PDF "FT Formula 1 MIX 250188".
+
+FT_FABRICANTE = {
+    "Empresa": "Umbrella F&FI, S.L.",
+    "NIF / VAT": "B65876351",
+    "Dirección": "Pol. Ind. Mogent A7 Park — Av. Mogent 262-264, 08450 Llinars del Vallès (Barcelona), España",
+    "Registro": "RGSEAA 26.020214/B",
+    "Web": "www.umbrellamix.com",
+}
+
+# Anexo II Reg. (UE) 1169/2011 — 14 grupos de alérgenos de declaración obligatoria.
+ALERGENOS_ANEXO_II = [
+    "Cereales con gluten y derivados",
+    "Crustáceos y derivados",
+    "Huevos y derivados",
+    "Pescado y derivados",
+    "Cacahuetes y derivados",
+    "Soja y derivados",
+    "Leche y derivados (incl. lactosa)",
+    "Frutos de cáscara (almendra, avellana, nuez…)",
+    "Apio y derivados",
+    "Mostaza y derivados",
+    "Granos de sésamo y derivados",
+    "Dióxido de azufre y sulfitos (>10 mg/kg)",
+    "Altramuces y derivados",
+    "Moluscos y derivados",
+]
+
+FT_DIETAS = ["Vegetariano", "Vegano", "Sin gluten", "Sin azúcar (<0,5 g/dosis)",
+             "Kosher", "Halal", "Bio / Ecológico"]
+
+# Boilerplate normativo de la plantilla Umbrella (no es output del LLM).
+FT_FOOD_GRADE = (
+    "Todos los aditivos cumplen la legislación alimentaria de la UE. Extractos vegetales y "
+    "derivados de origen animal conformes al Reg. (CE) 396/2005 (residuos de plaguicidas) y a "
+    "los límites de contaminantes del Reg. (UE) 915/2023. Criterios de pureza según Ph. Eur."
+)
+FT_GMO = "No fabricado a partir de materias primas GMO; no sujeto a Reg. (CE) 1829/2003 ni 1830/2003."
+FT_TSE = "Fabricado sin materias primas de origen humano ni con riesgo TSE/BSE."
+FT_TRANSPORTE = "No clasificado como peligroso. Transportar a 15-25 °C, protegido de luz, calor y humedad."
+
+
+def _ft_nutricional_rows(nut: dict) -> list[list[str]]:
+    """Extrae las filas de la tabla nutricional (acepta los dos formatos del LLM)."""
+    tabla = nut.get("tabla_nutricional", nut.get("tabla", []))
+    tab_por_dosis = nut.get("tabla_nutricional_por_dosis", {})
+    rows: list[list[str]] = []
+    if isinstance(tabla, list) and tabla:
+        for fila in tabla:
+            if isinstance(fila, dict):
+                rows.append([
+                    fila.get("parametro", fila.get("nutriente", fila.get("nombre", ""))),
+                    _val(fila.get("cantidad_por_dosis", fila.get("por_dosis", fila.get("valor_por_dosis", "")))),
+                    _val(fila.get("pct_vrn_dosis", fila.get("porcentaje_vrd", fila.get("vrd", "")))),
+                ])
+    elif isinstance(tab_por_dosis, dict):
+        NUTRIENTE_LABELS = {
+            "valor_energetico_kj": "Valor energético (kJ)",
+            "valor_energetico_kcal": "Valor energético (kcal)",
+            "grasas_g": "Grasas (g)", "acidos_grasos_saturados_g": "— de las cuales saturadas (g)",
+            "hidratos_de_carbono_g": "Hidratos de carbono (g)", "azucares_g": "— de los cuales azúcares (g)",
+            "fibra_g": "Fibra (g)", "proteinas_g": "Proteínas (g)", "sal_g": "Sal (g)",
+        }
+        sec = tab_por_dosis.get("seccion_obligatoria", {})
+        if isinstance(sec, dict):
+            for k, v in sec.items():
+                if k == "metodo_calculo":
+                    continue
+                rows.append([NUTRIENTE_LABELS.get(k, k.replace("_", " ").capitalize()), _val(v), "—"])
+        vit = tab_por_dosis.get("vitaminas_minerales", {})
+        if isinstance(vit, dict):
+            for k, v in vit.items():
+                if isinstance(v, dict):
+                    label = v.get("nombre_etiqueta", k)
+                    unidad = v.get("unidad", "")
+                    label_str = f"{label} ({unidad})" if unidad and unidad not in label else label
+                    cant = v.get("cantidad_por_dosis", v.get("por_dosis", ""))
+                    eq = v.get("equivalencia_ui", "")
+                    cant_str = f"{cant} ({eq})" if eq else cant
+                    rows.append([label_str, _val(cant_str), _val(v.get("porcentaje_nrv", v.get("pct_vrn", "")))])
+    return rows
+
+
+# ── Bloque 2 · Ficha Técnica (formato Umbrella de 6 secciones) ───────────────
+
+def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
+                      reg: dict | None = None, clm: dict | None = None,
+                      nombre_producto: str = "", hoy: str = "",
+                      canonica: list[dict] | None = None) -> list[str]:
+    """Renderiza la Ficha Técnica con el formato estándar de 6 secciones de
+    Umbrella, cruzando datos de Ficha Técnica + QC + KIC + Regulatorio + Claims.
+    Los campos de fabricación que no existen en los datos se marcan como
+    'pendiente de muestra de producción' (no se inventan)."""
+    qc = qc or {}
+    kic = kic or {}
+    reg = reg or {}
+    clm = clm or {}
+    lines: list[str] = []
+    id_ = ft.get("fase_1_identificacion", {})
+    mea = ft.get("fase_7_modo_empleo_advertencias", {})
+    modo = mea.get("modo_empleo", {}) if isinstance(mea, dict) else {}
+    dosis_diaria = (modo.get("dosis_diaria", "") if isinstance(modo, dict) else "") or "—"
+
+    # ── 1 · Identificación y tabla de claims activos ─────────────────
+    lines.append(_section("1 · Identificación y claims activos", 3))
+    lines += [f"**{k}:** {v}  " for k, v in FT_FABRICANTE.items()]
+    lines.append("")
+    lines += _kv_block(id_, [
+        ("denominacion_legal", "Denominación legal"),
+        ("nombre_comercial", "Nombre comercial"),
+        ("tipo_producto", "Tipo de producto"),
+        ("forma_presentacion", "Forma de presentación"),
+        ("publico_objetivo", "Público objetivo"),
+    ])
+    if hoy:
+        lines.append(f"**Fecha / versión:** {hoy}  ")
+    lines.append(f"**Dosis diaria:** {dosis_diaria}  ")
+    lines.append("")
+
+    # Tabla de activos por dosis (Active Claims Table)
+    lines.append(_section("Tabla de activos por dosis", 4))
+    headers = ["Activo", "Dosis de activo", "% NRV/VRN", "Forma química"]
+    ft_comp = ft.get("fase_2_composicion", {})
+    ft_ings = ft_comp.get("ingredientes_activos", ft_comp.get("ingredientes", [])) if isinstance(ft_comp, dict) else []
+    ft_by_name = {}
+    for i in (ft_ings if isinstance(ft_ings, list) else []):
+        if isinstance(i, dict):
+            ft_by_name[_norm(i.get("nombre_ingrediente", i.get("nombre", i.get("ingrediente", ""))))] = i
+    kic_ings = [i for i in kic.get("fase_2_ingredientes", []) if isinstance(i, dict)]
+    canon_alineada = _alinear_canonica(kic_ings, canonica or [])
+    usa_canon = any(c is not None for c in canon_alineada)
+    rows = []
+    for idx, ing in enumerate(kic_ings):
+        nombre = ing.get("ingrediente", "")
+        ft_i = ft_by_name.get(_norm(nombre), {})
+        rows.append([
+            nombre,
+            _dosis_activo(ing, canon_alineada[idx]),
+            _fmt_pct(ing.get("porcentaje_nrv", "")),
+            (ft_i.get("forma_quimica", "") if isinstance(ft_i, dict) else "") or "—",
+        ])
+    lines += _table(headers, rows)
+    lines.append("")
+    lines.append(NOTA_DOSIS_ACTIVO_CANON if usa_canon else NOTA_DOSIS_ACTIVO)
+    lines.append("")
+
+    # Colección de posibles claims vs ingredientes (lo que pide Xavier)
+    parte_a = clm.get("parte_a_claims_regulatorios", clm.get("claims_regulatorios", {}))
+    if isinstance(parte_a, list):
+        parte_a = {"claims_por_ingrediente": parte_a}
+    claims_por_ing = parte_a.get("claims_por_ingrediente", []) if isinstance(parte_a, dict) else []
+    if claims_por_ing:
+        lines.append(_section("Posibles claims por ingrediente", 4))
+        lines.append("*Resumen ingrediente → disponibilidad de claim EFSA. El listado completo está en el Bloque 3 (Marketing).*")
+        headers = ["Ingrediente", "Claims EFSA", "Ejemplo de claim autorizado"]
+        rows = []
+        for ic in claims_por_ing:
+            if not isinstance(ic, dict):
+                continue
+            cl = ic.get("claims", []) or []
+
+            def _es_valido(c) -> bool:
+                if not isinstance(c, dict):
+                    return False
+                ref = str(c.get("referencia_efsa", c.get("referencia_reglamento", c.get("id_ue", ""))))
+                txt = str(c.get("texto_traduccion_es", c.get("texto_claim", c.get("texto", ""))))
+                blob = (ref + " " + txt).upper()
+                # Botánicos "on hold": el agente escribe "Ninguno autorizado" /
+                # "No autorizado" → no es un claim válido, es estado en espera.
+                invalidos = ("N/A", "NO APLICA", "SIN CLAIM", "NINGUNO AUTORIZADO",
+                             "NO AUTORIZADO", "EN ESPERA", "ON HOLD", "PENDIENTE")
+                return not any(m in blob for m in invalidos)
+
+            válidos = [c for c in cl if _es_valido(c)]
+            if válidos:
+                c0 = válidos[0]
+                ejemplo = c0.get("texto_traduccion_es", c0.get("texto_claim", c0.get("texto", "")))[:90] or "—"
+                rows.append([ic.get("ingrediente", ""), str(len(válidos)), ejemplo])
             else:
-                lines.append(f"**Declaración:** {dec}")
+                rows.append([ic.get("ingrediente", ""), "—", "En espera (botánico)"])
+        lines += _table(headers, rows)
         lines.append("")
 
-    # Conservación y vida útil
-    cons = d.get("fase_6_conservacion_vida_util", {})
-    if cons:
-        lines.append(_section("Conservación y vida útil", 3))
+    # ── 2 · Tabla de ingredientes (orden de peso) ────────────────────
+    lines.append(_section("2 · Ingredientes (por orden de peso)", 3))
+    ordenados = sorted(
+        [i for i in kic.get("fase_2_ingredientes", []) if isinstance(i, dict)],
+        key=lambda i: i.get("dosis_formula_mg", 0) or 0, reverse=True,
+    )
+    if ordenados:
+        items = []
+        for ing in ordenados:
+            ft_i = ft_by_name.get(_norm(ing.get("ingrediente", "")), {})
+            forma = ft_i.get("forma_quimica", "") if isinstance(ft_i, dict) else ""
+            items.append(f"{ing.get('ingrediente','')}" + (f" — *{forma}*" if forma else ""))
+        lines += [f"- {x}" for x in items]
+        lines.append("")
+    lines.append("*Coadyuvantes tecnológicos y excipientes minoritarios según fórmula (Annex III Reg. (CE) 1334/2008).*")
+    lines.append("")
+
+    # ── 3 · Información nutricional, vida útil y reactividad ──────────
+    lines.append(_section("3 · Información nutricional", 3))
+    nut_rows = _ft_nutricional_rows(ft.get("fase_3_informacion_nutricional", {}))
+    if nut_rows:
+        lines += _table(["Nutriente", "Por dosis", "% VRN*"], nut_rows)
+        lines.append("*\\* % Valores de Referencia de la Nutrición*")
+        lines.append("")
+
+    cons = ft.get("fase_6_conservacion_vida_util", {})
+    vida = cons.get("vida_util_estimada", {}) if isinstance(cons, dict) else {}
+    if isinstance(vida, dict) and vida.get("meses"):
+        _m = str(vida["meses"]).strip()
+        vida_str = _m if "mes" in _m.lower() else f"{_m} meses"
+    else:
+        vida_str = _val(vida if not isinstance(vida, dict) else "")
+    lines.append(f"**Vida útil estimada:** {vida_str}  ")
+    lines.append("")
+
+    # Reactividad cualitativa: derivada de los riesgos/advertencias de KIC.
+    riesgos = (kic.get("fase_4_valoracion_global", {}) or {}).get("riesgos_formulacion", [])
+    if riesgos:
+        lines.append(_section("Reactividad y estabilidad (cualitativa)", 4))
+        for r in riesgos[:5]:
+            txt = r.get("riesgo", r.get("detalle", str(r))) if isinstance(r, dict) else str(r)
+            lines.append(f"- {txt}")
+        lines.append("")
+
+    # Microbiología (de QC fase_6) — datos analíticos de control.
+    f6 = qc.get("fase_6_ensayos_analiticos_adicionales", {})
+    micro = f6.get("microbiologia", {}) if isinstance(f6, dict) else {}
+    crit = micro.get("criterios_microbiologicos", []) if isinstance(micro, dict) else []
+    if crit:
+        lines.append(_section("Criterios microbiológicos", 4))
+        rows = [[c.get("parametro", ""), c.get("criterio", c.get("limite", ""))]
+                for c in crit if isinstance(c, dict)]
+        lines += _table(["Parámetro", "Criterio"], rows)
+        lines.append("")
+
+    # ── 4 · Identificación y especificaciones ────────────────────────
+    lines.append(_section("4 · Identificación y especificaciones", 3))
+    espec = ft.get("fase_5_especificaciones_tecnicas", {})
+    fq = espec.get("especificaciones_fisicoquimicas", {}) if isinstance(espec, dict) else {}
+    if isinstance(fq, dict) and fq:
+        for k, v in fq.items():
+            lines.append(f"**{k.replace('_',' ').capitalize()}:** {_spec_val(v)}  ")
+        lines.append("")
+    # Identidad analítica desde QC
+    ftir = qc.get("fase_1_ftir", {})
+    if ftir:
+        lines.append(f"**Identidad FTIR:** {ftir.get('objetivo','Identificación por espectro FTIR — pasa test')}  ")
+    if qc.get("fase_2_granulometria") or qc.get("fase_3_densidad") or qc.get("fase_4_ph"):
+        lines.append("**Granulometría / densidad / pH:** según plan de control (ver Bloque 5).  ")
+    if not fq and not ftir:
+        lines.append("*Especificaciones físico-químicas pendientes de muestra de producción.*  ")
+    lines += [
+        "",
+        f"**Food grade:** {FT_FOOD_GRADE}  ",
+        f"**GMO:** {FT_GMO}  ",
+        f"**TSE/BSE:** {FT_TSE}  ",
+        "",
+    ]
+
+    # ── 5 · Alérgenos y aptitud dietética ────────────────────────────
+    lines.append(_section("5 · Alérgenos y aptitud dietética", 3))
+    alerg = ft.get("fase_4_alergenos", {})
+    presentes = alerg.get("presentes", "") if isinstance(alerg, dict) else ""
+    trazas = alerg.get("trazas", "") if isinstance(alerg, dict) else ""
+    dec = alerg.get("declaracion_etiqueta", alerg.get("declaracion", "")) if isinstance(alerg, dict) else ""
+    if presentes:
+        lines.append(f"**Contiene:** {presentes if isinstance(presentes, str) else ', '.join(presentes)}")
+    if trazas:
+        lines.append(f"**Trazas posibles:** {trazas if isinstance(trazas, str) else ', '.join(trazas)}")
+    if dec:
+        lines.append(f"**Declaración:** {dec if isinstance(dec, str) else dec.get('texto_recomendado', str(dec))}")
+    lines.append("")
+    lines.append(_section("Tabla de alérgenos (Anexo II Reg. UE 1169/2011)", 4))
+    lines.append("*Marcado a verificar con fichas de proveedor y plan HACCP; no analizado en esta fase.*")
+    lines += _table(["Grupo de alérgenos", "Estado"],
+                    [[a, "Verificar"] for a in ALERGENOS_ANEXO_II])
+    lines.append("")
+    lines.append(_section("Aptitud para dietas", 4))
+    lines += _table(["Dieta", "Estado"], [[d, "Bajo petición"] for d in FT_DIETAS])
+    lines.append("")
+
+    # ── 6 · Datos de producto y conservación ─────────────────────────
+    lines.append(_section("6 · Datos de producto y conservación", 3))
+    if isinstance(cons, dict):
         for campo, label in [
-            ("condiciones_conservacion", "Condiciones de conservación"),
-            ("vida_util_estimada", "Vida útil estimada"),
-            ("condiciones_transporte", "Condiciones de transporte"),
+            ("condiciones_conservacion", "Conservación"),
+            ("condiciones_post_apertura", "Tras apertura"),
         ]:
-            val = cons.get(campo)
-            if val:
-                if isinstance(val, dict):
-                    meses = val.get("meses", "")
-                    justif = val.get("justificacion", val.get("condicion", ""))
-                    val_str = f"{meses} meses" if meses else ""
-                    if justif:
-                        val_str += f" — {justif[:150]}..." if len(str(justif)) > 150 else f" — {justif}"
-                else:
-                    val_str = str(val)
-                lines.append(f"**{label}:** {val_str}  ")
-        lines.append("")
+            v = cons.get(campo)
+            if v:
+                lines.append(f"**{label}:** {_val(v)}  ")
+    lines += [
+        f"**Vida útil (producto terminado):** {vida_str}  ",
+        f"**Transporte:** {FT_TRANSPORTE}  ",
+        f"**Modo de empleo:** {dosis_diaria}  ",
+        "",
+    ]
 
-    # Modo de empleo y advertencias
-    mea = d.get("fase_7_modo_empleo_advertencias", {})
-    if mea:
-        lines.append(_section("Modo de empleo y advertencias", 3))
-        modo = mea.get("modo_empleo", mea.get("posologia", ""))
-        if modo:
-            if isinstance(modo, dict):
-                modo_str = modo.get("dosis_diaria", modo.get("modo_administracion", str(modo)))
-                momento = modo.get("momento_ingesta", "")
-                poblacion = modo.get("poblacion_objetivo", "")
-                lines.append(f"**Modo de empleo:** {modo_str}  ")
-                if momento:
-                    lines.append(f"**Momento de ingesta:** {momento}  ")
-                if poblacion:
-                    lines.append(f"**Población objetivo:** {poblacion}  ")
-            else:
-                lines.append(f"**Modo de empleo:** {modo}  ")
-        dosis = mea.get("dosis_maxima", mea.get("dosis_diaria_maxima", ""))
-        if dosis:
-            lines.append(f"**Dosis máxima:** {dosis}  ")
-        advertencias = mea.get("advertencias_obligatorias", mea.get("advertencias", []))
-        if advertencias:
-            lines.append("**Advertencias obligatorias:**")
-            items = advertencias if isinstance(advertencias, list) else [advertencias]
-            for a in items:
-                if isinstance(a, dict):
-                    lines.append(f"- {a.get('texto', str(a))}")
-                else:
-                    lines.append(f"- {a}")
-        lines.append("")
-
-    lines += _fuentes(d.get("fuentes_consultadas", []))
+    lines += _fuentes(ft.get("fuentes_consultadas", []))
     return lines
 
 
 # ── Sección 4: Claims ───────────────────────────────────────────────────────
 
+_SIN_CLAIM_MARKERS = ("ninguno autorizado", "no autorizado", "sin claim",
+                      "n/a", "no aplica", "en espera", "on hold", "pendiente")
+
+
+def _claim_en_espera(c) -> bool:
+    """True si el 'claim' indica ausencia de claim autorizado (botánico en
+    espera EFSA) en vez de un claim real del Reg. (UE) 432/2012."""
+    if not isinstance(c, dict):
+        return not str(c).strip()
+    txt = str(c.get("texto_traduccion_es", c.get("texto_claim", c.get("texto", ""))))
+    ref = str(c.get("referencia_efsa", c.get("referencia_reglamento", c.get("id_ue", ""))))
+    blob = (txt + " " + ref).lower()
+    return (not txt.strip()) or any(m in blob for m in _SIN_CLAIM_MARKERS)
+
+
 def fmt_claims(d: dict) -> list[str]:
-    lines = [_section("4. Claims y Diferenciación Comercial")]
+    lines = [_section("Claims y diferenciación comercial", 3)]
 
     parte_a = d.get("parte_a_claims_regulatorios", d.get("claims_regulatorios", {}))
     # Si es lista en vez de dict, convertir a dict con key "claims_por_ingrediente"
@@ -476,9 +857,14 @@ def fmt_claims(d: dict) -> list[str]:
             if not claims_list:
                 continue
             lines.append(f"**{nombre}**")
+            # Botánicos sin claim autorizado: mostrar estado, no una fila vacía.
+            válidos = [c for c in claims_list if not _claim_en_espera(c)]
+            if not válidos:
+                lines += ["*En espera (botánico) — sin claim autorizado en el Reg. (UE) 432/2012.*", ""]
+                continue
             headers = ["Texto del claim", "Condición de uso", "Ref. EFSA"]
             rows = []
-            for c in claims_list:
+            for c in válidos:
                 if isinstance(c, dict):
                     texto = c.get("texto_traduccion_es", c.get("texto_claim", c.get("texto", c.get("texto_oficial_en", ""))))
                     rows.append([
@@ -560,154 +946,120 @@ def fmt_claims(d: dict) -> list[str]:
     return lines
 
 
-# ── Sección 5: Etiqueta ─────────────────────────────────────────────────────
+# ── Bloque 3 · Etiqueta (layout cara frontal / caras laterales, ES + EN) ─────
+# Espejo del ejemplo "Immunara*": panel frontal + caras laterales, con la
+# división obligatorio/opcional que pide Xavier. Bilingüe: el español sale de
+# los datos del agente; el inglés de los campos con sufijo `_en` (cuando el
+# agente Etiqueta los emita) y, en su defecto, de las frases legales fijas.
 
-def fmt_etiqueta(d: dict) -> list[str]:
-    lines = [_section("5. Propuesta de Etiqueta")]
+ETIQUETA_MENCION = {"es": "Complemento alimenticio", "en": "Food supplement"}
+ETIQUETA_ADVERTENCIAS_EN = [
+    "Do not exceed the recommended daily dose.",
+    "Food supplements should not be used as a substitute for a varied and balanced diet and a healthy lifestyle.",
+    "Keep out of reach of young children.",
+]
+ETIQUETA_ECOEMBES = "Logo Ecoembes (Punto Verde) — gestión de residuos de envases"
 
+
+def _etq_caras(d: dict) -> dict:
     caras = d.get("fase_2_texto_por_caras", d.get("caras", {}))
-    if isinstance(caras, list) and caras:
-        # Normalizar lista de caras a dict por nombre de cara
-        caras_dict = {}
+    if isinstance(caras, list):
+        out: dict = {}
         for c in caras:
             if isinstance(c, dict):
-                cara_name = c.get("cara", "").lower().replace(" ", "_")
-                caras_dict[cara_name] = c
-        caras = caras_dict
-    if isinstance(caras, dict):
-        # ── Cara principal ──────────────────────────────────────────
-        cp = caras.get("cara_principal", {})
-        if cp:
-            lines.append(_section("Cara principal", 3))
-            denom = cp.get("denominacion_venta", "")
-            if denom:
-                lines += [f"**Denominación de venta:**", f"> {denom}", ""]
-            cantidad = cp.get("cantidad_neta", "")
-            if cantidad:
-                lines.append(f"**Cantidad neta:** {cantidad}  ")
-            claims = cp.get("claims_autorizados", [])
-            if claims:
-                lines.append("**Claims autorizados:**")
-                for c in (claims if isinstance(claims, list) else [claims]):
-                    lines.append(f"- {c}")
-            notas_c = cp.get("notas_claims", "")
-            if notas_c:
-                lines += ["", f"*{notas_c}*"]
-            lines.append("")
+                out[c.get("cara", "").lower().replace(" ", "_")] = c
+        return out
+    return caras if isinstance(caras, dict) else {}
 
-        # ── Cara secundaria ─────────────────────────────────────────
-        cs = caras.get("cara_secundaria", {})
-        if cs:
-            lines.append(_section("Cara secundaria", 3))
-            lista_ing = cs.get("lista_ingredientes", "")
-            if lista_ing:
-                lines += [f"**Lista de ingredientes:**", f"> {lista_ing}", ""]
-            alergenos = cs.get("alergenos", "")
-            if alergenos:
-                lines += [f"**Alérgenos:** {alergenos}  ", ""]
-            modo = cs.get("modo_empleo", "")
-            dosis = cs.get("dosis_diaria", "")
-            poblacion = cs.get("poblacion", "")
-            if modo:
-                lines.append(f"**Modo de empleo:** {modo}  ")
-            if dosis:
-                lines.append(f"**Dosis diaria:** {dosis}  ")
-            if poblacion:
-                lines.append(f"**Población:** {poblacion}  ")
-            lines.append("")
-            adv_oblig = cs.get("advertencias_obligatorias", [])
-            adv_rec = cs.get("advertencias_recomendadas", [])
-            if adv_oblig:
-                lines.append("**Advertencias obligatorias:**")
-                for a in adv_oblig:
-                    lines.append(f"- {a.get('texto', a) if isinstance(a, dict) else a}")
-            if adv_rec:
-                lines.append("**Advertencias recomendadas:**")
-                for a in adv_rec:
-                    lines.append(f"- {a.get('texto', a) if isinstance(a, dict) else a}")
-            bloque = cs.get("bloque_advertencias_texto", "")
-            if bloque and not adv_oblig and not adv_rec:
-                lines += [f"> {bloque}"]
-            lines.append("")
 
-            # Tabla nutricional embebida en cara secundaria
-            nut_cara = cs.get("tabla_nutricional", {})
-            if isinstance(nut_cara, dict) and nut_cara:
-                lines.append(_section("Tabla nutricional (cara secundaria)", 4))
-                filas = nut_cara.get("filas", nut_cara.get("tabla", []))
-                if isinstance(filas, list) and filas:
-                    headers = ["Nutriente", "Por dosis", "% VRN*"]
-                    rows = []
-                    for fila in filas:
-                        if isinstance(fila, dict):
-                            nutriente = fila.get("parametro", fila.get("nutriente", fila.get("nombre", "")))
-                            unidad = fila.get("unidad", "")
-                            nombre_str = f"{nutriente} ({unidad})" if unidad and unidad not in str(nutriente) else nutriente
-                            rows.append([
-                                nombre_str,
-                                _val(fila.get("por_dosis", fila.get("valor_por_dosis", fila.get("cantidad", "")))),
-                                _val(fila.get("pct_vrn_dosis", fila.get("porcentaje_vrd", fila.get("vrd", fila.get("porcentaje_nrv", ""))))),
-                            ])
-                    if rows:
-                        lines += _table(headers, rows)
-                        lines.append("*\\* % Valores de Referencia de la Dieta*")
-                lines.append("")
+def _etq_panel(caras: dict, lista_ing_es: str, lang: str, nombre_producto: str) -> list[str]:
+    """Layout (cara frontal + caras laterales) en el idioma dado.
+    Para 'en' lee los campos con sufijo `_en`; si faltan, usa las frases legales
+    fijas y marca el contenido variable como pendiente."""
+    cp = caras.get("cara_principal", {}) or {}
+    cs = caras.get("cara_secundaria", {}) or {}
+    cl = caras.get("cara_lateral_contraetiqueta", {}) or {}
+    pend = "_(pendiente: regenerar el pipeline con el agente Etiqueta bilingüe)_" if lang == "en" else "—"
 
-        # ── Cara lateral / contraetiqueta ───────────────────────────
-        cl = caras.get("cara_lateral_contraetiqueta", {})
-        if cl:
-            lines.append(_section("Cara lateral / contraetiqueta", 3))
-            for campo, label in [
-                ("operador_responsable", "Operador responsable"),
-                ("fabricante", "Fabricante"),
-                ("fecha_duracion_minima", "Duración mínima"),
-                ("condiciones_conservacion", "Conservación"),
-                ("numero_lote", "N.º lote"),
-                ("pais_origen", "País de origen"),
-                ("notificacion_aesan", "Notificación AESAN"),
-            ]:
-                val = cl.get(campo, "")
-                if val:
-                    lines.append(f"**{label}:** {val}  ")
-            notas_lat = cl.get("notas_lateral", "")
-            if notas_lat:
-                lines += ["", f"*{notas_lat}*"]
-            lines.append("")
+    def g(dic: dict, key: str) -> str:
+        return (dic.get(f"{key}_en", "") if lang == "en" else dic.get(key, "")) or ""
 
-    # Lista de ingredientes
+    def gn(dic: dict, key: str) -> str:
+        # Campos administrativos (operador, fabricante, lote, fechas): comunes a
+        # ambos idiomas → siempre el valor base, sin sufijo _en ni 'pendiente'.
+        return dic.get(key, "") or ""
+
+    L: list[str] = []
+    # ── Cara frontal ──
+    L.append(_section("Cara frontal", 4))
+    L.append("**Obligatorio:**")
+    L.append(f"- Marca / nombre comercial: {nombre_producto or g(cp,'denominacion_venta') or pend}")
+    base = g(cp, "denominacion_venta")
+    # Evita "a base de… complemento alimenticio a base de…" (la denominación legal ya lo incluye).
+    base = re.sub(r"(?i)^\s*(complemento alimenticio\s+)?a base de\s+", "", base).strip()
+    en_base = "Food supplement based on:" if lang == "en" else "En base a:"
+    L.append(f"- {en_base} {base or pend}")
+    L.append(f"- Dosis / cantidad neta: {g(cp,'cantidad_neta') or pend}")
+    L.append(f"- Mención legal: **{ETIQUETA_MENCION[lang]}**")
+    L.append("**Opcional:**")
+    L.append("- Logos (certificaciones: vegano, sin gluten, GMP… según corresponda)")
+    L.append("")
+    # ── Caras laterales ──
+    L.append(_section("Caras laterales", 4))
+    L.append("**Obligatorio:**")
+    li = lista_ing_es if lang == "es" else g(cs, "lista_ingredientes")
+    L.append("- Lista de ingredientes *(alérgenos en negrita)*:")
+    L.append(f"  > {li or pend}")
+    aler = g(cs, "alergenos")
+    if aler:
+        L.append(f"- Declaración de alérgenos: {aler}")
+    modo = g(cs, "modo_empleo") or g(cs, "dosis_diaria")
+    L.append(f"- Modo de empleo / dosis: {modo or pend}")
+    adv = cs.get("advertencias_obligatorias", []) if lang == "es" else (cs.get("advertencias_obligatorias_en") or ETIQUETA_ADVERTENCIAS_EN)
+    L.append("- Advertencias y frases obligatorias:")
+    for a in (adv or []):
+        L.append(f"  - {a.get('texto', a) if isinstance(a, dict) else a}")
+    op_es = [("operador_responsable", "Operador responsable"), ("fabricante", "Fabricado por")]
+    op_en = [("operador_responsable", "Responsible operator"), ("fabricante", "Manufactured by")]
+    for key, lab in (op_en if lang == "en" else op_es):
+        v = gn(cl, key)  # administrativo → valor común (no se traduce)
+        if v:
+            L.append(f"- {lab}: {v.splitlines()[0] if v else v}")
+    L.append("- Distribuido por: " + (gn(cl, "distribuido_por") or "—"))
+    L.append(f"- Peso neto · Lote · Caducidad: {gn(cl, 'fecha_duracion_minima') or '—'}")
+    L.append(f"- {ETIQUETA_ECOEMBES}")
+    L.append("**Opcional:**")
+    L.append("- Tabla nutricional / %VRN → ver Bloque 2 (Ficha Técnica)")
+    L.append("- Contribución nutricional (claims) → ver Claims, Bloque 3")
+    L.append("- Código de barras · código QR")
+    L.append("")
+    return L
+
+
+def fmt_etiqueta(d: dict, nombre_producto: str = "") -> list[str]:
+    lines = [_section("Propuesta de etiqueta", 3)]
+    caras = _etq_caras(d)
     lista_ing = d.get("fase_4_lista_ingredientes_completa", d.get("lista_ingredientes_completa", ""))
-    if lista_ing:
-        lines.append(_section("Lista de ingredientes", 3))
-        if isinstance(lista_ing, str):
-            lines += [f"> {lista_ing}", ""]
-        elif isinstance(lista_ing, dict):
-            texto = lista_ing.get("texto", lista_ing.get("lista", ""))
-            if texto:
-                lines += [f"> {texto}", ""]
+    if isinstance(lista_ing, dict):
+        lista_ing = lista_ing.get("texto", lista_ing.get("lista", ""))
 
-    # Tabla nutricional
-    nut = d.get("fase_3_tabla_nutricional_completa", d.get("tabla_informacion_nutricional", {}))
-    if nut:
-        lines.append(_section("Tabla de información nutricional", 3))
-        dosis_ref = nut.get("dosis_referencia", nut.get("por_dosis", ""))
-        if dosis_ref:
-            lines.append(f"*Valores por dosis de referencia ({dosis_ref}):*")
-        filas = nut.get("filas", nut.get("tabla", []))
-        if isinstance(filas, list) and filas:
-            headers = ["Nutriente", "Por 100g", "Por dosis", "% VRD*"]
-            rows = []
-            for fila in filas:
-                if isinstance(fila, dict):
-                    rows.append([
-                        fila.get("nutriente", fila.get("nombre", "")),
-                        _val(fila.get("valor_por_100g", fila.get("por_100g", ""))),
-                        _val(fila.get("valor_por_dosis", fila.get("por_dosis", ""))),
-                        _val(fila.get("porcentaje_vrd", fila.get("vrd", ""))),
-                    ])
-            if rows:
-                lines += _table(headers, rows)
-                lines.append("*\\* % Valores de Referencia de la Dieta*")
-        lines.append("")
+    lines.append(_section("Versión en español (ES)", 4))
+    lines += _etq_panel(caras, lista_ing, "es", nombre_producto)
+
+    lines.append(_section("Versión en inglés (EN)", 4))
+    has_en = any(
+        (caras.get(c, {}) or {}).get(f"{k}_en")
+        for c in ("cara_principal", "cara_secundaria", "cara_lateral_contraetiqueta")
+        for k in ("denominacion_venta", "lista_ingredientes", "modo_empleo")
+    )
+    if not has_en:
+        lines += [
+            "*El agente Etiqueta aún no emite contenido en inglés; se muestran las "
+            "menciones legales fijas en EN y el contenido variable queda pendiente. "
+            "Regenera el pipeline tras activar el modo bilingüe del agente para poblarlo.*",
+            "",
+        ]
+    lines += _etq_panel(caras, lista_ing, "en", nombre_producto)
 
     # Notas técnicas
     notas = d.get("fase_5_notas_tecnicas_diseno", d.get("notas_tecnicas", {}))
@@ -753,7 +1105,7 @@ def fmt_etiqueta(d: dict) -> list[str]:
 # ── Sección 6: Formatos ─────────────────────────────────────────────────────
 
 def fmt_formatos(d: dict) -> list[str]:
-    lines = [_section("6. Formatos e Innovación")]
+    lines = [_section("Formatos e innovación", 3)]
 
     # Recomendación primero
     rec = d.get("fase_4_recomendacion_final", {})
@@ -825,19 +1177,102 @@ def fmt_formatos(d: dict) -> list[str]:
             ("combinaciones_sinergicas", "Combinaciones sinérgicas"),
         ]:
             items = innov.get(campo, [])
-            if isinstance(items, list) and items:
-                lines.append(f"**{label}:**")
-                lines += [f"- {x}" for x in items]
-                lines.append("")
+            if isinstance(items, list):
+                lines += _labeled_list(label, items)
 
     lines += _fuentes(d.get("fuentes_consultadas", []))
+    return lines
+
+
+# ── Bloque 3 · Segmentos de mercado (Claims) ─────────────────────────────────
+
+def fmt_segmentos(clm: dict) -> list[str]:
+    """Segmentos de mercado adecuados para la fórmula. Usa la lista estructurada
+    `parte_f_segmentos_mercado` si el agente la emite; si no, cae a los públicos
+    objetivo de `parte_d_diferenciadores` (lo que existe hoy)."""
+    seg = clm.get("parte_f_segmentos_mercado", clm.get("segmentos_mercado", []))
+    pd = clm.get("parte_d_diferenciadores", {}) if isinstance(clm.get("parte_d_diferenciadores"), dict) else {}
+
+    lines = [_section("Segmentos de mercado", 3)]
+    if isinstance(seg, list) and seg:
+        headers = ["Segmento", "Necesidad principal", "Encaje con la fórmula", "Mensaje clave"]
+        rows = []
+        for s in seg:
+            if not isinstance(s, dict):
+                continue
+            rows.append([
+                s.get("segmento", s.get("nombre", "")),
+                s.get("necesidad_principal", s.get("necesidad", "")),
+                s.get("encaje_formula", s.get("encaje", "")),
+                s.get("mensaje_clave", s.get("mensaje", "")),
+            ])
+        lines += _table(headers, rows)
+        lines.append("")
+    elif pd.get("publico_objetivo_principal") or pd.get("publico_objetivo_secundario"):
+        if pd.get("publico_objetivo_principal"):
+            lines.append(f"**Público objetivo principal:** {pd['publico_objetivo_principal']}  ")
+        if pd.get("publico_objetivo_secundario"):
+            lines.append(f"**Público objetivo secundario:** {pd['publico_objetivo_secundario']}  ")
+        if pd.get("momento_consumo"):
+            lines.append(f"**Momento de consumo:** {pd['momento_consumo']}  ")
+        lines += ["", "*Segmentación detallada pendiente: regenera el pipeline para poblar la tabla de segmentos.*", ""]
+    else:
+        lines += ["*Pendiente: regenera el pipeline para poblar los segmentos de mercado.*", ""]
+    return lines
+
+
+# ── Bloque 3 · Formatos × Segmentos (Formatos) ───────────────────────────────
+
+def fmt_formatos_segmentos(fmt: dict) -> list[str]:
+    """Matriz formato × segmento. Usa `matriz_formato_segmento` si el agente la
+    emite; si no, deriva una matriz inicial del formato óptimo/alternativo y los
+    formatos de innovación ya presentes."""
+    lines = [_section("Formatos × Segmentos", 3)]
+    matriz = fmt.get("matriz_formato_segmento", [])
+    if isinstance(matriz, list) and matriz:
+        headers = ["Segmento", "Formato recomendado", "Por qué", "Innovación"]
+        rows = []
+        for m in matriz:
+            if not isinstance(m, dict):
+                continue
+            innov = m.get("es_innovacion", m.get("innovacion", ""))
+            innov_str = "✅" if innov is True else ("—" if innov in (False, "", None) else _val(innov))
+            rows.append([
+                m.get("segmento", ""),
+                m.get("formato_recomendado", m.get("formato", "")),
+                m.get("justificacion", m.get("motivo", "")),
+                innov_str,
+            ])
+        lines += _table(headers, rows)
+        lines.append("")
+        return lines
+
+    # Fallback: matriz inicial derivada de la recomendación de formatos existente.
+    rec = fmt.get("fase_4_recomendacion_final", {})
+    opt = rec.get("formato_optimo", {}) if isinstance(rec, dict) else {}
+    alt = rec.get("formato_alternativo", {}) if isinstance(rec, dict) else {}
+    opt_n = opt.get("nombre", "") if isinstance(opt, dict) else _val(opt)
+    alt_n = alt.get("nombre", "") if isinstance(alt, dict) else _val(alt)
+    rows = []
+    if opt_n:
+        rows.append(["Segmento principal", opt_n,
+                     (opt.get("justificacion_comercial", "") if isinstance(opt, dict) else "") or "Formato óptimo recomendado", "—"])
+    if alt_n:
+        rows.append(["Segmento alternativo", alt_n,
+                     (alt.get("escenario", "") if isinstance(alt, dict) else "") or "Escenario de coste/target distinto", "—"])
+    if rows:
+        lines += _table(["Segmento", "Formato recomendado", "Por qué", "Innovación"], rows)
+        lines += ["", "*Matriz inicial derivada del análisis de formatos. Regenera el pipeline para la matriz formato×segmento completa.*", ""]
+    else:
+        lines += ["*Pendiente: regenera el pipeline para poblar la matriz formato×segmento.*", ""]
     return lines
 
 
 # ── Sección 7: Docs Internos ────────────────────────────────────────────────
 
 def fmt_docs_internos(d: dict) -> list[str]:
-    lines = [_section("7. Documentación Interna de Producción")]
+    # El título del bloque ("## 4. Documentación Interna de Producción") lo añade compose_informe.
+    lines: list[str] = []
 
     # Lista de Materiales
     lm = d.get("fase_1_lista_materiales_navision", {})
@@ -912,8 +1347,10 @@ def fmt_docs_internos(d: dict) -> list[str]:
                     op = paso.get("operacion", paso.get("nombre", ""))
                     desc = paso.get("descripcion", paso.get("detalle", ""))
                     pcc = paso.get("punto_critico", paso.get("pcc", False))
-                    pcc_str = " 🔴 **PCC**" if pcc else ""
-                    lines.append(f"**{num}. {op}{pcc_str}**")
+                    # El marcador PCC va FUERA de la negrita del título para no
+                    # anidar `**...**` (rompe el render markdown→PDF dejando '**').
+                    pcc_str = " 🔴 PCC" if pcc else ""
+                    lines.append(f"**{num}. {op}**{pcc_str}")
                     lines.append(f"{desc}")
                     cond = paso.get("condiciones", {})
                     if isinstance(cond, dict) and cond:
@@ -974,7 +1411,8 @@ def fmt_docs_internos(d: dict) -> list[str]:
 # ── Sección 8: QC ───────────────────────────────────────────────────────────
 
 def fmt_qc(d: dict) -> list[str]:
-    lines = [_section("8. Plan de Control de Calidad")]
+    # El título del bloque ("## 5. Plan de Calidad") lo añade compose_informe.
+    lines: list[str] = []
 
     # Resumen ejecutivo QC
     resumen = d.get("fase_8_resumen_ejecutivo", "")
@@ -1117,7 +1555,9 @@ def fmt_qc(d: dict) -> list[str]:
             lines.append("**Condiciones de estudio:**")
             for cond in condiciones:
                 if isinstance(cond, dict):
-                    lines.append(f"- {cond.get('tipo', cond.get('nombre',''))}: {cond.get('temperatura','')} / {cond.get('humedad_relativa', cond.get('humedad',''))} — {cond.get('duracion', cond.get('meses',''))} meses")
+                    _dur = str(cond.get("duracion", cond.get("meses", ""))).strip()
+                    _dur_str = _dur if (not _dur or "mes" in _dur.lower()) else f"{_dur} meses"
+                    lines.append(f"- {cond.get('tipo', cond.get('nombre',''))}: {cond.get('temperatura','')} / {cond.get('humedad_relativa', cond.get('humedad',''))} — {_dur_str}")
                 else:
                     lines.append(f"- {cond}")
             lines.append("")
@@ -1157,10 +1597,69 @@ def fmt_qc(d: dict) -> list[str]:
     return lines
 
 
+# ── Bloque 6 · Portfolio recomendado (Agente 9) ──────────────────────────────
+
+def fmt_portfolio(d: dict) -> list[str]:
+    """Renderiza el portfolio a aconsejar al cliente: posicionamiento del
+    producto ancla, extensiones de línea, productos complementarios y gama
+    recomendada."""
+    lines: list[str] = []
+
+    pos = d.get("fase_1_posicionamiento", {})
+    if isinstance(pos, dict) and pos:
+        lines += _kv_block(pos, [
+            ("producto_ancla", "Producto ancla"),
+            ("categoria", "Categoría"),
+            ("propuesta_valor", "Propuesta de valor"),
+        ])
+        lines.append("")
+
+    def _tabla_productos(items: list, titulo: str, col_relacion: str, key_relacion: str) -> None:
+        if not isinstance(items, list) or not items:
+            return
+        lines.append(_section(titulo, 3))
+        headers = ["Producto", col_relacion, "Ingredientes clave", "Formato", "Segmento"]
+        rows = []
+        for p in items:
+            if not isinstance(p, dict):
+                continue
+            ing = p.get("ingredientes_clave", [])
+            ing_str = ", ".join(ing) if isinstance(ing, list) else _val(ing)
+            rows.append([
+                p.get("nombre", ""),
+                p.get(key_relacion, p.get("descripcion", "")),
+                ing_str or "—",
+                p.get("formato_sugerido", "") or "—",
+                p.get("segmento_objetivo", "") or "—",
+            ])
+        lines.extend(_table(headers, rows))
+        lines.append("")
+
+    _tabla_productos(d.get("fase_2_extensiones_linea", []),
+                     "Extensiones de línea", "Diferencia vs ancla", "diferencia_vs_ancla")
+    _tabla_productos(d.get("fase_3_productos_complementarios", []),
+                     "Productos complementarios", "Sinergia con el ancla", "sinergia_con_ancla")
+
+    gama = d.get("fase_4_gama_recomendada", {})
+    if isinstance(gama, dict) and gama:
+        lines.append(_section("Gama recomendada (roadmap)", 3))
+        sec = gama.get("secuencia_lanzamiento", [])
+        if isinstance(sec, list):
+            lines += [f"- {s}" for s in sec]
+        just = gama.get("justificacion", "")
+        if just:
+            lines += ["", f"*{just}*"]
+        lines.append("")
+
+    lines += _fuentes(d.get("fuentes_consultadas", []))
+    return lines
+
+
 # ── Compositor principal ────────────────────────────────────────────────────
 
 def compose_informe(formula: str, path: str, agent_models: dict | None = None,
-                    timings: dict | None = None, total_elapsed: float = 0) -> None:
+                    timings: dict | None = None, total_elapsed: float = 0,
+                    output_dir: str | None = None) -> None:
     """
     Lee los JSON de los 8 agentes y genera un informe de producto
     en formato markdown profesional.
@@ -1168,14 +1667,20 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
     nombre_producto = formula.strip().splitlines()[0]
     hoy = date.today().strftime("%d/%m/%Y")
 
-    kic = _load("agente_1_kic_v2")
-    reg = _load("agente_2_regulatorio_v2")
-    ft  = _load("agente_3_ficha_técnica_v2")
-    clm = _load("agente_4_claims_v2")
-    etq = _load("agente_5_etiqueta_v2")
-    fmt = _load("agente_6_formatos_v2")
-    doc = _load("agente_7_docs_internos_v2")
-    qc  = _load("agente_8_qc_v2")
+    # output_dir defaults to the directory containing the report itself
+    if output_dir is None:
+        output_dir = os.path.dirname(os.path.abspath(path))
+
+    kic = _load("agente_1_kic_v2", output_dir)
+    reg = _load("agente_2_regulatorio_v2", output_dir)
+    ft  = _load("agente_3_ficha_técnica_v2", output_dir)
+    clm = _load("agente_4_claims_v2", output_dir)
+    etq = _load("agente_5_etiqueta_v2", output_dir)
+    fmt = _load("agente_6_formatos_v2", output_dir)
+    doc = _load("agente_7_docs_internos_v2", output_dir)
+    qc  = _load("agente_8_qc_v2", output_dir)
+    prt = _load("agente_9_portfolio_v2", output_dir)
+    canonica = _load_canonica(output_dir)  # dosis de activo del FT PDF (si existe)
 
     # Mapa prefix → _trazabilidad (para tokens y coste en el Anexo)
     _trazab_map: dict[str, dict] = {
@@ -1187,6 +1692,7 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
         "AGENT_6_FORMATOS": fmt.get("_trazabilidad", {}),
         "AGENT_7_DOCS":     doc.get("_trazabilidad", {}),
         "AGENT_8_QC":       qc.get("_trazabilidad", {}),
+        "AGENT_9_PORTFOLIO": prt.get("_trazabilidad", {}),
     }
 
     # ── Portada ──────────────────────────────────────────────────────
@@ -1210,23 +1716,20 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
         "",
         "## Índice",
         "",
-        "1. [Análisis KIC — Composición de Ingredientes](#1-análisis-de-composición-de-ingredientes-kic)",
-        "2. [Validación Regulatoria](#2-validación-regulatoria)",
-        "3. [Ficha Técnica](#3-ficha-técnica)",
-        "4. [Claims y Diferenciación Comercial](#4-claims-y-diferenciación-comercial)",
-        "5. [Propuesta de Etiqueta](#5-propuesta-de-etiqueta)",
-        "6. [Formatos e Innovación](#6-formatos-e-innovación)",
-        "7. [Documentación Interna de Producción](#7-documentación-interna-de-producción)",
-        "8. [Plan de Control de Calidad](#8-plan-de-control-de-calidad)",
-        "9. [Anexo — Configuración del Pipeline](#anexo--configuración-del-pipeline)",
+        "1. [Fórmula Cuantitativa](#1-fórmula-cuantitativa)",
+        "2. [Ficha Técnica](#2-ficha-técnica)",
+        "3. [Información de Marketing](#3-información-de-marketing)",
+        "4. [Documentación Interna de Producción](#4-documentación-interna-de-producción)",
+        "5. [Plan de Calidad](#5-plan-de-calidad)",
+        "6. [Portfolio recomendado](#6-portfolio-recomendado)",
+        "7. [Anexo — Configuración del Pipeline](#anexo--configuración-del-pipeline)",
         "",
         "---",
         "",
-        "## Fórmula analizada",
-        "",
-        "```",
-        formula.strip(),
-        "```",
+        "> **Confidencialidad:** la fórmula cuantitativa (dosis de materia prima) es "
+        "información reservada de Umbrella y solo figura en los bloques internos de "
+        "producción y calidad (4 y 5). Los bloques 1–3 muestran únicamente la "
+        "**dosis de activo aportado**.",
         "",
         "---",
     ]
@@ -1240,19 +1743,65 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
                 merged.update(item)
         qc = merged
 
-    for fn, data in [
-        (fmt_kic,          kic),
-        (fmt_regulatorio,  reg),
-        (fmt_ficha_tecnica, ft),
-        (fmt_claims,       clm),
-        (fmt_etiqueta,     etq),
-        (fmt_formatos,     fmt),
-        (fmt_docs_internos, doc),
-        (fmt_qc,           qc),
-    ]:
-        if data:
-            lines += fn(data)
+    # ── Bloque 1 · Fórmula Cuantitativa ──────────────────────────────
+    # Tabla maestra (única) + análisis de ingredientes + validación
+    # regulatoria + propuestas de mejora consolidadas.
+    if kic or reg or ft:
+        lines.append(_section("1. Fórmula Cuantitativa", 2))
+        if kic:
+            lines += fmt_tabla_maestra(kic, reg, ft, canonica=canonica)
+            lines += fmt_analisis_ingredientes(kic)
+        if reg:
+            lines += fmt_validacion_regulatoria(reg)
+        propuestas = fmt_propuestas_mejora(kic, reg)
+        if propuestas:
+            lines += propuestas
         lines.append("\n---")
+
+    # ── Bloque 2 · Ficha Técnica ─────────────────────────────────────
+    if ft:
+        lines.append(_section("2. Ficha Técnica", 2))
+        lines += fmt_ficha_tecnica(ft, qc=qc, kic=kic, reg=reg, clm=clm,
+                                   nombre_producto=nombre_producto, hoy=hoy,
+                                   canonica=canonica)
+        lines.append("\n---")
+
+    # ── Bloque 3 · Información de Marketing ───────────────────────────
+    if clm or fmt or etq:
+        lines.append(_section("3. Información de Marketing", 2))
+        if clm:
+            lines += fmt_claims(clm)
+            lines += fmt_segmentos(clm)
+        if fmt:
+            lines += fmt_formatos(fmt)
+            lines += fmt_formatos_segmentos(fmt)
+        if etq:
+            lines += fmt_etiqueta(etq, nombre_producto=nombre_producto)
+        lines.append("\n---")
+
+    # ── Bloque 4 · Documentación Interna de Producción ───────────────
+    if doc:
+        lines.append(_section("4. Documentación Interna de Producción", 2))
+        lines += fmt_docs_internos(doc)
+        lines.append("\n---")
+
+    # ── Bloque 5 · Plan de Calidad ───────────────────────────────────
+    if qc:
+        lines.append(_section("5. Plan de Calidad", 2))
+        lines += fmt_qc(qc)
+        lines.append("\n---")
+
+    # ── Bloque 6 · Portfolio recomendado (Agente 9) ──────────────────
+    lines.append(_section("6. Portfolio recomendado", 2))
+    if prt:
+        lines += fmt_portfolio(prt)
+    else:
+        lines.append(
+            "*Pendiente: ejecuta el pipeline con el Agente 9 (Portfolio) para poblar "
+            "esta sección con la propuesta de gama a aconsejar al cliente.*"
+        )
+        lines.append("")
+    lines.append("\n---")
 
     # ── Anexo: modelos y tiempos de ejecución ────────────────────────
     if agent_models:
@@ -1265,6 +1814,7 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
             "AGENT_6_FORMATOS": ("Formatos", "Agente 6 — Formatos e Innovación"),
             "AGENT_7_DOCS":     ("Docs Internos", "Agente 7 — Documentación Interna"),
             "AGENT_8_QC":       ("QC", "Agente 8 — Plan QC"),
+            "AGENT_9_PORTFOLIO": ("Portfolio", "Agente 9 — Portfolio recomendado"),
         }
         # Calcular duración total en mm:ss
         total_mm = int(total_elapsed // 60)
@@ -1288,8 +1838,8 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
             f"**Tiempo total de pipeline:** {total_mm}m {total_ss}s  ",
             f"**Coste estimado total:** {_format_cost(total_cost)}  ",
             "",
-            "| Agente | Modelo | Tiempo | Tokens (in / out) | Coste est. | Endpoint |",
-            "|---|---|---|---|---|---|",
+            "| Agente | Modelo | Temp | Tiempo | Tokens (in / out) | Coste est. | Endpoint |",
+            "|---|---|---|---|---|---|---|",
         ]
         for prefix, cfg in agent_models.items():
             key, name = agent_names.get(prefix, (prefix, prefix))
@@ -1313,8 +1863,11 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
             p_in, p_out = _lookup_price(tr.get("model") or cfg.model or "")
             cost = (in_tok / 1_000_000) * p_in + (out_tok / 1_000_000) * p_out
             cost_str = _format_cost(cost)
+            temperature = tr.get("temperature", cfg.temperature)
 
-            lines.append(f"| {name} | `{cfg.model}` | {t_str} | {tok_str} | {cost_str} | `{cfg.base_url}` |")
+            lines.append(
+                f"| {name} | `{cfg.model}` | `{temperature}` | {t_str} | {tok_str} | {cost_str} | `{cfg.base_url}` |"
+            )
 
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:

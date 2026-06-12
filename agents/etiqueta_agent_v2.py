@@ -117,7 +117,7 @@ class EtiquetaAnalysis(BaseModel):
 
 # ── Instructions ─────────────────────────────────────────────────────
 
-PROMPT_VERSION = "2.0.0"
+PROMPT_VERSION = "2.1.0"  # +FASE 7: versión bilingüe (campos _en) para la etiqueta
 
 ETIQUETA_INSTRUCTIONS = """\
 # ROL
@@ -179,7 +179,8 @@ Construye la tabla completa con:
 - Filas adicionales: vitaminas y minerales presentes (% VRD según Anexo XIII Reg. 1169/2011)
 - Notas: "* % Valores de Referencia de la Dieta"
 
-Usa web_search si necesitas confirmar los VRD actualizados de vitaminas/minerales.
+Usa tu conocimiento normativo (Anexo XIII Reg. 1169/2011) para los VRD. Si dudas de algún \
+VRD concreto, márcalo en "notas_tabla" como pendiente de verificación en lugar de inventarlo.
 
 ## FASE 4 — Lista de ingredientes completa
 Redacta la lista de ingredientes:
@@ -201,6 +202,15 @@ Lista las menciones que no puedes completar por falta de datos en el prompt \
 (ej: dirección exacta del operador, lote, cantidad neta del envase). \
 Indica qué información necesita aportar el cliente para completar la etiqueta.
 
+## FASE 7 — Versión bilingüe (inglés)
+Para el contenido VARIABLE de la etiqueta, añade su traducción al inglés en campos \
+espejo con sufijo `_en` dentro de cada cara. Traduce con terminología regulatoria \
+correcta (p. ej. "Complemento alimenticio" → "Food supplement"; mantén los alérgenos \
+en NEGRITA igual que en español). Campos a duplicar en `_en`:
+- cara_principal: `denominacion_venta_en`, `cantidad_neta_en`
+- cara_secundaria: `lista_ingredientes_en`, `alergenos_en`, `modo_empleo_en`, `dosis_diaria_en`, `advertencias_obligatorias_en`
+No traduzcas los campos administrativos (operador, fabricante, lote, fechas): son comunes a ambos idiomas.
+
 # USO DE WEB_SEARCH
 NO uses web_search. Este agente consume datos de los agentes upstream (Claims y Ficha \
 Técnica) que ya han verificado la información. Genera el texto de etiqueta a partir de ese \
@@ -215,17 +225,24 @@ Usa EXACTAMENTE estas claves de nivel superior:
   "fase_2_texto_por_caras": {
     "cara_principal": {
       "denominacion_venta": "Texto de denominación de venta",
+      "denominacion_venta_en": "Sales name text (English)",
       "cantidad_neta": "30 cápsulas / 15 g",
+      "cantidad_neta_en": "30 capsules / 15 g",
       "claims_autorizados": ["Claim autorizado 1", "Claim autorizado 2"],
       "notas_claims": "Notas sobre claims"
     },
     "cara_secundaria": {
       "lista_ingredientes": "Lista de ingredientes en orden decreciente",
+      "lista_ingredientes_en": "Ingredients list in descending order (English)",
       "alergenos": "Declaración de alérgenos",
+      "alergenos_en": "Allergen declaration (English)",
       "modo_empleo": "Tomar 1 cápsula al día con agua",
+      "modo_empleo_en": "Take 1 capsule daily with water",
       "dosis_diaria": "1 cápsula",
+      "dosis_diaria_en": "1 capsule",
       "poblacion": "Adultos",
       "advertencias_obligatorias": ["No superar la dosis diaria recomendada", "..."],
+      "advertencias_obligatorias_en": ["Do not exceed the recommended daily dose", "..."],
       "advertencias_recomendadas": ["advertencia recomendada 1"],
       "bloque_advertencias_texto": "Bloque de texto con todas las advertencias",
       "tabla_nutricional": {
