@@ -253,6 +253,7 @@ _ING_SYN = {
     "nicotinamida": "nicotinamide", "curcuminoides": "curcuminoid",
     "curcuminoids": "curcuminoid", "glucosamina": "glucosamine",
     "astaxantina": "astaxanthin", "sucralosa": "sucralose",
+    "bovino": "bovine", "frutos": "fruits", "rojos": "red",
 }
 
 # Ruido común a ambos lados que no discrimina ingredientes.
@@ -263,7 +264,8 @@ _ING_STOP = {
     "acido", "acid", "oil", "aceite", "algae", "algas", "root", "s", "medium",
     "chain", "triglycerides", "triglyceridos", "cadena", "media", "complex",
     "flavour", "flavor", "sabor", "saborizantes", "deshidratada", "dehydrated",
-    "natur", "cell", "d", "l", "bg", "dc",
+    "natur", "cell", "d", "l", "bg", "dc", "sulfato", "sulphate", "sulfate",
+    "huevo", "cascara", "membrana",
 }
 
 
