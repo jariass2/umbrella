@@ -99,6 +99,15 @@ def parse_ft_pdf(source) -> dict:
         pct_active = am.group(1).replace("<", "").strip() if am else ""
         active_name = am.group(2).strip() if am else ""
 
+        # El PDF redondea la columna de activo a 2 decimales, así que una
+        # microdosis (B12: 0,1% → 0,004 mg) llega como 0,00. Recupérala desde
+        # materia prima × %. No afecta a los sobredosados (B6: 1,40 ≠ 0).
+        if active_mg == 0 and pct_active and raw_mg:
+            try:
+                active_mg = raw_mg * float(pct_active.replace(",", ".")) / 100.0
+            except ValueError:
+                pass
+
         ingredients.append({
             "code": code,
             "name": name.strip(),

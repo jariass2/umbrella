@@ -198,9 +198,32 @@ def _parse_pct_activo(nombre: str):
 
 
 def _fmt_mg(valor, unidad: str = "mg") -> str:
-    """'50.0' -> '50 mg'; '1.4' -> '1.4 mg'. Sin ceros sobrantes."""
-    val = f"{float(valor):.2f}".rstrip("0").rstrip(".")
-    return f"{val} {unidad}".strip()
+    """'50.0' -> '50 mg'; '1.4' -> '1.4 mg'. Sin ceros sobrantes.
+
+    Decimales adaptativos: las microdosis (B12 ≈ 0,004 mg) no deben colapsar a
+    '0' por redondeo a 2 cifras. Amplía precisión hasta que un valor no nulo
+    deje de truncarse a cero.
+    """
+    v = float(valor)
+    if v == 0:
+        return f"0 {unidad}".strip()
+    for dec in (2, 3, 4, 5, 6):
+        s = f"{v:.{dec}f}"
+        if float(s) != 0:
+            break
+    s = s.rstrip("0").rstrip(".")
+    return f"{s} {unidad}".strip()
+
+
+def _activo_desde_raw(raw_mg, pct_active) -> float | None:
+    """Dosis de activo = materia prima × % activo. Devuelve None si no computa.
+    `pct_active` puede venir como '0,1' (coma decimal del FT)."""
+    if raw_mg in (None, "") or pct_active in (None, ""):
+        return None
+    try:
+        return float(raw_mg) * float(str(pct_active).replace(",", ".")) / 100.0
+    except (TypeError, ValueError):
+        return None
 
 
 def _dosis_activo(ing: dict, canonical: dict | None = None) -> str:
@@ -212,7 +235,12 @@ def _dosis_activo(ing: dict, canonical: dict | None = None) -> str:
     nombre (puente). '—' si no se puede.
     """
     if canonical and canonical.get("active_mg") not in (None, ""):
-        return _fmt_mg(canonical["active_mg"], canonical.get("unit", "mg"))
+        am = canonical["active_mg"]
+        # El FT PDF redondea a 2 decimales, así que una microdosis (B12,
+        # 0,1% → 0,004 mg) llega como 0,0. Recupérala desde materia prima × %.
+        if not am:
+            am = _activo_desde_raw(canonical.get("raw_mg"), canonical.get("pct_active")) or am
+        return _fmt_mg(am, canonical.get("unit", "mg"))
 
     mg = ing.get("dosis_formula_mg")
     pct = _parse_pct_activo(ing.get("ingrediente", ""))

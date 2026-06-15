@@ -239,6 +239,22 @@ def test_dosis_activo_canonico_prevalece_sobre_calculo():
     assert _dosis_activo({"ingrediente": "Boswellia (30% AKBA)", "dosis_formula_mg": 166.67}) == "50 mg"
 
 
+def test_fmt_mg_microdosis_no_colapsa_a_cero():
+    from pipeline.report_composer import _fmt_mg
+    assert _fmt_mg(0.00375) == "0.004 mg"   # B12: no se trunca a "0 mg"
+    assert _fmt_mg(0.01) == "0.01 mg"
+    assert _fmt_mg(1.5) == "1.5 mg"
+    assert _fmt_mg(67.91) == "67.91 mg"
+    assert _fmt_mg(0) == "0 mg"             # cero real sigue siendo "0 mg"
+
+
+def test_dosis_activo_recupera_microdosis_redondeada_a_cero():
+    from pipeline.report_composer import _dosis_activo
+    # B12: el FT PDF redondea el activo a 0,00; se recupera desde materia prima × %.
+    canon = {"active_mg": 0.0, "raw_mg": 3.75, "pct_active": "0,1", "unit": "mg"}
+    assert _dosis_activo({"ingrediente": "Vitamina B12"}, canon) == "0.004 mg"
+
+
 def test_alinear_canonica_por_identidad():
     from pipeline.report_composer import _alinear_canonica
     # KIC reordena y consolida vs la canónica del FT (conteos distintos, sin
