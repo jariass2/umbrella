@@ -241,12 +241,125 @@ def _load_canonica(output_dir: str | None) -> list[dict]:
     return ings if isinstance(ings, list) else []
 
 
+# Sinónimos bilingües (ES↔EN/químico): la canónica viene del FT PDF en
+# inglés/nombre químico y KIC escribe en español. Normalizan al token común.
+_ING_SYN = {
+    "tocoferol": "tocopherol", "biotina": "biotin", "ascorbico": "ascorbic",
+    "hialuronico": "hyaluron", "hialuronato": "hyaluron", "hyaluronate": "hyaluron",
+    "remolacha": "beet", "pina": "pineapple", "condroitina": "chondroitin",
+    "condroitin": "chondroitin", "colecalciferol": "cholecalciferol",
+    "tiamina": "thiamin", "riboflavina": "riboflavin", "riboflavine": "riboflavin",
+    "piridoxina": "pyridoxine", "cianocobalamina": "cyanocobalamin",
+    "nicotinamida": "nicotinamide", "curcuminoides": "curcuminoid",
+    "curcuminoids": "curcuminoid", "glucosamina": "glucosamine",
+    "astaxantina": "astaxanthin", "sucralosa": "sucralose",
+}
+
+# Ruido común a ambos lados que no discrimina ingredientes.
+_ING_STOP = {
+    "vit", "vitamina", "vitamin", "extract", "extracto", "powder", "polvo", "cwd",
+    "natural", "pure", "microencapsulated", "microencapsulado", "microencapsulada",
+    "de", "del", "la", "el", "en", "como", "soluble", "sodico", "sodium", "na",
+    "acido", "acid", "oil", "aceite", "algae", "algas", "root", "s", "medium",
+    "chain", "triglycerides", "triglyceridos", "cadena", "media", "complex",
+    "flavour", "flavor", "sabor", "saborizantes", "deshidratada", "dehydrated",
+    "natur", "cell", "d", "l", "bg", "dc",
+}
+
+
+def _ing_ascii(s: str) -> str:
+    return unicodedata.normalize("NFKD", str(s or "")).encode("ascii", "ignore").decode().lower()
+
+
+def _ing_ident_key(name: str) -> str | None:
+    """Clave de identidad fuerte para vitaminas y minerales (inequívoca entre
+    idiomas). Las vitaminas se comprueban ANTES que los minerales para que la
+    B5 (Ca D-Pantotenato) no se confunda con el Calcio."""
+    s = _ing_ascii(name)
+    m = re.search(r"\bb\s*([0-9]{1,2})\b", s)
+    if m and ("vit" in s or ("b" + m.group(1)) in s.replace(" ", "")):
+        return f"vit:b{int(m.group(1))}"
+    if re.search(r"\bvit\.?\s*c\b", s) or "ascorbic" in s:
+        return "vit:c"
+    if re.search(r"\bd3\b", s) or "cholecalciferol" in s:
+        return "vit:d3"
+    if re.search(r"\bvit\.?\s*e\b", s) or "tocopherol" in s or "tocoferol" in s:
+        return "vit:e"
+    if re.search(r"\bvit\.?\s*h\b", s) or "biotin" in s or "biotina" in s:
+        return "vit:h"
+    if re.search(r"\bk2\b", s) or "mk7" in s.replace("-", "").replace(" ", "") or "mk-7" in s:
+        return "vit:k2"
+    if "magnes" in s or re.search(r"\bmg\b", s):
+        return "min:mg"
+    if "zinc" in s or re.search(r"\bzn\b", s):
+        return "min:zn"
+    if "calci" in s or re.search(r"\bca\b", s):
+        return "min:ca"
+    return None
+
+
+def _ing_dist_tokens(name: str) -> set[str]:
+    """Tokens distintivos (marca/compuesto) para emparejar el resto de
+    ingredientes. Conserva ratios tipo '1:5' (discriminan piña polvo vs aroma)."""
+    s = _ing_ascii(name)
+    ratios = re.findall(r"\d+:\d+", s)
+    s = re.sub(r"[^a-z0-9]", " ", s)
+    out = set(ratios)
+    for t in s.split():
+        if not t or re.fullmatch(r"\d+", t):
+            continue
+        t = _ING_SYN.get(t, t)
+        if t in _ING_STOP or len(t) < 3:
+            continue
+        out.add(t)
+    return out
+
+
 def _alinear_canonica(kic_ings: list[dict], canonica: list[dict]) -> list[dict | None]:
-    """Empareja por índice cuando los conteos coinciden (KIC conserva el orden
-    del input). Si no coinciden, devuelve None por fila → cae al cálculo puente."""
-    if canonica and len(canonica) == len(kic_ings):
-        return list(canonica)
-    return [None] * len(kic_ings)
+    """Empareja cada ingrediente de KIC con su fila canónica (FT PDF) por
+    IDENTIDAD, no por índice: KIC reordena y consolida (3 aromas→1, eggshell+
+    bisglicinato→'Calcio') por lo que los conteos casi nunca cuadran y el orden
+    no se conserva. Estrategia: (1) clave fuerte para vitaminas/minerales;
+    (2) tokens distintivos con asignación global 1-a-1 (Jaccard sobre la unión).
+    Sin match → None (cae al cálculo puente de `_dosis_activo`)."""
+    res: list[dict | None] = [None] * len(kic_ings)
+    if not canonica:
+        return res
+
+    cused: set[int] = set()
+    ckeys = [_ing_ident_key(f"{c.get('name','')} {c.get('active_name','') or ''}") for c in canonica]
+
+    # (1) Vitaminas y minerales por clave de identidad.
+    for ki, ing in enumerate(kic_ings):
+        kk = _ing_ident_key(ing.get("ingrediente", ""))
+        if not kk:
+            continue
+        for cj, ck in enumerate(ckeys):
+            if cj not in cused and ck == kk:
+                res[ki] = canonica[cj]
+                cused.add(cj)
+                break
+
+    # (2) El resto por tokens distintivos; asignación global mejor-primero.
+    pairs: list[tuple[float, int, int]] = []
+    for ki, ing in enumerate(kic_ings):
+        if res[ki] is not None:
+            continue
+        tk = _ing_dist_tokens(ing.get("ingrediente", ""))
+        if not tk:
+            continue
+        for cj, c in enumerate(canonica):
+            if cj in cused:
+                continue
+            tc = _ing_dist_tokens(f"{c.get('name','')} {c.get('active_name','') or ''}")
+            inter = tk & tc
+            if inter:
+                pairs.append((len(inter) / len(tk | tc), ki, cj))
+    for score, ki, cj in sorted(pairs, reverse=True):
+        if res[ki] is None and cj not in cused and score >= 0.34:
+            res[ki] = canonica[cj]
+            cused.add(cj)
+    return res
 
 
 # Nota al pie según la procedencia del dato.

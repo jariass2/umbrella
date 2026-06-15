@@ -29,7 +29,7 @@ def parse_formula(formula_text: str) -> tuple[str, list[dict]]:
             line = line[:m.start()].strip()
         if ":" not in line:
             continue
-        name, rest = line.split(":", 1)
+        name, rest = line.rsplit(":", 1)  # rsplit: colons inside names like "(1:5)" don't break the split
         rest = rest.strip()
         # Detectar unidad (de mayor a menor longitud para evitar coincidencias parciales)
         unit = "mg"

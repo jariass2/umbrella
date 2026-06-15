@@ -239,21 +239,39 @@ def test_dosis_activo_canonico_prevalece_sobre_calculo():
     assert _dosis_activo({"ingrediente": "Boswellia (30% AKBA)", "dosis_formula_mg": 166.67}) == "50 mg"
 
 
-def test_alinear_canonica_por_indice():
+def test_alinear_canonica_por_identidad():
     from pipeline.report_composer import _alinear_canonica
-    kic = [{"ingrediente": "a"}, {"ingrediente": "b"}]
-    canon = [{"active_mg": 1}, {"active_mg": 2}]
-    assert _alinear_canonica(kic, canon) == canon          # conteos iguales → empareja
-    assert _alinear_canonica(kic, [{"active_mg": 1}]) == [None, None]  # distinto → fallback
+    # KIC reordena y consolida vs la canónica del FT (conteos distintos, sin
+    # orden común): el emparejamiento es por IDENTIDAD, no por índice.
+    kic = [
+        {"ingrediente": "Magnesio (Bisglicinato de Magnesio)"},
+        {"ingrediente": "Vitamina B6 (Piridoxina, como HCl)"},
+        {"ingrediente": "Astaxantina (Haematococcus pluvialis, AstaMarine® CWD 1%)"},
+    ]
+    canon = [  # otro orden + una fila extra sin par en KIC
+        {"name": "AstaMarine® CWD 1% Natural Pure Astaxanthin", "active_mg": 1.5},
+        {"name": "Vit. B6 HCl, 80,5% Pyridoxine", "active_mg": 3.0},
+        {"name": "Mango flavour 100%", "active_mg": 300.0},
+        {"name": "Mg Bisglycinate, 12% Mg", "active_mg": 150.0},
+    ]
+    out = _alinear_canonica(kic, canon)
+    assert out[0]["active_mg"] == 150.0   # Magnesio (no roba el Ca de nadie)
+    assert out[1]["active_mg"] == 3.0     # B6 por código de vitamina
+    assert out[2]["active_mg"] == 1.5     # Astaxantina por marca AstaMarine
+    # El conteo distinto ya NO descarta toda la canónica (era el bug del cliente).
+    assert all(o is not None for o in out)
 
 
 def test_tabla_maestra_usa_canonica(tmp_path):
     from pipeline.report_composer import fmt_tabla_maestra
     kic = {"fase_2_ingredientes": [
-        {"ingrediente": "Vitamina B6 (80,5%)", "dosis_formula_mg": 2.26, "porcentaje_nrv": "161"},
+        {"ingrediente": "Vitamina B6 (Piridoxina, 80,5%)", "dosis_formula_mg": 2.26, "porcentaje_nrv": "161"},
         {"ingrediente": "Extracto de bambú (85% sílice)", "dosis_formula_mg": 10.07},
     ]}
-    canon = [{"active_mg": 1.40, "unit": "mg"}, {"active_mg": 4.0, "unit": "mg"}]
+    canon = [
+        {"name": "Vit. B6 HCl, 80,5% Pyridoxine", "active_mg": 1.40, "unit": "mg"},
+        {"name": "Extracto de Bambú 85% sílice", "active_mg": 4.0, "unit": "mg"},
+    ]
     out = "\n".join(fmt_tabla_maestra(kic, {}, {}, canonica=canon))
     assert "1.4 mg" in out          # B6 valor declarado, no el calculado 1.82
     assert "4 mg" in out            # bambú silicio, no 8.56 del 85%
