@@ -157,6 +157,21 @@ function populateFromPdf(data) {
   const list = document.getElementById('ingredients-list');
   list.innerHTML = '';
   (data.ingredients || []).forEach(ing => list.appendChild(makeIngredientRow(ing)));
+  // Al cargar una fórmula nueva, el DAG de agentes del run anterior deja de
+  // ser relevante: resetear #main-content al estado 'sin run' (todos en
+  // espera). Si hay un análisis en curso (.stop-bar), no tocamos la vista.
+  resetPipelineView();
+}
+
+// Resetea la vista del pipeline (arriba) al estado 'sin run': todos los
+// agentes en espera, sin resultados ni poll. La sidebar se conserva intacta.
+function resetPipelineView() {
+  if (document.querySelector('.stop-bar')) return;  // hay un run en curso
+  if (window.htmx && htmx.ajax) {
+    htmx.ajax('GET', '/reset-pipeline', {target: '#main-content', swap: 'innerHTML'});
+  }
+  // Quitar el resaltado 'active' del historial: ya no hay run seleccionado.
+  document.querySelectorAll('.history-item.active').forEach(el => el.classList.remove('active'));
 }
 
 function uploadPdf(file) {
