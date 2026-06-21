@@ -1060,6 +1060,18 @@ def pipeline_status(run_id):
     return render_template("partials/main_content.html", **ctx)
 
 
+@app.route("/reset-pipeline")
+def reset_pipeline():
+    """Pipeline en estado 'sin run' (todos los agentes en espera).
+
+    Se invoca desde el cliente al cargar una fórmula nueva (p. ej. arrastrar
+    un FT PDF) para que el DAG de agentes no siga mostrando el estado de un
+    run anterior ya irrelevante — sin tocar la sidebar, donde la fórmula
+    recién cargada vive y el usuario la revisa antes de lanzar.
+    """
+    return render_template("partials/main_content.html", **_get_main_context(None))
+
+
 @app.route("/run/<int:run_id>")
 def load_run(run_id):
     ctx = _get_main_context(run_id)
