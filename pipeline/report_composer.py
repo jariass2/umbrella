@@ -37,6 +37,10 @@ INTERACCION_EMOJI = {
 # Clave = subcadena que aparece en el model ID (case-insensitive).
 # El primer match gana — ordenar del más específico al más genérico.
 PRICING_PER_1M: list[tuple[str, float, float]] = [
+    # Modelos en uso (precios OpenRouter, USD/millón). Los más específicos primero.
+    ("gemini-3.1-flash-lite", 0.25,  1.50),
+    ("minimax-m3",        0.30,  1.20),
+    ("minimax-m2",        0.255, 1.02),
     ("kimi-k2",           0.14,  0.60),
     ("mimo-v2.5-pro",     0.435, 0.87),
     ("claude-haiku-4",    0.80,  4.00),
@@ -692,6 +696,33 @@ ALERGENOS_ANEXO_II = [
 FT_DIETAS = ["Vegetariano", "Vegano", "Sin gluten", "Sin azúcar (<0,5 g/dosis)",
              "Kosher", "Halal", "Bio / Ecológico"]
 
+# Ingredientes de origen animal → el producto no es apto para vegetarianos/veganos.
+_ANIMAL = ("collagen", "colageno", "gelatin", "gelatina", "carmin", "carmine",
+           "lactos", "whey", "suero lacteo", "casein", "caseina", "miel ", "beeswax",
+           "cera de abeja", "lanolina", "lanolin", "grenetina")
+
+
+def _aptitud_dietas_rows(canonica: list[dict] | None, kic: dict | None) -> list[list[str]]:
+    """Estado por dieta derivado de la fórmula: 'No apto' cuando hay origen animal
+    (p. ej. colágeno), 'Bajo petición' para lo que depende del proveedor."""
+    nombres = " ".join(
+        f"{c.get('name','')} {c.get('active_name','') or ''}"
+        for c in (canonica or []) if isinstance(c, dict)
+    )
+    nombres += " " + " ".join(
+        i.get("ingrediente", "") for i in (kic or {}).get("fase_2_ingredientes", [])
+        if isinstance(i, dict)
+    )
+    txt = _ing_ascii(nombres)
+    animal = next((a.strip() for a in _ANIMAL if a in txt), "")
+    rows = []
+    for d in FT_DIETAS:
+        estado = "Bajo petición"
+        if animal and d in ("Vegetariano", "Vegano"):
+            estado = "No apto (contiene ingredientes de origen animal)"
+        rows.append([d, estado])
+    return rows
+
 # Boilerplate normativo de la plantilla Umbrella (no es output del LLM).
 FT_FOOD_GRADE = (
     "Todos los aditivos cumplen la legislación alimentaria de la UE. Extractos vegetales y "
@@ -703,10 +734,58 @@ FT_TSE = "Fabricado sin materias primas de origen humano ni con riesgo TSE/BSE."
 FT_TRANSPORTE = "No clasificado como peligroso. Transportar a 15-25 °C, protegido de luz, calor y humedad."
 
 
-def _ft_nutricional_rows(nut: dict) -> list[list[str]]:
-    """Extrae las filas de la tabla nutricional (acepta los dos formatos del LLM)."""
+NUTRIENTE_LABELS = {
+    "valor_energetico_kj": "Valor energético (kJ)",
+    "valor_energetico_kcal": "Valor energético (kcal)",
+    "grasas_g": "Grasas (g)", "acidos_grasos_saturados_g": "— de las cuales saturadas (g)",
+    "hidratos_de_carbono_g": "Hidratos de carbono (g)", "azucares_g": "— de los cuales azúcares (g)",
+    "fibra_g": "Fibra (g)", "proteinas_g": "Proteínas (g)", "sal_g": "Sal (g)",
+}
+
+# Valores de Referencia de Nutrientes (VRN/NRV) del Anexo XIII del Reg. (UE)
+# 1169/2011: (VRN en mg, unidad de etiqueta). Son constantes legales fijas → el
+# %VRN se calcula, no se le pide al LLM (que se saltaba filas y daba 0% en B12).
+_NRV = {
+    "vit:b1": (1.1, "mg"), "vit:b2": (1.4, "mg"), "vit:b3": (16.0, "mg"),
+    "vit:b5": (6.0, "mg"), "vit:b6": (1.4, "mg"), "vit:b9": (0.2, "µg"),
+    "vit:b12": (0.0025, "µg"), "vit:c": (80.0, "mg"), "vit:d3": (0.005, "µg"),
+    "vit:e": (12.0, "mg"), "vit:h": (0.05, "µg"), "vit:k2": (0.075, "µg"),
+    "min:mg": (375.0, "mg"), "min:zn": (10.0, "mg"), "min:ca": (800.0, "mg"),
+}
+
+
+def _fmt_cantidad(mg: float, unidad: str) -> str:
+    """0.000375 mg en µg -> '0,375 µg'; 56.25 mg -> '56,25 mg' (decimal español)."""
+    val = mg * 1000 if unidad == "µg" else mg
+    s = f"{val:.4f}".rstrip("0").rstrip(".").replace(".", ",")
+    return f"{s} {unidad}"
+
+
+def _fmt_pct_num(pct: float) -> str:
+    """25.0 -> '25%'; 13.33 -> '13,3%'."""
+    if abs(pct - round(pct)) < 0.05:
+        return f"{round(pct)}%"
+    return f"{pct:.1f}".replace(".", ",") + "%"
+
+
+def _ft_macro_rows(nut: dict) -> list[list[str]]:
+    """Macronutrientes (energía, grasas, HC, proteínas, sal) de la Ficha Técnica."""
+    tab = nut.get("tabla_nutricional_por_dosis", {})
+    sec = tab.get("seccion_obligatoria", {}) if isinstance(tab, dict) else {}
+    rows: list[list[str]] = []
+    if isinstance(sec, dict):
+        for k, v in sec.items():
+            if k == "metodo_calculo":
+                continue
+            rows.append([NUTRIENTE_LABELS.get(k, k.replace("_", " ").capitalize()), _val(v), "—"])
+    return rows
+
+
+def _ft_vitmin_rows(nut: dict) -> list[list[str]]:
+    """Vitaminas/minerales tal y como los devuelve la Ficha Técnica (fallback si
+    KIC no está disponible). Acepta los dos formatos del LLM."""
     tabla = nut.get("tabla_nutricional", nut.get("tabla", []))
-    tab_por_dosis = nut.get("tabla_nutricional_por_dosis", {})
+    tab = nut.get("tabla_nutricional_por_dosis", {})
     rows: list[list[str]] = []
     if isinstance(tabla, list) and tabla:
         for fila in tabla:
@@ -716,21 +795,8 @@ def _ft_nutricional_rows(nut: dict) -> list[list[str]]:
                     _val(fila.get("cantidad_por_dosis", fila.get("por_dosis", fila.get("valor_por_dosis", "")))),
                     _val(fila.get("pct_vrn_dosis", fila.get("porcentaje_vrd", fila.get("vrd", "")))),
                 ])
-    elif isinstance(tab_por_dosis, dict):
-        NUTRIENTE_LABELS = {
-            "valor_energetico_kj": "Valor energético (kJ)",
-            "valor_energetico_kcal": "Valor energético (kcal)",
-            "grasas_g": "Grasas (g)", "acidos_grasos_saturados_g": "— de las cuales saturadas (g)",
-            "hidratos_de_carbono_g": "Hidratos de carbono (g)", "azucares_g": "— de los cuales azúcares (g)",
-            "fibra_g": "Fibra (g)", "proteinas_g": "Proteínas (g)", "sal_g": "Sal (g)",
-        }
-        sec = tab_por_dosis.get("seccion_obligatoria", {})
-        if isinstance(sec, dict):
-            for k, v in sec.items():
-                if k == "metodo_calculo":
-                    continue
-                rows.append([NUTRIENTE_LABELS.get(k, k.replace("_", " ").capitalize()), _val(v), "—"])
-        vit = tab_por_dosis.get("vitaminas_minerales", {})
+    elif isinstance(tab, dict):
+        vit = tab.get("vitaminas_minerales", {})
         if isinstance(vit, dict):
             for k, v in vit.items():
                 if isinstance(v, dict):
@@ -741,6 +807,39 @@ def _ft_nutricional_rows(nut: dict) -> list[list[str]]:
                     eq = v.get("equivalencia_ui", "")
                     cant_str = f"{cant} ({eq})" if eq else cant
                     rows.append([label_str, _val(cant_str), _val(v.get("porcentaje_nrv", v.get("pct_vrn", "")))])
+    return rows
+
+
+def _nutricional_vitmin_rows(kic: dict | None, canonica: list[dict] | None) -> list[list[str]]:
+    """Vitaminas/minerales de forma determinista: filas de KIC (procesa TODO
+    ingrediente, así que no se salta ninguno), dosis de activo de la canónica
+    (FT PDF, exacta — recupera microdosis como la B12) y %VRN del Anexo XIII.
+
+    Cae a la dosis/%VRN de KIC cuando no se identifica el VRN de referencia."""
+    kic_ings = [i for i in (kic or {}).get("fase_2_ingredientes", []) if isinstance(i, dict)]
+    if not kic_ings:
+        return []
+    canon = _alinear_canonica(kic_ings, canonica or [])
+    rows: list[list[str]] = []
+    for idx, ing in enumerate(kic_ings):
+        if (ing.get("tipologia") or "").upper() not in ("VITAMINA", "MINERAL"):
+            continue
+        nombre = ing.get("ingrediente", "")
+        c = canon[idx]
+        key = _ing_ident_key(nombre)
+        if key not in _NRV and c:
+            key = _ing_ident_key(c.get("active_name", "")) or _ing_ident_key(c.get("name", ""))
+        mg = c.get("active_mg") if c else None
+        if key in _NRV and isinstance(mg, (int, float)):
+            nrv_mg, unidad = _NRV[key]
+            dosis_str = _fmt_cantidad(mg, unidad)
+            pct_str = _fmt_pct_num(mg / nrv_mg * 100) if nrv_mg else "—"
+        else:
+            d = ing.get("dosis_formula_mg", "")
+            u = ing.get("dosis_formula_unidad") or "mg"
+            dosis_str = f"{d} {u}".strip() if d not in ("", None) else "—"
+            pct_str = _fmt_pct(ing.get("porcentaje_nrv", ""))
+        rows.append([nombre, dosis_str, pct_str])
     return rows
 
 
@@ -863,7 +962,11 @@ def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
 
     # ── 3 · Información nutricional, vida útil y reactividad ──────────
     lines.append(_section("3 · Información nutricional", 3))
-    nut_rows = _ft_nutricional_rows(ft.get("fase_3_informacion_nutricional", {}))
+    nut = ft.get("fase_3_informacion_nutricional", {})
+    # Vitaminas/minerales deterministas (KIC + canónica + VRN legal); macros de
+    # la Ficha Técnica. Cae a la tabla del LLM solo si no hay datos de KIC.
+    vm_rows = _nutricional_vitmin_rows(kic, canonica) or _ft_vitmin_rows(nut)
+    nut_rows = _ft_macro_rows(nut) + vm_rows
     if nut_rows:
         lines += _table(["Nutriente", "Por dosis", "% VRN*"], nut_rows)
         lines.append("*\\* % Valores de Referencia de la Nutrición*")
@@ -942,7 +1045,7 @@ def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
                     [[a, "Verificar"] for a in ALERGENOS_ANEXO_II])
     lines.append("")
     lines.append(_section("Aptitud para dietas", 4))
-    lines += _table(["Dieta", "Estado"], [[d, "Bajo petición"] for d in FT_DIETAS])
+    lines += _table(["Dieta", "Estado"], _aptitud_dietas_rows(canonica, kic))
     lines.append("")
 
     # ── 6 · Datos de producto y conservación ─────────────────────────
