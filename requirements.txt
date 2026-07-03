@@ -2,7 +2,7 @@
 # Versions pinned to current installed minor; bump deliberately.
 
 # LLM framework
-agno>=2.5,<3.0
+agno>=2.6.21,<3.0
 openai>=2.0,<3.0
 
 # Search tools
