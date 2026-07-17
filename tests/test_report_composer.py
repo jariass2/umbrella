@@ -204,12 +204,12 @@ def test_parse_pct_activo():
 
 def test_dosis_activo_no_expone_materia_prima():
     from pipeline.report_composer import _dosis_activo
-    # 833.33 mg de Magchel al 12% → 100 mg de Mg activo (nunca 833.33).
+    # 833.33 mg de Magchel al 12% → 99,9996 mg de Mg activo (nunca 833.33).
     out = _dosis_activo({"ingrediente": "Magchel (12% Mg)", "dosis_formula_mg": 833.33})
-    assert out == "100 mg"
+    assert out == "99.999600 mg"
     assert "833" not in out
-    # Boswellia 166.67 mg al 30% → 50 mg AKBA.
-    assert _dosis_activo({"ingrediente": "Boswellia (30% AKBA)", "dosis_formula_mg": 166.67}) == "50 mg"
+    # Boswellia 166.67 mg al 30% → 50,001 mg AKBA.
+    assert _dosis_activo({"ingrediente": "Boswellia (30% AKBA)", "dosis_formula_mg": 166.67}) == "50.001000 mg"
     # Excipiente sin % → guion, no la dosis de materia prima.
     assert _dosis_activo({"ingrediente": "Celulosa microcristalina", "dosis_formula_mg": 64.44}) == "—"
 
@@ -234,17 +234,17 @@ def test_dosis_activo_canonico_prevalece_sobre_calculo():
     from pipeline.report_composer import _dosis_activo
     # B6: cálculo daría 1,82 (2,26×80,5%), pero la canónica declara 1,40 (sobredosado).
     ing = {"ingrediente": "Vitamina B6 (80,5%)", "dosis_formula_mg": 2.26}
-    assert _dosis_activo(ing, {"active_mg": 1.40, "unit": "mg"}) == "1.4 mg"
+    assert _dosis_activo(ing, {"active_mg": 1.40, "unit": "mg"}) == "1.400000 mg"
     # Sin canónica → cae al cálculo puente.
-    assert _dosis_activo({"ingrediente": "Boswellia (30% AKBA)", "dosis_formula_mg": 166.67}) == "50 mg"
+    assert _dosis_activo({"ingrediente": "Boswellia (30% AKBA)", "dosis_formula_mg": 166.67}) == "50.001000 mg"
 
 
 def test_fmt_mg_microdosis_no_colapsa_a_cero():
     from pipeline.report_composer import _fmt_mg
-    assert _fmt_mg(0.00375) == "0.004 mg"   # B12: no se trunca a "0 mg"
-    assert _fmt_mg(0.01) == "0.01 mg"
-    assert _fmt_mg(1.5) == "1.5 mg"
-    assert _fmt_mg(67.91) == "67.91 mg"
+    assert _fmt_mg(0.00375) == "0.003750 mg"   # B12: no se trunca a "0 mg"
+    assert _fmt_mg(0.01) == "0.010000 mg"
+    assert _fmt_mg(1.5) == "1.500000 mg"
+    assert _fmt_mg(67.91) == "67.910000 mg"
     assert _fmt_mg(0) == "0 mg"             # cero real sigue siendo "0 mg"
 
 
@@ -252,7 +252,7 @@ def test_dosis_activo_recupera_microdosis_redondeada_a_cero():
     from pipeline.report_composer import _dosis_activo
     # B12: el FT PDF redondea el activo a 0,00; se recupera desde materia prima × %.
     canon = {"active_mg": 0.0, "raw_mg": 3.75, "pct_active": "0,1", "unit": "mg"}
-    assert _dosis_activo({"ingrediente": "Vitamina B12"}, canon) == "0.004 mg"
+    assert _dosis_activo({"ingrediente": "Vitamina B12"}, canon) == "0.003750 mg"
 
 
 def test_alinear_canonica_por_identidad():
@@ -289,8 +289,8 @@ def test_tabla_maestra_usa_canonica(tmp_path):
         {"name": "Extracto de Bambú 85% sílice", "active_mg": 4.0, "unit": "mg"},
     ]
     out = "\n".join(fmt_tabla_maestra(kic, {}, {}, canonica=canon))
-    assert "1.4 mg" in out          # B6 valor declarado, no el calculado 1.82
-    assert "4 mg" in out            # bambú silicio, no 8.56 del 85%
+    assert "1.400000 mg" in out          # B6 valor declarado, no el calculado 1.82
+    assert "4.000000 mg" in out            # bambú silicio, no 8.56 del 85%
     assert "según la ficha de fórmula" in out
     assert "833" not in out and "10.07" not in out  # nunca la materia prima
 
@@ -320,6 +320,50 @@ def test_dosis_de_activo_en_tablas_cliente(tmp_path):
     assert "Confidencialidad" in texto
 
 
+def test_analisis_ingredientes_tolera_no_strings_en_lista():
+    """Regresión run_53: el agente KIC devolvió un int mezclado en
+    `factores_positivos`; `"; ".join(...)` revienta, compose_informe caía y el
+    PDF revertía al volcado crudo por agente (la tabla nutricional salía como
+    texto `Parametro:/Unidad:/…`). El composer debe coercer a str."""
+    from pipeline.report_composer import fmt_analisis_ingredientes
+    kic = {"fase_2_ingredientes": [{
+        "ingrediente": "Magnesio",
+        "biodisponibilidad": {"factores_positivos": ["quelato", 100, "aminoácido"]},
+    }]}
+    out = "\n".join(fmt_analisis_ingredientes(kic))
+    assert "100" in out            # el int se renderiza como str, no rompe
+    assert "quelato" in out
+
+
+def test_alinear_canonica_consolida_formas_y_cubre_minerales():
+    """Regresión run_53: la canónica (FT PDF, EN, N filas) y KIC (ES, menos filas
+    y consolidadas) no cuadran por índice. (1) minerales antes en '—' (K, Se…)
+    ahora alinean; (2) las formas consolidadas se SUMAN (Magnesio = citrato +
+    bisglicinato); (3) el silicio de bambú y el OSA no se cruzan entre sí."""
+    from pipeline.report_composer import _alinear_canonica
+    kic = [
+        {"ingrediente": "Potasio (tri-K citrato)"},
+        {"ingrediente": "Magnesio (tri-Mg citrato + Mg bisglicinato)"},
+        {"ingrediente": "Selenio (levadura enriquecida)"},
+        {"ingrediente": "Silicio (extracto de bambú al 85% sílice)"},
+        {"ingrediente": "Silicio (ácido ortosilícico, OSA, Orgono Powder)"},
+    ]
+    canon = [
+        {"name": "tri-K Citrate, 35,6% K", "active_name": "K", "active_mg": 8.95, "raw_mg": 25.14, "unit": "mg"},
+        {"name": "Tri-Mg Citrate, 16% Mg", "active_name": "Mg", "active_mg": 12.88, "raw_mg": 80.5, "unit": "mg"},
+        {"name": "Mg Bisglycinate, 12% Mg", "active_name": "Mg", "active_mg": 15.08, "raw_mg": 125.67, "unit": "mg"},
+        {"name": "Selenium Yeast, 0,2% Se", "active_name": "Se", "active_mg": 0.006, "raw_mg": 3.02, "unit": "mg"},
+        {"name": "Bamboo Extract, 85% Silica", "active_name": "Silicon", "active_mg": 16.63, "raw_mg": 41.87, "unit": "mg"},
+        {"name": "Orgono Powder OSA Orthosilicic acid", "active_name": "Si", "active_mg": 0.225, "raw_mg": 15.0, "unit": "mg"},
+    ]
+    res = _alinear_canonica(kic, canon)
+    assert res[0] is not None and res[0]["active_name"] == "K"          # antes '—'
+    assert res[1] is not None and round(res[1]["active_mg"], 2) == 27.96  # 12,88 + 15,08
+    assert res[2] is not None and res[2]["active_name"] == "Se"          # antes '—'
+    assert res[3] is not None and round(res[3]["active_mg"], 2) == 16.63  # bambú
+    assert res[4] is not None and round(res[4]["active_mg"], 3) == 0.225  # OSA, sin cruzarse
+
+
 if __name__ == "__main__":
     import tempfile
 
@@ -340,7 +384,9 @@ if __name__ == "__main__":
                    test_parse_pct_activo, test_dosis_activo_no_expone_materia_prima,
                    test_fmt_pct_na_no_imprime_porcentaje, test_spec_val_dict_no_crudo,
                    test_dosis_activo_canonico_prevalece_sobre_calculo,
-                   test_alinear_canonica_por_indice):
+                   test_alinear_canonica_por_indice,
+                   test_alinear_canonica_consolida_formas_y_cubre_minerales,
+                   test_analisis_ingredientes_tolera_no_strings_en_lista):
             fn()
             print(f"✅ {fn.__name__}")
         for fn in (test_tabla_maestra_usa_canonica,):

@@ -202,21 +202,16 @@ def _parse_pct_activo(nombre: str):
 
 
 def _fmt_mg(valor, unidad: str = "mg") -> str:
-    """'50.0' -> '50 mg'; '1.4' -> '1.4 mg'. Sin ceros sobrantes.
-
-    Decimales adaptativos: las microdosis (B12 ≈ 0,004 mg) no deben colapsar a
-    '0' por redondeo a 2 cifras. Amplía precisión hasta que un valor no nulo
-    deje de truncarse a cero.
-    """
-    v = float(valor)
+    """Dosis de ACTIVO con precisión fija de 6 decimales, sin poda de ceros
+    (50.0 -> '50.000000 mg'; 0.00375 -> '0.003750 mg'). Muestra la precisión
+    íntegra de la canónica en el informe; las microdosis no colapsan a '0'."""
+    try:
+        v = float(valor)
+    except (TypeError, ValueError):
+        return ""
     if v == 0:
         return f"0 {unidad}".strip()
-    for dec in (2, 3, 4, 5, 6):
-        s = f"{v:.{dec}f}"
-        if float(s) != 0:
-            break
-    s = s.rstrip("0").rstrip(".")
-    return f"{s} {unidad}".strip()
+    return f"{v:.6f} {unidad}".strip()
 
 
 def _activo_desde_raw(raw_mg, pct_active) -> float | None:
@@ -286,6 +281,9 @@ _ING_SYN = {
     "curcuminoids": "curcuminoid", "glucosamina": "glucosamine",
     "astaxantina": "astaxanthin", "sucralosa": "sucralose",
     "bovino": "bovine", "frutos": "fruits", "rojos": "red",
+    # ES↔EN para emparejar formas consolidadas y botánicos con la canónica (FT PDF en EN).
+    "silice": "silicon", "silicio": "silicon", "silica": "silicon", "bambu": "bamboo",
+    "colageno": "collagen", "peptidos": "peptides",
 }
 
 # Ruido común a ambos lados que no discrimina ingredientes.
@@ -305,6 +303,28 @@ def _ing_ascii(s: str) -> str:
     return unicodedata.normalize("NFKD", str(s or "")).encode("ascii", "ignore").decode().lower()
 
 
+# Minerales por símbolo o nombre (ES/EN). El símbolo va con \b…\b para no colisionar
+# con substrings (p. ej. «mo» dentro de «monohidratado»). Orden: raros antes que
+# ubicuos; las vitaminas (B, K2…) se comprueban antes en `_ing_ident_key`.
+_MIN_KEYS: list[tuple[str, tuple[str, ...]]] = [
+    ("min:mo", (r"molibdeno", r"molybd", r"\bmo\b")),
+    ("min:se", (r"selenio", r"selen", r"\bse\b")),
+    ("min:cr", (r"cromo", r"chrom", r"\bcr\b")),
+    ("min:mn", (r"manganes", r"mangan", r"\bmn\b")),
+    ("min:cu", (r"cobre", r"copper", r"\bcu\b")),
+    ("min:b",  (r"\bboro\b", r"\bboron\b", r"\bborax\b", r"\bborato\b")),
+    ("min:si", (r"silic", r"\bbamboo\b", r"\bbambu\b", r"\bsilicon\b", r"\bsilice\b")),
+    ("min:fe", (r"hierro", r"\biron\b", r"ferr")),
+    ("min:i",  (r"yodo", r"iod")),
+    ("min:f",  (r"fluor",)),
+    ("min:p",  (r"fosfo", r"fosfa", r"phosph")),
+    ("min:k",  (r"potasio", r"potassium", r"\bk\b")),
+    ("min:mg", (r"magnes", r"\bmg\b")),
+    ("min:zn", (r"zinc", r"\bzn\b")),
+    ("min:ca", (r"calci", r"\bca\b")),
+]
+
+
 def _ing_ident_key(name: str) -> str | None:
     """Clave de identidad fuerte para vitaminas y minerales (inequívoca entre
     idiomas). Las vitaminas se comprueban ANTES que los minerales para que la
@@ -315,7 +335,7 @@ def _ing_ident_key(name: str) -> str | None:
         return f"vit:b{int(m.group(1))}"
     if re.search(r"\bvit\.?\s*c\b", s) or "ascorbic" in s:
         return "vit:c"
-    if re.search(r"\bd3\b", s) or "cholecalciferol" in s:
+    if re.search(r"\bd3\b", s) or "cholecalciferol" in s or "colecalciferol" in s:
         return "vit:d3"
     if re.search(r"\bvit\.?\s*e\b", s) or "tocopherol" in s or "tocoferol" in s:
         return "vit:e"
@@ -323,12 +343,9 @@ def _ing_ident_key(name: str) -> str | None:
         return "vit:h"
     if re.search(r"\bk2\b", s) or "mk7" in s.replace("-", "").replace(" ", "") or "mk-7" in s:
         return "vit:k2"
-    if "magnes" in s or re.search(r"\bmg\b", s):
-        return "min:mg"
-    if "zinc" in s or re.search(r"\bzn\b", s):
-        return "min:zn"
-    if "calci" in s or re.search(r"\bca\b", s):
-        return "min:ca"
+    for key, pats in _MIN_KEYS:
+        if any(re.search(p, s) for p in pats):
+            return key
     return None
 
 
@@ -349,12 +366,38 @@ def _ing_dist_tokens(name: str) -> set[str]:
     return out
 
 
+def _merge_canonica(filas: list[dict]) -> dict:
+    """Fusiona varias filas canónicas de un mismo activo cuando KIC consolidó
+    varias formas en un solo ingrediente (p. ej. 'Magnesio (citrato +
+    bisglicinato)'): suma la dosis de activo y la materia prima, y recalcula el
+    % de estandarización de la mezcla."""
+    if len(filas) == 1:
+        return filas[0]
+    act = [f.get("active_mg") for f in filas if isinstance(f.get("active_mg"), (int, float))]
+    raw = [f.get("raw_mg") for f in filas if isinstance(f.get("raw_mg"), (int, float))]
+    total = sum(act) if act else None
+    total_raw = sum(raw) if raw else None
+    pct = f"{round(total / total_raw * 100, 1)}".replace(".", ",") if (total and total_raw) else ""
+    return {
+        "name": filas[0].get("name", ""),
+        "active_name": next((f.get("active_name") for f in filas if f.get("active_name")), ""),
+        "active_mg": total,
+        "raw_mg": total_raw,
+        "pct_active": pct,
+        "unit": next((f.get("unit") for f in filas if f.get("unit")), "mg"),
+    }
+
+
 def _alinear_canonica(kic_ings: list[dict], canonica: list[dict]) -> list[dict | None]:
-    """Empareja cada ingrediente de KIC con su fila canónica (FT PDF) por
-    IDENTIDAD, no por índice: KIC reordena y consolida (3 aromas→1, eggshell+
-    bisglicinato→'Calcio') por lo que los conteos casi nunca cuadran y el orden
-    no se conserva. Estrategia: (1) clave fuerte para vitaminas/minerales;
-    (2) tokens distintivos con asignación global 1-a-1 (Jaccard sobre la unión).
+    """Empareja cada ingrediente de KIC con su(s) fila(s) canónica(s) (FT PDF)
+    por IDENTIDAD, no por índice: KIC reordena y CONSOLIDA formas (citrato +
+    bisglicinato → 'Magnesio'; eggshell + bisglicinato → 'Calcio') por lo que
+    los conteos no cuadran y el orden no se conserva. Estrategia:
+      (1) Vitaminas/minerales por clave de identidad. Si una clave aparece en un
+          solo ingrediente KIC, este hereda TODAS las filas canónicas de esa
+          clave (consolidación: suma la dosis de activo). Si aparece en varios
+          KIC, se deja a (2) para que los tokens de forma los separen 1-a-1.
+      (2) El resto por tokens distintivos, asignación global 1-a-1 (Jaccard).
     Sin match → None (cae al cálculo puente de `_dosis_activo`)."""
     res: list[dict | None] = [None] * len(kic_ings)
     if not canonica:
@@ -362,17 +405,34 @@ def _alinear_canonica(kic_ings: list[dict], canonica: list[dict]) -> list[dict |
 
     cused: set[int] = set()
     ckeys = [_ing_ident_key(f"{c.get('name','')} {c.get('active_name','') or ''}") for c in canonica]
+    kkeys = [_ing_ident_key(ing.get("ingrediente", "")) for ing in kic_ings]
 
-    # (1) Vitaminas y minerales por clave de identidad.
-    for ki, ing in enumerate(kic_ings):
-        kk = _ing_ident_key(ing.get("ingrediente", ""))
-        if not kk:
+    # (1) Por identidad (vitaminas/minerales), agrupando por clave de elemento.
+    for ek in {k for k in kkeys if k}:
+        ki_list = [i for i, k in enumerate(kkeys) if k == ek]
+        cj_list = [j for j, k in enumerate(ckeys) if k == ek and j not in cused]
+        if not ki_list or not cj_list:
             continue
-        for cj, ck in enumerate(ckeys):
-            if cj not in cused and ck == kk:
-                res[ki] = canonica[cj]
-                cused.add(cj)
-                break
+        if len(ki_list) == 1:
+            # KIC consolidó varias formas → hereda todas (suma de activo).
+            res[ki_list[0]] = _merge_canonica([canonica[j] for j in cj_list])
+            cused.update(cj_list)
+        else:
+            # Varias KIC del mismo elemento (silicio bambú vs OSA): reparte 1-a-1
+            # por mejor solape de tokens de forma (ser del mismo elemento ya
+            # descarta al resto; no hace falta umbral).
+            cand = []
+            for i in ki_list:
+                kt = _ing_dist_tokens(kic_ings[i].get("ingrediente", ""))
+                for j in cj_list:
+                    ct = _ing_dist_tokens(f"{canonica[j].get('name','')} {canonica[j].get('active_name','') or ''}")
+                    inter = kt & ct
+                    if inter:
+                        cand.append((len(inter) / len(kt | ct), i, j))
+            for _, i, j in sorted(cand, reverse=True):
+                if res[i] is None and j not in cused:
+                    res[i] = canonica[j]
+                    cused.add(j)
 
     # (2) El resto por tokens distintivos; asignación global mejor-primero.
     pairs: list[tuple[float, int, int]] = []
@@ -493,7 +553,7 @@ def fmt_analisis_ingredientes(d: dict) -> list[str]:
     ]
     obj_sec = c.get("objetivos_funcionales_secundarios", [])
     if obj_sec:
-        lines.append(f"**Objetivos secundarios:** {', '.join(obj_sec)}  ")
+        lines.append(f"**Objetivos secundarios:** {', '.join(str(x) for x in obj_sec)}  ")
     lines.append("")
 
     for ing in d.get("fase_2_ingredientes", []):
@@ -508,8 +568,8 @@ def fmt_analisis_ingredientes(d: dict) -> list[str]:
             lines.append(f"- *Mecanismo:* {mec.get('descripcion','')} — Evidencia: **{mec.get('nivel_evidencia','')}**")
         bio = ing.get("biodisponibilidad", {})
         if isinstance(bio, dict):
-            mejora = "; ".join(bio.get("factores_positivos", bio.get("factores_mejora", [])) or [])
-            reduccion = "; ".join(bio.get("factores_negativos", bio.get("factores_reduccion", [])) or [])
+            mejora = "; ".join(str(x) for x in (bio.get("factores_positivos", bio.get("factores_mejora", [])) or []))
+            reduccion = "; ".join(str(x) for x in (bio.get("factores_negativos", bio.get("factores_reduccion", [])) or []))
             if mejora:
                 lines.append(f"- *Absorción (mejora):* {mejora}")
             if reduccion:
