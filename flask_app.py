@@ -902,6 +902,16 @@ def _fmt_num(v) -> str:
         return ""
 
 
+def _fmt_active(v) -> str:
+    """Dosis de ACTIVO con precisión fija de 6 decimales, sin poda de ceros
+    (166.6666 -> '166.666600'). La dosis de activo es pública y debe viajar
+    íntegra al pipeline; el redondeo a 2 decimales pierde precisión."""
+    try:
+        return f"{float(v):.6f}"
+    except (TypeError, ValueError):
+        return ""
+
+
 @app.route("/parse-formula-pdf", methods=["POST"])
 def parse_formula_pdf():
     """Parsea un FT PDF arrastrado y devuelve JSON para pre-rellenar el formulario.
@@ -920,7 +930,7 @@ def parse_formula_pdf():
     ingredients = [{
         "name": ing["name"],
         "dosage": _fmt_num(ing["raw_mg"]),      # materia prima (interna)
-        "active": _fmt_num(ing["active_mg"]),   # dosis de activo (pública)
+        "active": _fmt_active(ing["active_mg"]),   # dosis de activo (pública)
         "active_name": ing.get("active_name", ""),
         "pct": ing.get("pct_active", ""),
         "unit": ing.get("unit", "mg"),
@@ -1090,7 +1100,7 @@ def load_run(run_id):
         if canonica is not None:
             for i, ing in enumerate(ingredients):
                 if i < len(canonica):
-                    ing["active"] = _fmt_num(canonica[i].get("active_mg"))
+                    ing["active"] = _fmt_active(canonica[i].get("active_mg"))
                     ing["active_name"] = canonica[i].get("active_name") or ""
                     ing["pct"] = canonica[i].get("pct_active") or ""
 

@@ -111,8 +111,8 @@ def test_load_run_rellena_campo_activo_desde_canonica(client, tmp_path):
     # El partial OOB debe incluir los inputs `ing_active` con el valor de la
     # canónica — no un value vacío.
     assert 'name="ing_active"' in body
-    assert 'value="100"' in body, "Dosis de activo del Mg (100mg) no se rellenó"
-    assert 'value="50"' in body, "Dosis de activo del AKBA (50mg) no se rellenó"
+    assert 'value="100.000000"' in body, "Dosis de activo del Mg (100mg) no se rellenó"
+    assert 'value="50.000000"' in body, "Dosis de activo del AKBA (50mg) no se rellenó"
     # Y los hidden de % y nombre de activo.
     assert 'name="ing_pct"' in body
     assert 'value="12"' in body

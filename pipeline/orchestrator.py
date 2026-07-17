@@ -194,9 +194,10 @@ def _load_formula(path: str | None, inline: str | None) -> tuple[str, str]:
 
 
 def _fmt_mg(v) -> str:
-    """50.0 -> '50'; 1.4 -> '1.4'. Sin ceros sobrantes."""
+    """50.0 -> '50.000000'; 1.4 -> '1.400000'. Precisión fija de 6 decimales sin
+    poda de ceros: el agente razona con la dosis de activo íntegra (no truncada)."""
     try:
-        return f"{float(v):.2f}".rstrip("0").rstrip(".")
+        return f"{float(v):.6f}"
     except (TypeError, ValueError):
         return ""
 
