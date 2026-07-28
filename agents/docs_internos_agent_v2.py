@@ -35,6 +35,9 @@ class NivelRiesgoReactividad(str, Enum):
 
 
 class EstadoMaterial(str, Enum):
+    # Hasta que el pipeline lea NAVISION (fase 2), el único estado que podemos
+    # afirmar es "no lo sabemos". Los demás quedan para cuando haya conexión.
+    PENDIENTE_VERIFICACION_ERP = "PENDIENTE_VERIFICACION_ERP"
     HOMOLOGADO = "HOMOLOGADO"
     EN_EVALUACION = "EN_EVALUACION"
     PENDIENTE_PROVEEDOR = "PENDIENTE_PROVEEDOR"
@@ -143,7 +146,11 @@ Para CADA ingrediente de la fórmula (activos + excipientes si los hay):
    (formato UG-XXXX si el ingrediente existe en catálogo Umbrella, o NUEVO si no)
 3. Calcula la cantidad por unidad de producto (dosis diaria estándar)
 4. Calcula la cantidad por lote de 10.000 unidades (añade 2% de merma estándar)
-5. Indica el estado del material: HOMOLOGADO | EN_EVALUACION | PENDIENTE_PROVEEDOR | NUEVO
+5. Estado del material: usa SIEMPRE "PENDIENTE_VERIFICACION_ERP". El estado real de
+   homologación solo existe en NAVISION y no tienes acceso a NAVISION. NO lo infieras
+   del nombre del material ni de si es una marca conocida: marcar como EN_EVALUACION
+   o PENDIENTE_PROVEEDOR un material que el cliente ya tiene homologado es un error
+   grave, porque dispara alertas de aprovisionamiento que no existen.
 6. Añade el orden de incorporación en el proceso de mezcla
 
 Toma como referencia para cantidades los datos de la fórmula proporcionada.
@@ -217,7 +224,7 @@ Usa EXACTAMENTE estas claves de nivel superior:
       "codigo_referencia": "UG-XXXX o PENDIENTE_PROVEEDOR",
       "cantidad_por_unidad_mg": 500,
       "cantidad_lote_con_merma_g": 5100,
-      "estado_material": "HOMOLOGADO | EN_EVALUACION | PENDIENTE_PROVEEDOR | NO_DISPONIBLE"
+      "estado_material": "PENDIENTE_VERIFICACION_ERP"
     }
   ],
   "fase_2_formula_cuantitativa": {

@@ -59,8 +59,8 @@ def test_seis_bloques_en_orden(tmp_path):
 
 def test_tabla_ingredientes_una_sola_vez(tmp_path):
     texto = _informe(tmp_path)
-    # Cabecera única de la tabla maestra.
-    assert texto.count("Biodisponibilidad | Reg.") == 1
+    # Cabecera única de la tabla maestra (formato Excel del cliente).
+    assert texto.count("Bioavailability | REGA") == 1
     # La cabecera de la antigua tabla KIC ('Tipología') ya no debe existir.
     assert "Tipología" not in texto
 
@@ -95,8 +95,9 @@ def test_ficha_tecnica_cabecera_fabricante(tmp_path):
     # Cabecera corporativa fija (plantilla, no inventada por el LLM).
     assert "Umbrella F&FI, S.L." in texto
     assert "RGSEAA 26.020214/B" in texto
-    # Las 14 entradas del Anexo II de alérgenos.
-    assert texto.count("| Verificar |") == 14
+    # Las 14 entradas del Anexo II de alérgenos. El estado remite a la ficha
+    # técnica del cliente: la evaluación ya existe, no la pedimos otra vez.
+    assert texto.count("| Según ficha técnica |") == 14
 
 
 def test_vida_util_sin_meses_duplicado(tmp_path):
@@ -278,21 +279,100 @@ def test_alinear_canonica_por_identidad():
     assert all(o is not None for o in out)
 
 
+def test_tabla_nutricional_agrega_por_elemento():
+    """El Anexo XIII declara NUTRIENTES, no las sales que los aportan. Xavier
+    (2026-07-27) tachó la tabla porque listaba 'tri-Mg Citrate' y 'Mg
+    Bisglycinate' como dos filas: debe ser un solo Magnesio con la suma.
+    Los valores esperados son los que él mismo anotó sobre el informe."""
+    from pipeline.report_composer import _nutricional_vitmin_rows
+    kic = {"fase_2_ingredientes": [
+        {"ingrediente": "Citrato de magnesio", "tipologia": "MINERAL"},
+        {"ingrediente": "Bisglicinato de magnesio", "tipologia": "MINERAL"},
+        {"ingrediente": "Extracto de bambú (sílice)", "tipologia": "MINERAL"},
+    ]}
+    canon = [
+        {"name": "Tri-Mg Citrate Anh.", "active_mg": 12.88, "raw_mg": 80.5},
+        {"name": "Mg Bisglycinate, 12% Mg", "active_name": "Mg",
+         "active_mg": 15.08, "raw_mg": 125.67},
+        {"name": "Bamboo Extract (85% Silica)", "active_name": "Silicon",
+         "active_mg": 16.635, "raw_mg": 41.87},
+    ]
+    rows = _nutricional_vitmin_rows(kic, canon)
+    por_nombre = {r[0]: r for r in rows}
+
+    # Una sola fila de magnesio, con la suma 12,88 + 15,08 = 27,96 mg.
+    assert "Magnesio" in por_nombre, f"Filas obtenidas: {rows}"
+    assert sum(1 for r in rows if r[0] == "Magnesio") == 1
+    assert por_nombre["Magnesio"][1] == "27,96 mg"
+    # 27,96 / 375 = 7,456% → "7,5%" (VRN legal del Anexo XIII, no inventado).
+    assert por_nombre["Magnesio"][2] == "7,5%"
+
+    # El silicio no tiene VRN en el Anexo XIII: cantidad sí, porcentaje nunca.
+    assert por_nombre["Silicio"][2] == "Sin VRN establecido"
+
+    # Ninguna fila conserva el nombre de la materia prima.
+    assert not any("Citrate" in r[0] or "Bisglycinate" in r[0] for r in rows)
+
+
 def test_tabla_maestra_usa_canonica(tmp_path):
+    """La tabla replica la Tabla Cuantitativa.xlsm del cliente: ahora muestra
+    materia prima explícita (Ingredient mg+) y %Formula, junto con ACTIVE mg
+    de la canónica. Las nuevas cabeceras deben estar presentes y los orígenes
+    canónicos prevalecen sobre los cálculos puente."""
     from pipeline.report_composer import fmt_tabla_maestra
     kic = {"fase_2_ingredientes": [
         {"ingrediente": "Vitamina B6 (Piridoxina, 80,5%)", "dosis_formula_mg": 2.26, "porcentaje_nrv": "161"},
         {"ingrediente": "Extracto de bambú (85% sílice)", "dosis_formula_mg": 10.07},
     ]}
     canon = [
-        {"name": "Vit. B6 HCl, 80,5% Pyridoxine", "active_mg": 1.40, "unit": "mg"},
-        {"name": "Extracto de Bambú 85% sílice", "active_mg": 4.0, "unit": "mg"},
+        # Con code: REF debe mostrar el código, no el nº de orden.
+        {"name": "Vit. B6 HCl, 80,5% Pyridoxine", "active_mg": 1.40,
+         "raw_mg": 2.26, "pct_active": "80,5", "unit": "mg", "code": "91483"},
+        # Sin code: REF cae al nº de orden (fallback).
+        {"name": "Extracto de Bambú 85% sílice", "active_mg": 4.0,
+         "raw_mg": 4.71, "pct_active": "85", "unit": "mg"},
     ]
-    out = "\n".join(fmt_tabla_maestra(kic, {}, {}, canonica=canon))
+    # Total de cápsula para %Formula: 500 mg → B6 0,452% / bambú 0,942%.
+    doc = {"fase_2_formula_cuantitativa": {"total_capsula_mg": 500}}
+
+    out = "\n".join(fmt_tabla_maestra(kic, {}, {}, canonica=canon, doc=doc))
+
+    # ── ACTIVE mg (canónica prevalece sobre el cálculo puente) ───────────
     assert "1.400000 mg" in out          # B6 valor declarado, no el calculado 1.82
-    assert "4.000000 mg" in out            # bambú silicio, no 8.56 del 85%
-    assert "según la ficha de fórmula" in out
-    assert "833" not in out and "10.07" not in out  # nunca la materia prima
+    assert "4.000000 mg" in out          # bambú silicio, no 8.56 del 85%
+
+    # ── Ingredient mg+ (NUEVO: materia prima explícita) ─────────────────
+    assert "2.260000 mg" in out          # B6 raw de la canónica
+    assert "4.710000 mg" in out          # bambú raw de la canónica
+
+    # ── %Formula (NUEVO: ratio sobre total de cápsula) ──────────────────
+    # 2.26 / 500 * 100 = 0.452 → "0,452"
+    assert "0,452" in out
+    # 4.71 / 500 * 100 = 0.942 → "0,942"
+    assert "0,942" in out
+
+    # ── Cabeceras del Excel del cliente (orden exacto) ──────────────────
+    for h in ["REF", "Formula Ingredient Name", "List of Ingredients",
+              "Active name", "% Active", "ACTIVE mg", "%VRN",
+              "Ingredient mg+", "%Formula", "Bioavailability", "REGA"]:
+        assert h in out, f"Falta cabecera de la tabla cliente: {h}"
+
+    # ── REF: code de la canónica, con fallback al nº de orden ───────────
+    filas = [l for l in out.splitlines() if "Vitamina B6" in l or "bambú" in l]
+    assert len(filas) == 2, f"Se esperaban 2 filas de ingrediente: {filas}"
+    b6, bambu = filas
+    assert b6.split("|")[1].strip() == "91483"   # code de la canónica
+    assert bambu.split("|")[1].strip() == "2"    # sin code → nº de orden
+
+    # ── Cabecera antigua "Forma química" desaparece del Bloque 1 ────────
+    # (puede seguir en el FT interno — se valida por contexto).
+    assert "| Forma química |" not in out
+
+    # ── Nota al pie actualizada: ya no habla de confidencialidad ────────
+    assert "ACTIVE mg" in out and "Ingredient mg+" in out
+    # La nota nueva describe ACTIVE mg e Ingredient mg+, no "confidencial".
+    assert "confidencial" not in out.lower()
+    assert "no la dosis de materia prima" not in out
 
 
 def test_claim_en_espera_botanico():
@@ -394,3 +474,15 @@ if __name__ == "__main__":
             print(f"✅ {fn.__name__}")
         test_claim_en_espera_botanico()
         print("✅ test_claim_en_espera_botanico")
+
+
+def test_detecta_fuga_de_idioma_cjk():
+    """El LLM coló chino en los agentes 6 y 7 de run_56 ("sin esfuerzo de撕裂").
+    Helvetica no tiene esos glifos, así que en el PDF salen como cuadrados
+    negros y el cliente los ve. El composer debe avisar, no silenciarlo."""
+    from pipeline.report_composer import _detectar_fuga_idioma
+    assert _detectar_fuga_idioma("stick: solo si la apertura es fácil (sin esfuerzo de撕裂)")
+    assert _detectar_fuga_idioma("premix para均匀 distribución")
+    # Un informe correcto en español, con acentos y símbolos técnicos, no avisa.
+    assert _detectar_fuga_idioma(
+        "Magnesio 27,96 mg — 7,5% VRN · Na2MoO4·2H2O · µg/día") == []
