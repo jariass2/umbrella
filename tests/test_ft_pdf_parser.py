@@ -23,7 +23,7 @@ from dashboard.utils.ft_pdf_parser import parse_ft_pdf  # noqa: E402
 PDF = Path(
     "/Users/jordiariassantaella/Library/CloudStorage/"
     "GoogleDrive-jariass2@gmail.com/Mi unidad/Consulting/Umbrella Group/"
-    "Bloque 1 Discovert /Frmules per Validar/FT Formula 1 MIX 250188 (1).pdf"
+    "Bloque 1 Discovert /Formules per Validar/FT Formula 4 MIX 260047.pdf"
 )
 
 
@@ -36,43 +36,48 @@ def _parsed():
 
 def test_cabecera():
     d = _parsed()
-    assert d["product_name"] == "MIX 250188"
-    assert "1680" in d["dosage"]
-    assert d["version"] == "20260424"
+    assert d["product_name"] == "MIX 260047"
+    assert d["dosage"] == '500 mg / Capsule "0"'
+    assert d["version"] == "20260513"
 
 
-def test_doce_ingredientes():
+def test_dieciocho_ingredientes_con_codigo():
     d = _parsed()
-    assert len(d["ingredients"]) == 12
+    assert len(d["ingredients"]) == 18
+    assert all(i["code"] for i in d["ingredients"])
+    assert len({i["code"] for i in d["ingredients"]}) == 18
 
 
 def test_dosis_activa_vs_materia_prima():
     d = _parsed()
     by_code = {i["code"]: i for i in d["ingredients"]}
-    # Boswellia: activo 50 (AKBA) vs materia prima 166,67.
+    # Boswellia: activo 4,829 (AKBA) vs materia prima 16,1.
     bos = by_code["91483"]
-    assert bos["active_mg"] == 50.0
-    assert round(bos["raw_mg"], 2) == 166.67
+    assert bos["active_mg"] == 4.829
+    assert bos["raw_mg"] == 16.1
     assert bos["active_name"] == "AKBA"
     assert bos["pct_active"] == "30"
 
 
-def test_b6_sobredosado_lee_valor_declarado():
-    # B6: 2,26 materia prima × 80,5% = 1,82, pero declarado = 1,40 (sobredosado).
-    # El parser debe leer 1,40, no calcular.
+def test_microdosis_y_estandarizados_se_parsean():
     d = _parsed()
-    b6 = {i["code"]: i for i in d["ingredients"]}["5029"]
-    assert b6["active_mg"] == 1.40
-    assert round(b6["raw_mg"], 2) == 2.26
+    by_code = {i["code"]: i for i in d["ingredients"]}
+    # D3 is recovered from raw dose × 0,25% because the PDF rounds it to 0,00.
+    d3 = by_code["5067"]
+    assert d3["active_mg"] == 0.003
+    assert d3["raw_mg"] == 1.3
+    # Silicon uses the explicit 39,73% active declaration, not the 85% silica.
+    silicon = by_code["4265"]
+    assert silicon["active_mg"] == 16.635
+    assert silicon["pct_active"] == "39,73"
+    assert silicon["active_name"] == "Silicon"
 
 
-def test_bambu_silicio_no_silice():
-    # Bambú: el nombre dice "85% Silica" pero el activo real es 39,73% Silicon → 4,00.
+def test_todos_los_registros_conservan_esquema():
     d = _parsed()
-    bam = {i["code"]: i for i in d["ingredients"]}["4265"]
-    assert bam["active_mg"] == 4.0
-    assert bam["pct_active"] == "39,73"
-    assert bam["active_name"] == "Silicon"
+    required = {"code", "name", "active_name", "pct_active", "active_mg", "raw_mg", "unit"}
+    assert all(required <= set(i) for i in d["ingredients"])
+    assert all(i["unit"] == "mg" for i in d["ingredients"])
 
 
 if __name__ == "__main__":

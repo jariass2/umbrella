@@ -928,6 +928,7 @@ def parse_formula_pdf():
         return jsonify({"error": f"No se pudo leer el PDF: {exc}"}), 400
 
     ingredients = [{
+        "code": ing.get("code", ""),            # ref. interna del FT → columna REF
         "name": ing["name"],
         "dosage": _fmt_num(ing["raw_mg"]),      # materia prima (interna)
         "active": _fmt_active(ing["active_mg"]),   # dosis de activo (pública)
@@ -952,6 +953,7 @@ def analyze():
     actives = request.form.getlist("ing_active")
     active_names = request.form.getlist("ing_active_name")
     pcts = request.form.getlist("ing_pct")
+    codes = request.form.getlist("ing_code")
 
     def _at(lst, i):
         return lst[i] if i < len(lst) else ""
@@ -985,6 +987,7 @@ def analyze():
         except ValueError:
             active_mg = None
         canonica.append({
+            "code": _at(codes, i).strip(),
             "name": name.strip(),
             "raw_mg": float(dosage.replace(",", ".")) if unit in ("mg",) else None,
             "active_mg": active_mg,

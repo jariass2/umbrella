@@ -19,6 +19,7 @@
     </select>
     <input type="hidden" name="ing_active_name" value="{{ ing.active_name or '' }}">
     <input type="hidden" name="ing_pct" value="{{ ing.pct or '' }}">
+    <input type="hidden" name="ing_code" value="{{ ing.code or '' }}">
     <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
   </div>
   {% endfor %}
