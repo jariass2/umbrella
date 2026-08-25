@@ -238,6 +238,77 @@ def _activo_desde_raw(raw_mg, pct_active) -> float | None:
         return None
 
 
+# Umbral de discrepancia por encima del cual dejamos de tratar un desajuste como
+# redondeo del PDF y lo tratamos como dato de origen incoherente.
+_TOL_COHERENCIA = 0.01  # 1 %
+
+
+def _pct_active_num(canon_i: dict | None):
+    """% de activo de la canónica como float ('35,6' → 35.6). None si falta."""
+    if not canon_i:
+        return None
+    v = canon_i.get("pct_active")
+    if v in (None, ""):
+        return None
+    try:
+        return float(str(v).replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+
+
+def _raw_mg_preciso(canon_i: dict | None, nombre: str = ""):
+    """Materia prima a precisión completa = ACTIVE mg ÷ % activo.
+
+    La ficha técnica en PDF redondea la materia prima a 2 decimales y el informe
+    la imprimía con 6, fingiendo una precisión que no tenía: el cobre salía como
+    '7.140000 mg' cuando 1 mg al 14 % son 7,142857 mg (Xavier, 2026-08-25).
+    Recalculamos desde el activo, que sí es autoritativo. Si el valor recalculado
+    se aleja más de `_TOL_COHERENCIA` del que trae la ficha, la diferencia ya no
+    es redondeo: devolvemos el de la ficha sin tocar y que lo cace la coherencia.
+    """
+    if not canon_i:
+        return None
+    raw = canon_i.get("raw_mg")
+    activo = canon_i.get("active_mg")
+    # El % de estandarización no siempre viaja en su columna: el gluconato de
+    # cobre solo lo lleva en el nombre («Copper Gluconate 14%»).
+    pct = _pct_active_num(canon_i) or _parse_pct_activo(nombre or canon_i.get("name", ""))
+    if not isinstance(activo, (int, float)) or not activo or not pct:
+        return raw if isinstance(raw, (int, float)) else None
+    esperado = activo / pct * 100.0
+    if not isinstance(raw, (int, float)) or not raw:
+        return esperado
+    return esperado if abs(esperado - raw) / raw <= _TOL_COHERENCIA else raw
+
+
+def incoherencias_fila(nombre: str, canon_i: dict | None) -> list[str]:
+    """Desajustes de la fila que NO podemos resolver sin volver al origen.
+
+    No corrige nada: describe. El caso que la motiva es el potasio del #13, donde
+    la canónica traía `pct_active` 77,3 % (pureza del citrato tri-K) mientras el
+    nombre declara «35,6 % K», el porcentaje del ELEMENTO. El informe multiplicó
+    por el primero y publicó 98,56 mg de K y un 4,9 % VRN cuando son 16 mg y un
+    0,8 % — un factor 6 en la cifra que decide si hay claim. Los dos números eran
+    coherentes entre sí, así que solo los delata cruzarlos con el nombre.
+
+    Deliberadamente NO comprobamos `materia prima × % = activo`: el sobredosado
+    es una práctica legítima de formulación (la B6 del run_56 declara 1,4 mg de
+    activo sobre 2,26 mg al 80,5 %) y esa regla solo produciría falsos positivos
+    sobre fórmulas correctas. Tampoco habría cazado el potasio, que era
+    internamente coherente con el porcentaje equivocado."""
+    out: list[str] = []
+    if not canon_i:
+        return out
+    pct_canon = _pct_active_num(canon_i)
+    pct_nombre = _parse_pct_activo(nombre)
+    if pct_canon and pct_nombre and abs(pct_canon - pct_nombre) / pct_nombre > _TOL_COHERENCIA:
+        out.append(
+            f"% de activo en conflicto: la ficha dice {pct_canon:g} % y el nombre "
+            f"declara {pct_nombre:g} %. ACTIVE mg y %VRN dependen de cuál sea el bueno."
+        )
+    return out
+
+
 def _dosis_activo(ing: dict, canonical: dict | None = None) -> str:
     """Dosis de ACTIVO aportado. Pública. Nunca expone `dosis_formula_mg`.
 
@@ -297,6 +368,16 @@ _ING_SYN = {
     # ES↔EN para emparejar formas consolidadas y botánicos con la canónica (FT PDF en EN).
     "silice": "silicon", "silicio": "silicon", "silica": "silicon", "bambu": "bamboo",
     "colageno": "collagen", "peptidos": "peptides",
+    # Excipientes y auxiliares tecnológicos. Sin ellos, 10 de las 21 filas del
+    # #13 (agua, dextrosa, ácido cítrico, sorbato, L-citrulina, aroma…) no
+    # casaban con la canónica y publicaban la cifra del LLM en vez del dato de
+    # la ficha. Xavier (2026-08-25).
+    "agua": "water", "fructosa": "fructose", "dextrosa": "dextrose",
+    "glucosa": "glucose", "citrico": "citric", "malico": "malic",
+    "sorbato": "sorbate", "potasico": "potassium", "xantana": "xanthan",
+    "fresa": "strawberry", "carminico": "carminic", "citrulina": "citrulline",
+    "maltodextrina": "maltodextrin", "patata": "potato", "colorante": "colourant",
+    "anhidro": "anh", "anhidra": "anh", "anhydrous": "anh",
     # Formas de sal: cuando un mismo elemento llega en dos sales (Mg citrato +
     # Mg bisglicinato), el elemento no discrimina y el emparejamiento depende
     # de la sal. Sin estos sinónimos las filas se quedaban sin canónica y
@@ -348,14 +429,34 @@ _MIN_KEYS: list[tuple[str, tuple[str, ...]]] = [
     ("min:mg", (r"magnes", r"\bmg\b")),
     ("min:zn", (r"zinc", r"\bzn\b")),
     ("min:ca", (r"calci", r"\bca\b")),
+    # Cloruro y sodio van los ÚLTIMOS: son los aniones/cationes de acompañamiento
+    # de media tabla ("Zinc chloride", "Sodium selenite") y cualquier mineral más
+    # específico debe ganarles. Xavier (2026-08-25) sobre el #13: la fila NaCl
+    # caía sin identidad y heredaba el %VRN inventado por el LLM ("1,2% como Na").
+    ("min:cl", (r"\bcloruro\b", r"\bchloride\b", r"\bnacl\b")),
+    ("min:na", (r"\bsodio\b", r"\bsodium\b")),
 ]
+
+
+# Aditivos cuyo nombre lleva un catión mineral que NO es el nutriente declarado.
+# El sorbato potásico del #13 se identificaba como «potasio» y se fusionaba con
+# el citrato tri-K: 44,94 + 82,56 = 127,5 mg de materia prima y 16 + 82,56 =
+# 98,56 mg de activo, con un 77,3 % de estandarización que no es de nadie. De ahí
+# salía el 4,9 % VRN que Xavier corrigió a 0,8 % (2026-08-25). Un conservante no
+# aporta el mineral de su contraión a efectos de declaración nutricional.
+_ADITIVOS_NO_NUTRIENTES = (
+    r"sorbat", r"benzoat", r"\be\s?[0-9]{3}\b", r"metabisulf", r"glutamat",
+)
 
 
 def _ing_ident_key(name: str) -> str | None:
     """Clave de identidad fuerte para vitaminas y minerales (inequívoca entre
     idiomas). Las vitaminas se comprueban ANTES que los minerales para que la
-    B5 (Ca D-Pantotenato) no se confunda con el Calcio."""
+    B5 (Ca D-Pantotenato) no se confunda con el Calcio. Los aditivos con catión
+    mineral quedan fuera: su contraión no es un nutriente declarable."""
     s = _ing_ascii(name)
+    if any(re.search(p, s) for p in _ADITIVOS_NO_NUTRIENTES):
+        return None
     m = re.search(r"\bb\s*([0-9]{1,2})\b", s)
     if m and ("vit" in s or ("b" + m.group(1)) in s.replace(" ", "")):
         return f"vit:b{int(m.group(1))}"
@@ -412,6 +513,24 @@ def _merge_canonica(filas: list[dict]) -> dict:
         "pct_active": pct,
         "unit": next((f.get("unit") for f in filas if f.get("unit")), "mg"),
     }
+
+
+_UMBRAL_TOKENS = 0.34
+
+
+def _score_tokens(tk: set[str], tc: set[str]) -> float:
+    """Parecido entre los tokens distintivos de dos nombres.
+
+    Jaccard puro castiga que un lado sea más verboso que el otro, y ese matiz
+    tumbaba emparejamientos evidentes: «Goma xantana (Satiaxane CX 911)» contra
+    «Satiaxane CX 911» daba 1/3 = 0,333 y se caía por una milésima del umbral,
+    pese a compartir una marca que no aparece en ninguna otra fila. Cuando los
+    tokens del lado más corto están TODOS en el otro, el nombre corto es un
+    subconjunto del largo y el emparejamiento es seguro: puntúa 1."""
+    inter = tk & tc
+    if inter and len(inter) == min(len(tk), len(tc)):
+        return 1.0
+    return len(inter) / len(tk | tc)
 
 
 def _alinear_canonica(kic_ings: list[dict], canonica: list[dict]) -> list[dict | None]:
@@ -474,9 +593,9 @@ def _alinear_canonica(kic_ings: list[dict], canonica: list[dict]) -> list[dict |
             tc = _ing_dist_tokens(f"{c.get('name','')} {c.get('active_name','') or ''}")
             inter = tk & tc
             if inter:
-                pairs.append((len(inter) / len(tk | tc), ki, cj))
+                pairs.append((_score_tokens(tk, tc), ki, cj))
     for score, ki, cj in sorted(pairs, reverse=True):
-        if res[ki] is None and cj not in cused and score >= 0.34:
+        if res[ki] is None and cj not in cused and score >= _UMBRAL_TOKENS:
             res[ki] = canonica[cj]
             cused.add(cj)
     return res
@@ -486,7 +605,7 @@ def _alinear_canonica(kic_ings: list[dict], canonica: list[dict]) -> list[dict |
 # explícita en la tabla → la nota deja de ser un aviso de confidencialidad y pasa
 # a explicar las dos columnas de dosificación (activo vs materia prima).
 NOTA_DOSIS_ACTIVO_CANON = (
-    "*ACTIVE mg: dosis de principio activo por cápsula. Ingredient mg+: dosis "
+    "*ACTIVE mg: dosis de principio activo por unidad de consumo. Ingredient mg+: dosis "
     "total de materia prima del ingrediente (incluye cargas, diluciones y "
     "estandarización). «—» = dato no disponible o no aplica.*"
 )
@@ -508,6 +627,32 @@ NOTA_DOSIS_ACTIVO = (
 # prima (Ingredient mg+) es PÚBLICA en este bloque (requisito explícito del
 # cliente); el resto de bloques siguen ocultándola.
 
+# Fracción másica del anión con VRN dentro de la sal. En estas sales la ficha
+# técnica declara como activo el CATIÓN (NaCl → "Na, 60 mg"), pero el nutriente
+# que el Anexo XIII permite declarar es el ANIÓN. Sin esta conversión la fila se
+# quedaba sin %VRN utilizable: el sodio no tiene VRN y el cloruro nunca se
+# calculaba. Xavier (2026-08-25), fórmula #13.
+_FRACCION_ANION = {
+    # sal (patrón sobre el nombre normalizado) → (clave del anión, fracción másica)
+    "nacl":  ("min:cl", 35.453 / 58.443, "como Cl; el Na no tiene VRN"),
+    "kcl":   ("min:cl", 35.453 / 74.551, "como Cl"),
+}
+
+
+def _anion_con_vrn(nombre: str, canon_i: dict | None) -> tuple[str, float, str] | None:
+    """(clave, mg, nota) del anión con VRN de una sal, calculado desde la
+    MATERIA PRIMA por estequiometría. None si el ingrediente no es una de esas
+    sales o no conocemos su materia prima."""
+    s = _ing_ascii(nombre).replace(" ", "")
+    raw = canon_i.get("raw_mg") if canon_i else None
+    if not isinstance(raw, (int, float)) or not raw:
+        return None
+    for pat, (key, frac, nota) in _FRACCION_ANION.items():
+        if pat in s:
+            return key, raw * frac, nota
+    return None
+
+
 def _vrn_ingrediente(ing: dict, canon_i: dict | None) -> str:
     """%VRN de una fila de la tabla de ingredientes, calculado con el VRN legal
     del Anexo XIII en vez del texto del LLM.
@@ -522,6 +667,14 @@ def _vrn_ingrediente(ing: dict, canon_i: dict | None) -> str:
     if key is None and canon_i:
         key = (_ing_ident_key(canon_i.get("active_name", ""))
                or _ing_ident_key(canon_i.get("name", "")))
+    # Sales tipo NaCl: el activo de la ficha (Na) no tiene VRN, pero el anión
+    # (Cl) sí. Se calcula el anión y se deja constancia de por qué no es el Na.
+    anion = _anion_con_vrn(nombre, canon_i)
+    if anion is not None:
+        akey, amg, nota = anion
+        nrv_mg, _u = _NRV.get(akey, (None, None))
+        if nrv_mg:
+            return f"{_fmt_pct_num(amg / nrv_mg * 100)} ({nota})"
     if key in _SIN_VRN:
         return "Sin VRN"
     mg = canon_i.get("active_mg") if canon_i else None
@@ -551,6 +704,7 @@ def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict,
         for i in reg.get("ingredientes", []) if isinstance(i, dict)
     }
 
+    avisos: list[str] = []
     kic_ings = [i for i in kic.get("fase_2_ingredientes", []) if isinstance(i, dict)]
     canon_alineada = _alinear_canonica(kic_ings, canonica or [])
     usa_canon = any(c is not None for c in canon_alineada)
@@ -609,9 +763,19 @@ def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict,
         canon_name = canon_i.get("name", "") if canon_i else ""
         canon_code = canon_i.get("code", "") if canon_i else ""
         nom_actiu = canon_i.get("active_name", "") if canon_i else ""
+        # % de activo: la columna de la ficha si viene, y si no el % declarado
+        # en el propio nombre («Copper Gluconate 14%»), que es el mismo dato con
+        # el que ya calculamos la materia prima. Xavier (2026-08-25) marcó como
+        # vacía la celda del cobre teniendo el 14 % escrito al lado.
         pct_actiu_raw = canon_i.get("pct_active", "") if canon_i else ""
+        if not pct_actiu_raw:
+            pct_nombre = _parse_pct_activo(nombre) or (
+                _parse_pct_activo(canon_name) if canon_name else None)
+            pct_actiu_raw = f"{pct_nombre:g}".replace(".", ",") if pct_nombre else ""
         pct_actiu = f"{pct_actiu_raw}%" if pct_actiu_raw else "—"
-        canon_raw_mg = canon_i.get("raw_mg") if canon_i else None
+        # Materia prima recalculada desde el activo: la ficha PDF la redondea a
+        # 2 decimales y la imprimíamos con 6 (Xavier, 2026-08-25).
+        canon_raw_mg = _raw_mg_preciso(canon_i, nombre)
         canon_unit = (canon_i.get("unit", "mg") if canon_i else "mg") or "mg"
 
         # ACTIVE mg: reusamos _dosis_activo (canónica prevalece sobre cálculo)
@@ -633,6 +797,9 @@ def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict,
         else:
             pct_formula_str = "—"
 
+        for aviso in incoherencias_fila(nombre, canon_i):
+            avisos.append(f"**{nombre}** — {aviso}")
+
         rows.append([
             # REF: código de la fórmula canónica; si el ingrediente no casa
             # con la canónica (o el PDF no traía code), cae al nº de orden.
@@ -652,6 +819,17 @@ def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict,
     lines.append("")
     lines.append(NOTA_DOSIS_ACTIVO_CANON if usa_canon else NOTA_DOSIS_ACTIVO)
     lines.append("")
+    if avisos:
+        # Un dato de origen que no cuadra no se corrige a ojo ni se publica en
+        # silencio: se enseña. Estas filas necesitan que el cliente confirme el
+        # valor bueno antes de que el informe salga.
+        lines.append("> ⚠️ **Filas pendientes de confirmar con la fórmula de origen.** "
+                     "Los valores de estas filas no son coherentes entre sí y las cifras "
+                     "publicadas para ellas no deben usarse para decidir claims:")
+        lines.append("")
+        for a in avisos:
+            lines.append(f"> - {a}")
+        lines.append("")
     return lines
 
 
@@ -943,7 +1121,9 @@ _NRV = {
 
 # Boro y silicio NO tienen VRN en el Anexo XIII: se declaran en cantidad, sin
 # porcentaje. Cualquier % para ellos sería inventado.
-_SIN_VRN = {"min:b", "min:si"}
+# El sodio tampoco: el Anexo XIII declara SAL (g), no Na, y no le fija VRN.
+# Xavier (2026-08-25): "el sodi (Na) no en té VRN; el clorur sí".
+_SIN_VRN = {"min:b", "min:si", "min:na"}
 
 # Nombre de NUTRIENTE para la tabla de información nutricional. Xavier
 # (2026-07-27) tachó la tabla entera porque listaba materias primas ("tri-Mg

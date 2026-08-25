@@ -343,13 +343,13 @@ def test_tabla_maestra_usa_canonica(tmp_path):
 
     # ── Ingredient mg+ (NUEVO: materia prima explícita) ─────────────────
     assert "2.260000 mg" in out          # B6 raw de la canónica
-    assert "4.710000 mg" in out          # bambú raw de la canónica
+    assert "4.705882 mg" in out          # bambú raw recalculado desde el activo (4 mg / 85 %)
 
     # ── %Formula (NUEVO: ratio sobre total de cápsula) ──────────────────
     # 2.26 / 500 * 100 = 0.452 → "0,452"
     assert "0,452" in out
-    # 4.71 / 500 * 100 = 0.942 → "0,942"
-    assert "0,942" in out
+    # 4.705882 / 500 * 100 = 0.941 → "0,941"
+    assert "0,941" in out
 
     # ── Cabeceras del Excel del cliente (orden exacto) ──────────────────
     for h in ["REF", "Formula Ingredient Name", "List of Ingredients",
@@ -486,3 +486,99 @@ def test_detecta_fuga_de_idioma_cjk():
     # Un informe correcto en español, con acentos y símbolos técnicos, no avisa.
     assert _detectar_fuga_idioma(
         "Magnesio 27,96 mg — 7,5% VRN · Na2MoO4·2H2O · µg/día") == []
+
+
+# ── Correcciones de Xavier sobre la fórmula #13 (2026-08-25) ────────────────
+# Las 11 notas de su PDF caen todas en la Tabla Cuantitativa y ninguna toca el
+# criterio regulatorio: son aritmética y mapeo de columnas.
+
+def test_raw_mg_a_precision_completa():
+    """El cobre: 1 mg de activo al 14 % son 7,142857 mg de gluconato, no los
+    7,14 que la ficha PDF redondea a dos decimales."""
+    from pipeline.report_composer import _raw_mg_preciso
+    preciso = _raw_mg_preciso({"active_mg": 1.0, "pct_active": "14", "raw_mg": 7.14})
+    assert abs(preciso - 7.142857) < 1e-5
+
+
+def test_raw_mg_incoherente_no_se_reescribe():
+    """Una discrepancia grande no es redondeo: se respeta el dato de la ficha
+    y se deja que la coherencia lo señale, en vez de inventar un valor."""
+    from pipeline.report_composer import _raw_mg_preciso
+    assert _raw_mg_preciso({"active_mg": 16.0, "pct_active": "35.6", "raw_mg": 127.5}) == 127.5
+
+
+def test_incoherencia_pct_activo_potasio():
+    """El fallo del #13: la ficha traía 77,3 % (pureza del citrato) y el nombre
+    declara 35,6 % K. Multiplicar por el primero publicó 98,56 mg y 4,9 % VRN
+    cuando son 16 mg y 0,8 %."""
+    from pipeline.report_composer import incoherencias_fila
+    avisos = incoherencias_fila(
+        "Potasio (como tri-K Citrato H2O 35,6% K)",
+        {"active_mg": 98.56, "pct_active": "77.3", "raw_mg": 127.5},
+    )
+    assert any("conflicto" in a for a in avisos)
+
+
+def test_fila_coherente_no_genera_aviso():
+    from pipeline.report_composer import incoherencias_fila
+    assert incoherencias_fila(
+        "Cobre (como Copper Gluconate 14%)",
+        {"active_mg": 1.0, "pct_active": "14", "raw_mg": 7.142857},
+    ) == []
+
+
+def test_sodio_no_tiene_vrn_y_el_cloruro_si():
+    """Xavier: 'el sodi (Na) no en té VRN; el clorur sí'. La fila NaCl declaraba
+    un 1,2 % inventado por el LLM sobre una base de 2000 mg que no existe."""
+    from pipeline.report_composer import _vrn_ingrediente
+    vrn = _vrn_ingrediente(
+        {"ingrediente": "Cloruro sódico (NaCl)", "porcentaje_nrv": "1,2%"},
+        {"active_mg": 60.0, "raw_mg": 152.671754},
+    )
+    assert "Cl" in vrn and "no tiene VRN" in vrn
+    assert "1,2" not in vrn
+
+
+def test_cloruro_y_sodio_no_secuestran_otros_minerales():
+    """'Sodium selenite' es selenio y 'zinc chloride' es zinc: el anión y el
+    catión de acompañamiento nunca deben ganar al mineral específico."""
+    from pipeline.report_composer import _ing_ident_key
+    assert _ing_ident_key("Sodium Selenite") == "min:se"
+    assert _ing_ident_key("Zinc chloride") == "min:zn"
+    assert _ing_ident_key("Cloruro sódico (NaCl)") == "min:cl"
+
+
+def test_aditivo_no_secuestra_el_mineral_de_su_contraion():
+    """La raíz de cuatro de las once notas del #13: «Potassium Sorbate E202» se
+    identificaba como potasio y se fusionaba con el citrato tri-K, sumando
+    44,94 + 82,56 = 127,5 mg de materia prima y 16 + 82,56 = 98,56 mg de activo.
+    De ahí salían el 77,3 % de estandarización y el 4,9 % VRN."""
+    from pipeline.report_composer import _ing_ident_key
+    assert _ing_ident_key("Potassium Sorbate E202") is None
+    assert _ing_ident_key("Sorbato potásico (E202)") is None
+    assert _ing_ident_key("Sodium Benzoate") is None
+    # El potasio de verdad sigue identificándose.
+    assert _ing_ident_key("tri-K Citrate H2O Fine Usual, 35,6% K") == "min:k"
+
+
+def test_score_tokens_acepta_subconjunto():
+    """«Goma xantana (Satiaxane CX 911)» contra «Satiaxane CX 911» daba 1/3 en
+    Jaccard y se caía por una milésima del umbral de 0,34."""
+    from pipeline.report_composer import _score_tokens
+    assert _score_tokens({"goma", "xanthan", "satiaxane"}, {"satiaxane"}) == 1.0
+    assert _score_tokens({"a", "b", "c"}, {"d", "e", "f"}) == 0.0
+
+
+def test_excipientes_es_en_casan_con_la_canonica():
+    """Diez de las 21 filas del #13 (agua, dextrosa, ácido cítrico…) no casaban
+    con la canónica y publicaban la cifra del LLM en vez del dato de la ficha."""
+    from pipeline.report_composer import _alinear_canonica
+    kic = [{"ingrediente": n} for n in [
+        "Agua", "Ácido cítrico anhidro", "D-Fructosa anhidra",
+        "Dextrosa anhidra (D-glucosa)", "L-Citrulina", "Sorbato potásico (E202)",
+    ]]
+    canon = [{"name": n} for n in [
+        "Water H2O", "Citric Acid anh 100%", "D-Fructose Anh.",
+        "Dextrose Anh.", "L-Citrulline 100%", "Potassium Sorbate E202",
+    ]]
+    assert all(c is not None for c in _alinear_canonica(kic, canon))
