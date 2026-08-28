@@ -23,8 +23,10 @@ import re
 
 import pypdfium2 as pdfium
 
-# Un número con coma decimal y, opcionalmente, puntos de millar: "2,26", "24.900,79".
-_NUM = r"\d{1,3}(?:\.\d{3})*,\d+"
+# Número con coma decimal. El entero puede venir agrupado con puntos de millar
+# ("24.900,79") o como un run de dígitos sin agrupar ("1250,000000") — la columna
+# de activo escribe los valores ≥1000 sin separador, así que ambas formas existen.
+_NUM = r"(?:\d{1,3}(?:\.\d{3})+|\d+),\d+"
 # Fila de ingrediente: código + nombre + 7 columnas numéricas.
 _ROW = re.compile(rf"^(\d{{3,6}})\s+(.*?)\s+((?:{_NUM}\s+){{6}}{_NUM})\s*$")
 # Activo dentro del nombre: "..., 80,5% Vit. B6" / "..., <95 % Curcuminoids".

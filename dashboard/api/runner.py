@@ -56,6 +56,33 @@ _KNOWN_PROVIDER_KEYS = (
 )
 
 
+def _purge_stale_agent_outputs(output_dir: str) -> int:
+    """Elimina outputs de agentes de runs previos que hayan quedado en el
+    mismo directorio.
+
+    Sin esto, el bucle de polling de `run_pipeline` marcaría esos JSONs como
+    "completed" de inmediato para el run nuevo (ve el fichero, lo lee, lo da
+    por bueno), mostrando datos obsoletos como si cada agente se hubiera
+    ejecutado al instante — el bug de "todos los agentes en verde al cargar
+    la fórmula". Solo se borran los ficheros que producen los agentes; las
+    entradas (formula_canonica.json, formula_input.txt) se conservan.
+
+    Devuelve el número de ficheros eliminados.
+    """
+    removed = 0
+    for filename in _AGENT_FILENAME.values():
+        for ext in (".json", ".md"):
+            stale = os.path.join(output_dir, filename + ext)
+            try:
+                os.remove(stale)
+            except FileNotFoundError:
+                continue
+            except OSError:
+                continue
+            removed += 1
+    return removed
+
+
 def _agent_key_from_label(label: str) -> str | None:
     """Extrae la key del agente desde un label como 'Agente 3: Ficha Técnica v2'."""
     m = re.match(r"Agente (\d+):", label)
@@ -99,6 +126,11 @@ def run_pipeline(
 ):
     """Ejecuta el pipeline como subproceso, monitorizando stdout y ficheros de salida."""
     os.makedirs(output_dir, exist_ok=True)
+
+    # Empezar desde cero: borrar outputs de agentes de runs previos que
+    # pudieran quedar en este mismo output_dir. Sin esto, el polling de
+    # abajo los leería como "completados" al instante (datos stale).
+    _purge_stale_agent_outputs(output_dir)
 
     for agent in AGENT_ORDER:
         status_queue.put({"agent": agent, "status": "waiting"})

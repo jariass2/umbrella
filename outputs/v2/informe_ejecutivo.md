@@ -1,6 +1,6 @@
-# Informe de Producto — Collagen Complex Pro
+# Informe de Producto — MIX 260047
 
-**Fecha:** 29/05/2026  
+**Fecha:** 27/07/2026  
 **Viabilidad regulatoria:**  VIABLE_CON_MODIFICACIONES  
 **Formato recomendado:** Stick de polvo monodosis (film metallizado barrera) - 14-16g de peso total  
 
@@ -18,27 +18,7 @@
 
 ---
 
-## Fórmula analizada
-
-```
-Collagen Complex Pro
-
-- L-Glicina: 5g
-- Péptidos de Colágeno: 5g
-- Ácido Hialurónico: 100mg
-- Magnesio: 75mg
-- AKBA (Boswellia serrata, extracto 30% AKBA): 10mg
-- Hierro: 3,5mg
-- Zinc: 2,5mg
-- Vitamina B5 (ácido pantoténico): 1,5mg
-- Astaxantina: 1mg
-- Vitamina B2 (riboflavina): 0,35mg
-- Vitamina B6 (piridoxina): 0,35mg
-- Vitamina B1 (tiamina): 0,275mg
-- Folato (ácido fólico): 50µg
-- Vitamina K2 (MK-7): 25µg
-- Vitamina B12 (cianocobalamina): 0,63µg
-```
+> **Confidencialidad:** la fórmula cuantitativa (dosis de materia prima) es información reservada de Umbrella y solo figura en los bloques internos de producción y calidad (4 y 5). Los bloques 1–3 muestran únicamente la **dosis de activo aportado**.
 
 ---
 
@@ -47,23 +27,25 @@ Collagen Complex Pro
 
 ### Tabla de ingredientes
 
-| Ingrediente | Dosis | % NRV/VRN | Forma química | Biodisponibilidad | Reg. |
-|---|---|---|---|---|---|
-| L-Glicina | 5000 mg | no aplica | Glicina (aminoácido libre, grado farmacéutico) | ALTA | ✅ |
-| Péptidos de Colágeno | 5000 mg | no aplica | Colágeno hidrolizado (peso molecular 2-5 kDa) | ALTA | ✅ |
-| Ácido Hialurónico | 100 mg | no aplica | Hialuronato sódico (peso molecular 800-1500 kDa, origen fermentativo Streptomyces) | MEDIA | ✅ |
-| Magnesio | 75 mg | 20% | Forma por confirmar con el fabricante (ej: citrato, bisglicinato, óxido - todas en Anexo II Dir. 2002/46/CE) | MEDIA | ✅ |
-| AKBA (Boswellia serrata 30%) | 10 mg | no aplica | Extracto de resina de Boswellia serrata estandarizado al 30% de ácido 3-O-acetil-11-ceto-β-boswélico (AKBA) | BAJA | ⚠️ |
-| Hierro | 3.5 mg | 25% | Forma por confirmar (ej: bisglicinato, sulfato ferroso, fumarato ferroso - verificar inclusión en Anexo II Dir. 2002/46/CE) | MEDIA | ✅ |
-| Zinc | 2.5 mg | 25% | Forma por confirmar (ej: citrato, gluconato, picolinato, bisglicinato - verificar Anexo II Dir. 2002/46/CE) | MEDIA | ✅ |
-| Vitamina B5 (Ácido pantoténico) | 1.5 mg | 25% | Ácido pantoténico o calcio D-pantotenato (Anexo II Dir. 2002/46/CE) | ALTA | ✅ |
-| Astaxantina | 1 mg | no aplica | Oleorresina rica en astaxantina del alga Haematococcus pluvialis (Novel Food autorizado Reg. (UE) 2017/2470, modificado por Reg. (UE) 2023/1581) | MEDIA | ⚠️ |
-| Vitamina B2 (Riboflavina) | 0.35 mg | 25% | Riboflavina o riboflavina-5'-fosfato sódico (Anexo II Dir. 2002/46/CE) | ALTA | ✅ |
-| Vitamina B6 (Piridoxina) | 0.35 mg | 25% | Clorhidrato de piridoxina o piridoxina-5'-fosfato (Anexo II Dir. 2002/46/CE) | ALTA | ✅ |
-| Vitamina B1 (Tiamina) | 0.275 mg | 25% | Clorhidrato de tiamina o mononitrato de tiamina (Anexo II Dir. 2002/46/CE) | ALTA | ✅ |
-| Folato (Ácido fólico) | 0.05 mg | 25% | Ácido fólico (Anexo II Dir. 2002/46/CE) [no confundir con 5-MTHF que requiere Reg. (UE) 2016/1935] | MEDIA | ✅ |
-| Vitamina K2 (MK-7) | 0.025 mg | no aplica (AI: 75µg) | Menaquinona-7 (MK-7, origen fermentationis) | ALTA | ⚠️ |
-| Vitamina B12 (Cianocobalamina) | 0.00063 mg | 25% | Cianocobalamina (Anexo II Dir. 2002/46/CE) | MEDIA | ✅ |
+| REF | Formula Ingredient Name | List of Ingredients | Active name | % Active | ACTIVE mg | %VRN | Ingredient mg+ [mg] | %Formula | Bioavailability | REGA |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | L-Glicina | — | — | — | — | — | 5000.000000 mg | — | ALTA | ✅ |
+| 2 | Péptidos de Colágeno | Collagen Fortibone, 100% Collagen Peptides | Collagen Peptides | 100% | 81.727000 mg | — | 81.730000 mg | 0,793881 | ALTA | ✅ |
+| 3 | Ácido Hialurónico | — | — | — | — | — | 100.000000 mg | — | MEDIA | ✅ |
+| 4 | Magnesio | Tri-Mg Citrate Anh. , 16% Mg | Mg | 13,6% | 27.960000 mg | 20% | 206.170000 mg | 2,002623 | MEDIA | ✅ |
+| 5 | AKBA (Boswellia serrata 30%) | Boswellia serrata Ext., 30% AKBA | AKBA | 30% | 4.829000 mg | — | 16.100000 mg | 0,156387 | BAJA | ⚠️ |
+| 6 | Hierro | — | — | — | — | 25% | 3.500000 mg | — | MEDIA | ✅ |
+| 7 | Zinc | tri-Zn Citrate 3H2O, 31% Zn | Zn | 29,0% | 1.391000 mg | 25% | 4.790000 mg | 0,046527 | MEDIA | ✅ |
+| 8 | Vitamina B5 (Ácido pantoténico) | — | — | — | — | 25% | 1.500000 mg | — | ALTA | ✅ |
+| 9 | Astaxantina | — | — | — | — | — | 1.000000 mg | — | MEDIA | ⚠️ |
+| 10 | Vitamina B2 (Riboflavina) | — | — | — | — | 25% | 0.350000 mg | — | ALTA | ✅ |
+| 11 | Vitamina B6 (Piridoxina) | — | — | — | — | 25% | 0.350000 mg | — | ALTA | ✅ |
+| 12 | Vitamina B1 (Tiamina) | — | — | — | — | 25% | 0.275000 mg | — | ALTA | ✅ |
+| 13 | Folato (Ácido fólico) | — | — | — | — | 25% | 0.050000 mg | — | MEDIA | ✅ |
+| 14 | Vitamina K2 (MK-7) | — | — | — | — | no aplica (AI: 75µg) | 0.025000 mg | — | ALTA | ⚠️ |
+| 15 | Vitamina B12 (Cianocobalamina) | — | — | — | — | 25% | 0.000630 mg | — | MEDIA | ✅ |
+
+*ACTIVE mg: dosis de principio activo por cápsula. Ingredient mg+: dosis total de materia prima del ingrediente (incluye cargas, diluciones y estandarización). «—» = dato no disponible o no aplica.*
 
 
 ### Análisis de ingredientes
@@ -319,29 +301,31 @@ Collagen Complex Pro
 **Tipo de producto:** complemento_alimenticio  
 **Forma de presentación:** Cápsulas (determinar según evaluación técnica de viabilidad, considerando la alta dosis de glicina y péptidos de colágeno que podrían requerir presentación en polvo sobres o double-capsule)  
 **Público objetivo:** Adultos que buscan soporte nutricional para la salud articular, cutánea y del tejido conectivo. Producto orientado a personas activas, mayores de 30 años, y población general interesada en el cuidado integral de la síntesis de colágeno endógeno. No destinado a población infantil ni adolescentes menores de 14 años (por contenido de astaxantina conforme a Reg. (UE) 2023/1581).  
-**Fecha / versión:** 29/05/2026  
+**Fecha / versión:** 27/07/2026  
 **Dosis diaria:** 1 cápsula al día (o la dosis que corresponda según formato final: sobres, double-capsule, etc.)  
 
 
 #### Tabla de activos por dosis
 
-| Activo | Cantidad / dosis | % NRV/VRN | Forma química |
+| Activo | Dosis de activo | % NRV/VRN | Forma química |
 |---|---|---|---|
-| L-Glicina | 5000 mg | no aplica | Glicina (aminoácido libre, grado farmacéutico) |
-| Péptidos de Colágeno | 5000 mg | no aplica | Colágeno hidrolizado (peso molecular 2-5 kDa) |
-| Ácido Hialurónico | 100 mg | no aplica | Hialuronato sódico (peso molecular 800-1500 kDa, origen fermentativo Streptomyces) |
-| Magnesio | 75 mg | 20% | Forma por confirmar con el fabricante (ej: citrato, bisglicinato, óxido - todas en Anexo II Dir. 2002/46/CE) |
-| AKBA (Boswellia serrata 30%) | 10 mg | no aplica | Extracto de resina de Boswellia serrata estandarizado al 30% de ácido 3-O-acetil-11-ceto-β-boswélico (AKBA) |
-| Hierro | 3.5 mg | 25% | Forma por confirmar (ej: bisglicinato, sulfato ferroso, fumarato ferroso - verificar inclusión en Anexo II Dir. 2002/46/CE) |
-| Zinc | 2.5 mg | 25% | Forma por confirmar (ej: citrato, gluconato, picolinato, bisglicinato - verificar Anexo II Dir. 2002/46/CE) |
-| Vitamina B5 (Ácido pantoténico) | 1.5 mg | 25% | Ácido pantoténico o calcio D-pantotenato (Anexo II Dir. 2002/46/CE) |
-| Astaxantina | 1 mg | no aplica | Oleorresina rica en astaxantina del alga Haematococcus pluvialis (Novel Food autorizado Reg. (UE) 2017/2470, modificado por Reg. (UE) 2023/1581) |
-| Vitamina B2 (Riboflavina) | 0.35 mg | 25% | Riboflavina o riboflavina-5'-fosfato sódico (Anexo II Dir. 2002/46/CE) |
-| Vitamina B6 (Piridoxina) | 0.35 mg | 25% | Clorhidrato de piridoxina o piridoxina-5'-fosfato (Anexo II Dir. 2002/46/CE) |
-| Vitamina B1 (Tiamina) | 0.275 mg | 25% | Clorhidrato de tiamina o mononitrato de tiamina (Anexo II Dir. 2002/46/CE) |
-| Folato (Ácido fólico) | 0.05 mg | 25% | Ácido fólico (Anexo II Dir. 2002/46/CE) [no confundir con 5-MTHF que requiere Reg. (UE) 2016/1935] |
-| Vitamina K2 (MK-7) | 0.025 mg | no aplica (AI: 75µg) | Menaquinona-7 (MK-7, origen fermentationis) |
-| Vitamina B12 (Cianocobalamina) | 0.00063 mg | 25% | Cianocobalamina (Anexo II Dir. 2002/46/CE) |
+| L-Glicina | — | — | Glicina (aminoácido libre, grado farmacéutico) |
+| Péptidos de Colágeno | 81.727000 mg | — | Colágeno hidrolizado (peso molecular 2-5 kDa) |
+| Ácido Hialurónico | — | — | Hialuronato sódico (peso molecular 800-1500 kDa, origen fermentativo Streptomyces) |
+| Magnesio | 27.960000 mg | 20% | Forma por confirmar con el fabricante (ej: citrato, bisglicinato, óxido - todas en Anexo II Dir. 2002/46/CE) |
+| AKBA (Boswellia serrata 30%) | 4.829000 mg | — | Extracto de resina de Boswellia serrata estandarizado al 30% de ácido 3-O-acetil-11-ceto-β-boswélico (AKBA) |
+| Hierro | — | 25% | Forma por confirmar (ej: bisglicinato, sulfato ferroso, fumarato ferroso - verificar inclusión en Anexo II Dir. 2002/46/CE) |
+| Zinc | 1.391000 mg | 25% | Forma por confirmar (ej: citrato, gluconato, picolinato, bisglicinato - verificar Anexo II Dir. 2002/46/CE) |
+| Vitamina B5 (Ácido pantoténico) | — | 25% | Ácido pantoténico o calcio D-pantotenato (Anexo II Dir. 2002/46/CE) |
+| Astaxantina | — | — | Oleorresina rica en astaxantina del alga Haematococcus pluvialis (Novel Food autorizado Reg. (UE) 2017/2470, modificado por Reg. (UE) 2023/1581) |
+| Vitamina B2 (Riboflavina) | — | 25% | Riboflavina o riboflavina-5'-fosfato sódico (Anexo II Dir. 2002/46/CE) |
+| Vitamina B6 (Piridoxina) | — | 25% | Clorhidrato de piridoxina o piridoxina-5'-fosfato (Anexo II Dir. 2002/46/CE) |
+| Vitamina B1 (Tiamina) | — | 25% | Clorhidrato de tiamina o mononitrato de tiamina (Anexo II Dir. 2002/46/CE) |
+| Folato (Ácido fólico) | — | 25% | Ácido fólico (Anexo II Dir. 2002/46/CE) [no confundir con 5-MTHF que requiere Reg. (UE) 2016/1935] |
+| Vitamina K2 (MK-7) | — | no aplica (AI: 75µg) | Menaquinona-7 (MK-7, origen fermentationis) |
+| Vitamina B12 (Cianocobalamina) | — | 25% | Cianocobalamina (Anexo II Dir. 2002/46/CE) |
+
+*ACTIVE mg: dosis de principio activo por cápsula. Ingredient mg+: dosis total de materia prima del ingrediente (incluye cargas, diluciones y estandarización). «—» = dato no disponible o no aplica.*
 
 
 #### Posibles claims por ingrediente
@@ -349,15 +333,15 @@ Collagen Complex Pro
 *Resumen ingrediente → disponibilidad de claim EFSA. El listado completo está en el Bloque 3 (Marketing).*
 | Ingrediente | Claims EFSA | Ejemplo de claim autorizado |
 |---|---|---|
-| L-Glicina | — | — |
+| L-Glicina | — | En espera (botánico) |
 | Péptidos de Colágeno | 1 | Los péptidos de colágeno hidrolizado han sido probados en ensayos controlados aleatorizado |
-| Ácido Hialurónico | — | — |
+| Ácido Hialurónico | — | En espera (botánico) |
 | Magnesio | 9 | El magnesio contribuye a la reducción del cansancio y la fatiga |
-| AKBA (Boswellia serrata) | — | — |
+| AKBA (Boswellia serrata) | — | En espera (botánico) |
 | Hierro | 7 | El hierro contribuye a la función cognitiva normal |
 | Zinc | 15 | El zinc contribuye a la síntesis normal de ADN |
 | Vitamina B5 (Ácido pantoténico) | 3 | El ácido pantoténico contribuye al metabolismo energético normal |
-| Astaxantina | — | — |
+| Astaxantina | — | En espera (botánico) |
 | Vitamina B2 (Riboflavina) | 7 | La riboflavina contribuye al mantenimiento de la piel normal |
 | Vitamina B6 (Piridoxina) | 9 | La vitamina B6 contribuye a la síntesis normal de cisteína |
 | Vitamina B1 (Tiamina) | 4 | La tiamina contribuye al metabolismo energético normal |
@@ -400,16 +384,16 @@ Collagen Complex Pro
 | Fibra (g) | No aplicable (producto en cápsulas/polvo) | — |
 | Proteínas (g) | Datos pendientes de confirmar - cálculo teórico: 5 g colágeno + 5 g glicina ≈ 9-10 g proteína/aminoácidos por dosis | — |
 | Sal (g) | Datos pendientes de confirmar por fabricante -可能会有来自矿物形式的钠 | — |
-| Magnesio (mg) | 75 | 20% |
-| Hierro (mg) | 3,5 | 25% |
-| Zinc (mg) | 2,5 | 25% |
-| Vitamina B1 (Tiamina) (mg) | 0,275 | 25% |
-| Vitamina B2 (Riboflavina) (mg) | 0,35 | 25% |
-| Vitamina B5 (Ácido pantoténico) (mg) | 1,5 | 25% |
-| Vitamina B6 (Piridoxina) (mg) | 0,35 | 25% |
-| Folato (Ácido fólico) (µg) | 50 | 25% |
-| Vitamina B12 (Cianocobalamina) (µg) | 0,63 | 25% |
-| Vitamina K2 (Menaquinona-7) (µg) | 25 | 33% (orientativo) |
+| Magnesio | 27,96 mg | 7,5% |
+| Hierro | 3.5 mg | 25% |
+| Zinc | 1,391 mg | 13,9% |
+| Vitamina B5 (Ácido pantoténico) | 1.5 mg | 25% |
+| Vitamina B2 (Riboflavina) | 0.35 mg | 25% |
+| Vitamina B6 (Piridoxina) | 0.35 mg | 25% |
+| Vitamina B1 (Tiamina) | 0.275 mg | 25% |
+| Folato (Ácido fólico) | 0.05 mg | 25% |
+| Vitamina K2 (MK-7) | 0.025 mg | no aplica (AI: 75µg) |
+| Vitamina B12 (Cianocobalamina) | 0.00063 mg | 25% |
 *\* % Valores de Referencia de la Nutrición*
 
 **Vida útil estimada:** 24 meses  
@@ -485,8 +469,8 @@ Collagen Complex Pro
 
 | Dieta | Estado |
 |---|---|
-| Vegetariano | Bajo petición |
-| Vegano | Bajo petición |
+| Vegetariano | No apto (contiene ingredientes de origen animal) |
+| Vegano | No apto (contiene ingredientes de origen animal) |
 | Sin gluten | Bajo petición |
 | Sin azúcar (<0,5 g/dosis) | Bajo petición |
 | Kosher | Bajo petición |
@@ -522,20 +506,15 @@ Collagen Complex Pro
 > El producto Collagen Complex Pro contiene ingredientes con niveles de dosis que NO alcanzan los umbrales mínimos establecidos por el Reglamento (UE) 432/2012 para poder hacer declaraciones de salud autorizadas en la mayoría de los casos. Los péptidos de colágeno, L-glicina, ácido hialurónico, astaxantina y AKBA NO tienen claims autorizados por EFSA. Las vitaminas del grupo B, hierro, zinc y magnesio SÍ tienen claims autorizados, pero las dosis presentes en la fórmula son generalmente INSUFICIENTES para cumplir las condiciones de uso establecidas en el Reglamento 432/2012. Esto significa que el producto puede posicionarse bajo el marco de 'fuente de' vitaminas/minerales (Art. 5 Reg. 1924/2006) para algunos nutrientes, pero NO puede utilizar claims de salud específicos en su etiquetado comercial sin incurrir en infracción regulatoria.
 
 **L-Glicina**
-| Texto del claim | Condición de uso | Ref. EFSA |
-|---|---|---|
-| N/A | No aplica | N/A - Sin claims autorizados |
+*En espera (botánico) — sin claim autorizado en el Reg. (UE) 432/2012.*
 
 **Péptidos de Colágeno**
 | Texto del claim | Condición de uso | Ref. EFSA |
 |---|---|---|
 | Los péptidos de colágeno hidrolizado han sido probados en ensayos controlados aleatorizados prospectivos en atletas. Los | No autorizado | ID 1662 - EFSA Journal 2011;9(6):2211 - RECHAZADO |
-| N/A | No aplica | N/A - Claims no autorizados por EFSA |
 
 **Ácido Hialurónico**
-| Texto del claim | Condición de uso | Ref. EFSA |
-|---|---|---|
-| El ácido hialurónico no ha sido evaluado por EFSA para ningún claim de salud en alimentos. | No aplica | N/A - Sin evaluación EFSA favorable |
+*En espera (botánico) — sin claim autorizado en el Reg. (UE) 432/2012.*
 
 **Magnesio**
 | Texto del claim | Condición de uso | Ref. EFSA |
@@ -551,9 +530,7 @@ Collagen Complex Pro
 | El magnesio tiene un papel en el proceso de división celular | Solo para productos fuente de magnesio | ID 235 - Reg. (UE) 432/2012 |
 
 **AKBA (Boswellia serrata)**
-| Texto del claim | Condición de uso | Ref. EFSA |
-|---|---|---|
-| N/A | No aplica | N/A - Sin evaluación EFSA favorable para Boswellia |
+*En espera (botánico) — sin claim autorizado en el Reg. (UE) 432/2012.*
 
 **Hierro**
 | Texto del claim | Condición de uso | Ref. EFSA |
@@ -593,9 +570,7 @@ Collagen Complex Pro
 | El ácido pantoténico contribuye a la reducción del cansancio y la fatiga | Solo para productos fuente de ácido pantoténico | ID 91 - Reg. (UE) 432/2012 |
 
 **Astaxantina**
-| Texto del claim | Condición de uso | Ref. EFSA |
-|---|---|---|
-| N/A | No aplica | ID 6654 - RECHAZADO |
+*En espera (botánico) — sin claim autorizado en el Reg. (UE) 432/2012.*
 
 **Vitamina B2 (Riboflavina)**
 | Texto del claim | Condición de uso | Ref. EFSA |
@@ -793,7 +768,7 @@ Extracto de Boswellia serrata estandarizado al 30% en ácido acetil-11-ceto-β-b
 #### Cara frontal
 
 **Obligatorio:**
-- Marca / nombre comercial: Collagen Complex Pro
+- Marca / nombre comercial: MIX 260047
 - En base a: péptidos de colágeno, L-glicina, ácido hialurónico, magnesio, hierro, zinc, vitaminas del grupo B, vitamina K2, extracto de Boswellia serrata y astaxantina
 - Dosis / cantidad neta: [XX] g ([XX] sobres de [XX] g)
 - Mención legal: **Complemento alimenticio**
@@ -838,7 +813,7 @@ NOTAS PARA LA LISTA DE INGREDIENTES:
 #### Cara frontal
 
 **Obligatorio:**
-- Marca / nombre comercial: Collagen Complex Pro
+- Marca / nombre comercial: MIX 260047
 - Food supplement based on: _(pendiente: regenerar el pipeline con el agente Etiqueta bilingüe)_
 - Dosis / cantidad neta: _(pendiente: regenerar el pipeline con el agente Etiqueta bilingüe)_
 - Mención legal: **Food supplement**
@@ -1177,21 +1152,3 @@ Muestreo estadistico: cada 15 min tomar 3 sticks consecutivos. Controles: (a) pe
 
 
 ---
-
----
-
-## Anexo — Configuración del Pipeline
-
-**Fecha de ejecución:** 12/04/2026  
-**Tiempo total de pipeline:** 15m 53s  
-
-| Agente | Modelo | Tiempo | Endpoint |
-|---|---|---|---|
-| Agente 1 — KIC (Análisis de Ingredientes) | `minimaxai/minimax-m2.7` | 2m 3s | `https://integrate.api.nvidia.com/v1` |
-| Agente 2 — Regulatorio | `glm-5-turbo` | 1m 34s | `https://api.z.ai/api/coding/paas/v4` |
-| Agente 3 — Ficha Técnica | `minimaxai/minimax-m2.7` | 2m 55s | `https://integrate.api.nvidia.com/v1` |
-| Agente 4 — Claims y Diferenciación | `minimaxai/minimax-m2.7` | 10m 1s | `https://integrate.api.nvidia.com/v1` |
-| Agente 5 — Etiqueta | `glm-5-turbo` | 2m 14s | `https://api.z.ai/api/coding/paas/v4` |
-| Agente 6 — Formatos e Innovación | `glm-5-turbo` | 2m 0s | `https://api.z.ai/api/coding/paas/v4` |
-| Agente 7 — Documentación Interna | `glm-5-turbo` | 3m 4s | `https://api.z.ai/api/coding/paas/v4` |
-| Agente 8 — Plan QC | `glm-5-turbo` | 3m 8s | `https://api.z.ai/api/coding/paas/v4` |

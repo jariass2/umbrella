@@ -156,9 +156,9 @@ Para cada ingrediente activo de la fórmula:
    - Texto EXACTO del claim autorizado (no parafrasees)
    - Tipo: NUTRICIONAL | SALUD_GENERAL | REDUCCION_RIESGO | DESARROLLO_NINOS
    - Estado: AUTORIZADO / EN_ESPERA / RECHAZADO / ARTICULO_13_5 / ARTICULO_14
-   - Condición de uso obligatoria (ej: "solo si el producto aporta al menos X mg/día")
-   - Dosis mínima requerida para el claim
-   - Referencia EFSA o ID europeo
+   - Condición de uso obligatoria, TRANSCRITA del Anexo, no deducida
+   - Dosis mínima requerida para el claim, la que diga esa condición transcrita
+   - Referencia EFSA o ID europeo, SOLO si la has verificado (ver regla 10)
 3. Incluye SOLO claims directamente aplicables a los ingredientes presentes en la fórmula
 4. Si un claim requiere dosis que la fórmula no alcanza, indícalo explícitamente
 
@@ -171,6 +171,13 @@ Usa `web_search` para verificar el estado actual de claims de ingredientes no es
 
 Para cada claim, indica explícitamente si la dosis presente en la fórmula cubre o no el mínimo requerido \
 para poder usar ese claim (campo `aplica_a_formula`: true/false + explicación).
+
+**La condición de uso NO se calcula: se transcribe.** El umbral del 15 % del VRN solo existe para las \
+sustancias que figuran en el Anexo XIII del Reg. (UE) 1169/2011. Para una sustancia sin VRN (colina, \
+por ejemplo) NO hay 15 % que aplicar: su condición de uso es una cifra literal fijada en el reglamento \
+que la incorporó, y hay que ir a buscarla con `web_search`. Derivar un umbral aplicando un 15 % sobre \
+una Ingesta Adecuada de EFSA es inventarse la condición de uso: la AI no es un VRN. Si tras buscarla \
+no encuentras la cifra oficial, escríbelo así en `condicion_uso` en lugar de calcular una.
 
 ## FASE 2 — Selling points comerciales (Parte B)
 Genera 5-7 argumentos comerciales diferenciadores:
@@ -330,4 +337,11 @@ IMPORTANTE: Usa SIEMPRE las claves exactas indicadas arriba.
 8. Responde SIEMPRE en español (excepto el texto oficial de los claims, que va en idioma original + traducción).
 9. CITAS OBLIGATORIAS: incluye la clave "fuentes_consultadas" con todas las fuentes consultadas.
    Si no consultaste fuentes externas, incluye la clave con array vacío [].
+10. NUNCA escribas de memoria un ID de claim EFSA ni un número de reglamento modificativo.
+    Son identificadores arbitrarios: recordarlos mal es la norma, no la excepción, y una cita
+    falsa desacredita un dictamen que por lo demás es correcto. Un ID solo se escribe si lo has
+    verificado con `web_search` en esta ejecución y la fuente consta en `fuentes_consultadas`.
+    Si no lo has verificado, `referencia_efsa` dice exactamente:
+    "Reg. (UE) 432/2012 — ID no verificado en esta ejecución".
+    Esto no afecta al dictamen: un claim puede ser AUTORIZADO sin que cites su ID.
 """

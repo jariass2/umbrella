@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import secrets
 import threading
 from datetime import datetime
@@ -902,6 +903,16 @@ def _fmt_num(v) -> str:
         return ""
 
 
+def _fmt_active(v) -> str:
+    """Dosis de ACTIVO con precisión fija de 6 decimales, sin poda de ceros
+    (166.6666 -> '166.666600'). La dosis de activo es pública y debe viajar
+    íntegra al pipeline; el redondeo a 2 decimales pierde precisión."""
+    try:
+        return f"{float(v):.6f}"
+    except (TypeError, ValueError):
+        return ""
+
+
 @app.route("/parse-formula-pdf", methods=["POST"])
 def parse_formula_pdf():
     """Parsea un FT PDF arrastrado y devuelve JSON para pre-rellenar el formulario.
@@ -918,9 +929,10 @@ def parse_formula_pdf():
         return jsonify({"error": f"No se pudo leer el PDF: {exc}"}), 400
 
     ingredients = [{
+        "code": ing.get("code", ""),            # ref. interna del FT → columna REF
         "name": ing["name"],
         "dosage": _fmt_num(ing["raw_mg"]),      # materia prima (interna)
-        "active": _fmt_num(ing["active_mg"]),   # dosis de activo (pública)
+        "active": _fmt_active(ing["active_mg"]),   # dosis de activo (pública)
         "active_name": ing.get("active_name", ""),
         "pct": ing.get("pct_active", ""),
         "unit": ing.get("unit", "mg"),
@@ -942,6 +954,7 @@ def analyze():
     actives = request.form.getlist("ing_active")
     active_names = request.form.getlist("ing_active_name")
     pcts = request.form.getlist("ing_pct")
+    codes = request.form.getlist("ing_code")
 
     def _at(lst, i):
         return lst[i] if i < len(lst) else ""
@@ -975,6 +988,7 @@ def analyze():
         except ValueError:
             active_mg = None
         canonica.append({
+            "code": _at(codes, i).strip(),
             "name": name.strip(),
             "raw_mg": float(dosage.replace(",", ".")) if unit in ("mg",) else None,
             "active_mg": active_mg,
@@ -1060,6 +1074,18 @@ def pipeline_status(run_id):
     return render_template("partials/main_content.html", **ctx)
 
 
+@app.route("/reset-pipeline")
+def reset_pipeline():
+    """Pipeline en estado 'sin run' (todos los agentes en espera).
+
+    Se invoca desde el cliente al cargar una fórmula nueva (p. ej. arrastrar
+    un FT PDF) para que el DAG de agentes no siga mostrando el estado de un
+    run anterior ya irrelevante — sin tocar la sidebar, donde la fórmula
+    recién cargada vive y el usuario la revisa antes de lanzar.
+    """
+    return render_template("partials/main_content.html", **_get_main_context(None))
+
+
 @app.route("/run/<int:run_id>")
 def load_run(run_id):
     ctx = _get_main_context(run_id)
@@ -1078,7 +1104,7 @@ def load_run(run_id):
         if canonica is not None:
             for i, ing in enumerate(ingredients):
                 if i < len(canonica):
-                    ing["active"] = _fmt_num(canonica[i].get("active_mg"))
+                    ing["active"] = _fmt_active(canonica[i].get("active_mg"))
                     ing["active_name"] = canonica[i].get("active_name") or ""
                     ing["pct"] = canonica[i].get("pct_active") or ""
 
@@ -1315,21 +1341,24 @@ def download_report(run_id):
         ]))
         return t
 
-    def _styled_table(rows: list, col_widths: list, has_header: bool = True) -> Table:
+    def _styled_table(rows: list, col_widths: list, has_header: bool = True,
+                      pad: float = 6) -> Table:
         """Tabla con estilo de informe profesional: cabecera navy con texto
         blanco, filas de datos con zebra, líneas finas, padding generoso.
 
         rows: lista de filas; cada fila es lista de Paragraph (o strings).
               Si `has_header`, la primera fila es cabecera.
         col_widths: anchos por columna en mm.
+        pad: padding lateral por celda, en puntos. Las tablas anchas lo bajan
+             para no gastar en aire el espacio que necesita el texto.
         """
         n_rows = len(rows)
         n_cols = max(len(r) for r in rows) if rows else len(col_widths)
 
         style = [
             ('VALIGN',       (0,0), (-1,-1), 'TOP'),
-            ('LEFTPADDING',  (0,0), (-1,-1), 6),
-            ('RIGHTPADDING', (0,0), (-1,-1), 6),
+            ('LEFTPADDING',  (0,0), (-1,-1), pad),
+            ('RIGHTPADDING', (0,0), (-1,-1), pad),
             ('TOPPADDING',   (0,0), (-1,-1), 5),
             ('BOTTOMPADDING',(0,0), (-1,-1), 5),
         ]
@@ -1418,62 +1447,86 @@ def download_report(run_id):
                 return
             n_cols = max(len(r) for r in table_rows)
 
-            # Ancho por columna basado en contenido. Dos modos:
-            #   * NARROW (body_max < NARROW_BODY_THRESHOLD): los valores son
-            #     cortos ("ALTA", "✓", "4.5", "100 mg"). En estos casos el
-            #     body marca el ancho real y la cabecera puede envolver si
-            #     es larga. Sin esto, columnas como "Punt." o "Coste" reciben
-            #     el ancho de su cabecera (17.5mm para 5 chars) aunque su
-            #     contenido apenas ocupe 4-5mm, dejando un hueco visual feo.
-            #   * NORMAL: la columna lleva descripciones o datos no triviales.
-            #     Usamos max(header_needs, body_needs) para que ni la cabecera
-            #     ("Biodisponibilidad", "Compatibilidad") ni el body se
-            #     trunque.
-            # BODY_CAP limita el body ideal: una celda de 80 chars no debe
-            # devorar la tabla — se queda en BODY_CAP×CHAR_REG y el texto
-            # envuelve en más líneas.
-            NARROW_BODY_THRESHOLD = 6
-            CHAR_BOLD = 1.5   # mm/char promedio Helvetica-Bold 9pt
-            CHAR_REG  = 1.0   # mm/char promedio Helvetica 9pt
-            COL_PAD   = 10    # mm totales de padding interno
-            BODY_CAP  = 25    # chars: a partir de ahí, el texto envuelve
-            MIN_W     = 12    # mm mínimo por columna
-            MAX_W     = 50    # mm máximo por columna
+            # Ancho por columna MEDIDO, no estimado. La versión anterior
+            # multiplicaba nº de caracteres por un mm/char fijo (1,0 normal /
+            # 1,5 negrita) que se queda corto: "REGA" en Helvetica-Bold 9pt mide
+            # 9,2mm y la estimación le daba 6. Peor, el modo "narrow" ignoraba
+            # la cabecera cuando el cuerpo era corto, así que una columna de
+            # datos de dos letras y cabecera "Active name" recibía 12mm y
+            # partía su propia cabecera una letra por línea. En la Tabla
+            # Cuantitativa del #13 eso rompía además los códigos REF ("41223"
+            # salía como "41/22/3", tres números donde hay uno).
+            #
+            # Regla: NINGUNA palabra se parte por la mitad. El suelo de cada
+            # columna es su token más largo —cabecera o dato— medido con la
+            # métrica real de la fuente. El texto envuelve entre palabras, que
+            # es lo que debe hacer.
+            def _txt(c: str) -> str:
+                """Texto tal como se verá: sin los marcadores de markdown."""
+                return re.sub(r'[*`_]', '', c or '')
 
-            ideal = []
-            for ci in range(n_cols):
-                header_len = len(table_rows[0][ci]) if (table_rows and ci < len(table_rows[0])) else 0
-                body_max = 0
-                for row in table_rows[1:]:
-                    if ci < len(row):
-                        body_max = max(body_max, len(row[ci]))
-                h_w = header_len * CHAR_BOLD + COL_PAD
-                b_w = min(BODY_CAP, body_max) * CHAR_REG + COL_PAD
-                if body_max < NARROW_BODY_THRESHOLD:
-                    col_ideal = b_w
-                else:
-                    col_ideal = max(h_w, b_w)
-                ideal.append(min(MAX_W, max(MIN_W, col_ideal)))
+            def _tokens(c: str) -> list:
+                return _txt(c).split() or ['']
 
-            # Escalar proporcionalmente para encajar exactamente en CONTENT_W.
-            # Si tras escalar alguna columna cae por debajo de MIN_W, rebalancear
-            # tomando el déficit de la columna más grande.
-            total = sum(ideal) or 1
-            col_widths = [w * (CONTENT_W / total) for w in ideal]
-            for i, w in enumerate(col_widths):
-                if w < MIN_W:
-                    deficit = MIN_W - w
-                    col_widths[i] = MIN_W
-                    biggest = max((j for j in range(n_cols) if j != i),
-                                  key=lambda j: col_widths[j])
-                    col_widths[biggest] -= deficit
+            BODY_CAP_CHARS = 25   # a partir de aquí el texto envuelve
+            table_rows = [list(r) + [''] * (n_cols - len(r)) for r in table_rows]
+
+            # La tabla ancha no cabe a 9pt sin partir palabras: 11 columnas
+            # piden 221mm de suelo sobre los 180 disponibles. Antes de deformar
+            # las columnas, bajamos el cuerpo de letra y el aire — un punto
+            # menos es invisible, un código partido en tres no.
+            for font_size, pad in ((9, 6), (8.5, 5), (8, 4), (7.5, 3), (7, 3)):
+                pad_w = 2 * pad
+                floors, ideals = [], []
+                for ci in range(n_cols):
+                    hd_tok = max(pdfmetrics.stringWidth(t, 'Helvetica-Bold', font_size)
+                                 for t in _tokens(table_rows[0][ci]))
+                    bd_tok = max([pdfmetrics.stringWidth(t, 'Helvetica', font_size)
+                                  for r in table_rows[1:] for t in _tokens(r[ci])] or [0])
+                    floors.append(max(hd_tok, bd_tok) + pad_w)
+                    hd_full = pdfmetrics.stringWidth(_txt(table_rows[0][ci]),
+                                                     'Helvetica-Bold', font_size)
+                    bd_full = max([pdfmetrics.stringWidth(_txt(r[ci]), 'Helvetica', font_size)
+                                   for r in table_rows[1:]] or [0])
+                    cap = BODY_CAP_CHARS * pdfmetrics.stringWidth('n', 'Helvetica', font_size)
+                    ideals.append(max(hd_full, min(bd_full, cap)) + pad_w)
+                if sum(floors) <= CONTENT_W:
+                    break
+            # Si ni a 7pt cabe, los suelos mandan igual: preferimos que la tabla
+            # se salga del margen —visible y corregible— a partir palabras en
+            # silencio dentro de un entregable de cliente.
+
+            # Repartimos el espacio sobrante por encima de los suelos, en
+            # proporción a lo que a cada columna le falta para su ancho ideal.
+            sobrante = CONTENT_W - sum(floors)
+            holgura  = [max(0.0, i - f) for i, f in zip(ideals, floors)]
+            total_h  = sum(holgura)
+            if sobrante > 0 and total_h > 0:
+                reparto = min(sobrante, total_h)
+                col_widths = [f + h / total_h * reparto for f, h in zip(floors, holgura)]
+                resto = sobrante - reparto
+                if resto > 0:  # todas en su ideal y aún sobra: a partes iguales
+                    col_widths = [w + resto / n_cols for w in col_widths]
+            else:
+                col_widths = list(floors)
+
+            # Estilos al cuerpo de letra que ha resultado del ajuste.
+            if font_size == 9:
+                hd_s, bd_s = tbl_hd_inv_s, tbl_bd_s
+            else:
+                hd_s = S(f'tbl_hd_inv_{font_size}', parent=tbl_hd_inv_s,
+                         fontName='Helvetica-Bold', fontSize=font_size,
+                         leading=font_size * 1.33)
+                bd_s = S(f'tbl_bd_{font_size}', parent=tbl_bd_s,
+                         fontName='Helvetica', fontSize=font_size,
+                         leading=font_size * 1.33)
 
             rl_rows = []
             for ri, row in enumerate(table_rows):
                 # Cabecera: blanco sobre navy. Cuerpo: estilo normal.
-                st = tbl_hd_inv_s if ri == 0 else tbl_bd_s
+                st = hd_s if ri == 0 else bd_s
                 rl_rows.append([safe_paragraph(rl(c), st) for c in row])
-            t = _styled_table(rl_rows, col_widths, has_header=True)
+            t = _styled_table(rl_rows, col_widths, has_header=True, pad=pad)
             fl.append(t)
             fl.append(Spacer(1, 4 * mm))
             table_rows, in_table = [], False

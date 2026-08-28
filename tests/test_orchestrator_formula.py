@@ -43,8 +43,8 @@ def test_enriquece_con_activo_y_framing(tmp_path):
     # Líneas originales conservadas (materia prima la necesitan Docs/QC).
     assert "166.67mg" in out
     # Dosis de activo añadida.
-    assert "50 mg de AKBA" in out
-    assert "1.4 mg de Vit. B6" in out
+    assert "50.000000 mg de AKBA" in out
+    assert "1.400000 mg de Vit. B6" in out
     # Framing de confidencialidad presente.
     assert "CONFIDENCIAL" in out
     assert "claims" in out.lower()
@@ -87,7 +87,7 @@ def test_F_para_claims_recorta_materia_prima(tmp_path):
     F_enriquecido = _enriquecer_formula(F, _canonica(tmp_path, canonica["ingredients"]))
     recortado = _F_para_claims(F_enriquecido)
     # El bloque de activos SÍ debe estar (es lo que Claims necesita).
-    assert "50 mg de AKBA" in recortado
+    assert "50.000000 mg de AKBA" in recortado
     # La materia prima detallada NO debe aparecer (es confidencial para Claims).
     assert "166.67mg" not in recortado
     assert "2.26mg" not in recortado

@@ -37,6 +37,10 @@ INTERACCION_EMOJI = {
 # Clave = subcadena que aparece en el model ID (case-insensitive).
 # El primer match gana — ordenar del más específico al más genérico.
 PRICING_PER_1M: list[tuple[str, float, float]] = [
+    # Modelos en uso (precios OpenRouter, USD/millón). Los más específicos primero.
+    ("gemini-3.1-flash-lite", 0.25,  1.50),
+    ("minimax-m3",        0.30,  1.20),
+    ("minimax-m2",        0.255, 1.02),
     ("kimi-k2",           0.14,  0.60),
     ("mimo-v2.5-pro",     0.435, 0.87),
     ("claude-haiku-4",    0.80,  4.00),
@@ -163,6 +167,19 @@ def _fmt_pct(v) -> str:
     return f"{s}%"
 
 
+def _fmt_pct_formula(pct: float) -> str:
+    """%Formula con coma decimal (estilo Excel del cliente). Sin sufijo '%'
+    (la cabecera '%Formula' ya indica que es un porcentaje). Mantiene hasta 6
+    decimales para preservar microdosis sin inflar la columna. Sin '%' final
+    porque la celda '%Formula' ya lleva el símbolo.
+
+    Ej: 50.0 -> '50'; 13.33 -> '13,33'; 0.26 -> '0,26'; 0.000123 -> '0,000123'."""
+    if pct == 0:
+        return "0"
+    s = f"{pct:.6f}".rstrip("0").rstrip(".")
+    return s.replace(".", ",")
+
+
 def _spec_val(v) -> str:
     """Renderiza un valor de especificación que puede venir como dict
     {'valor':…, 'metodo':…} en vez de string (bug de datos: salía el dict crudo)."""
@@ -198,21 +215,16 @@ def _parse_pct_activo(nombre: str):
 
 
 def _fmt_mg(valor, unidad: str = "mg") -> str:
-    """'50.0' -> '50 mg'; '1.4' -> '1.4 mg'. Sin ceros sobrantes.
-
-    Decimales adaptativos: las microdosis (B12 ≈ 0,004 mg) no deben colapsar a
-    '0' por redondeo a 2 cifras. Amplía precisión hasta que un valor no nulo
-    deje de truncarse a cero.
-    """
-    v = float(valor)
+    """Dosis de ACTIVO con precisión fija de 6 decimales, sin poda de ceros
+    (50.0 -> '50.000000 mg'; 0.00375 -> '0.003750 mg'). Muestra la precisión
+    íntegra de la canónica en el informe; las microdosis no colapsan a '0'."""
+    try:
+        v = float(valor)
+    except (TypeError, ValueError):
+        return ""
     if v == 0:
         return f"0 {unidad}".strip()
-    for dec in (2, 3, 4, 5, 6):
-        s = f"{v:.{dec}f}"
-        if float(s) != 0:
-            break
-    s = s.rstrip("0").rstrip(".")
-    return f"{s} {unidad}".strip()
+    return f"{v:.6f} {unidad}".strip()
 
 
 def _activo_desde_raw(raw_mg, pct_active) -> float | None:
@@ -224,6 +236,87 @@ def _activo_desde_raw(raw_mg, pct_active) -> float | None:
         return float(raw_mg) * float(str(pct_active).replace(",", ".")) / 100.0
     except (TypeError, ValueError):
         return None
+
+
+# Umbral de discrepancia por encima del cual dejamos de tratar un desajuste como
+# redondeo del PDF y lo tratamos como dato de origen incoherente.
+_TOL_COHERENCIA = 0.01  # 1 % — comparación de PORCENTAJES de estandarización
+
+# Tolerancia para la materia prima, en la unidad del ingrediente. NO es relativa:
+# lo único que legitima sustituir el dato de la ficha por el recalculado es el
+# redondeo a 2 decimales del PDF, que como mucho desplaza 0,005 mg. Un 1 %
+# relativo dejaba pasar 2,88 mg en la colina del #13 (ficha 372,12 / recalculado
+# 375,00: la diferencia es la sílice al 1 %, no un redondeo) y publicaba 375 en la
+# Tabla Cuantitativa mientras el escandallo del mismo informe decía 372,12.
+_TOL_RAW_MG_ABS = 0.01
+
+
+def _pct_active_num(canon_i: dict | None):
+    """% de activo de la canónica como float ('35,6' → 35.6). None si falta."""
+    if not canon_i:
+        return None
+    v = canon_i.get("pct_active")
+    if v in (None, ""):
+        return None
+    try:
+        return float(str(v).replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+
+
+def _raw_mg_preciso(canon_i: dict | None, nombre: str = ""):
+    """Materia prima a precisión completa = ACTIVE mg ÷ % activo.
+
+    La ficha técnica en PDF redondea la materia prima a 2 decimales y el informe
+    la imprimía con 6, fingiendo una precisión que no tenía: el cobre salía como
+    '7.140000 mg' cuando 1 mg al 14 % son 7,142857 mg (Xavier, 2026-08-25).
+    Recalculamos desde el activo, que sí es autoritativo. Si el valor recalculado
+    se aleja de la ficha más de `_TOL_RAW_MG_ABS` —el margen que puede explicar el
+    redondeo a 2 decimales del PDF— la diferencia ya no es redondeo sino materia
+    real que el activo no recoge (cargas, antiaglomerantes): devolvemos el de la
+    ficha sin tocar y que lo cace la coherencia.
+    """
+    if not canon_i:
+        return None
+    raw = canon_i.get("raw_mg")
+    activo = canon_i.get("active_mg")
+    # El % de estandarización no siempre viaja en su columna: el gluconato de
+    # cobre solo lo lleva en el nombre («Copper Gluconate 14%»).
+    pct = _pct_active_num(canon_i) or _parse_pct_activo(nombre or canon_i.get("name", ""))
+    if not isinstance(activo, (int, float)) or not activo or not pct:
+        return raw if isinstance(raw, (int, float)) else None
+    esperado = activo / pct * 100.0
+    if not isinstance(raw, (int, float)) or not raw:
+        return esperado
+    return esperado if abs(esperado - raw) <= _TOL_RAW_MG_ABS else raw
+
+
+def incoherencias_fila(nombre: str, canon_i: dict | None) -> list[str]:
+    """Desajustes de la fila que NO podemos resolver sin volver al origen.
+
+    No corrige nada: describe. El caso que la motiva es el potasio del #13, donde
+    la canónica traía `pct_active` 77,3 % (pureza del citrato tri-K) mientras el
+    nombre declara «35,6 % K», el porcentaje del ELEMENTO. El informe multiplicó
+    por el primero y publicó 98,56 mg de K y un 4,9 % VRN cuando son 16 mg y un
+    0,8 % — un factor 6 en la cifra que decide si hay claim. Los dos números eran
+    coherentes entre sí, así que solo los delata cruzarlos con el nombre.
+
+    Deliberadamente NO comprobamos `materia prima × % = activo`: el sobredosado
+    es una práctica legítima de formulación (la B6 del run_56 declara 1,4 mg de
+    activo sobre 2,26 mg al 80,5 %) y esa regla solo produciría falsos positivos
+    sobre fórmulas correctas. Tampoco habría cazado el potasio, que era
+    internamente coherente con el porcentaje equivocado."""
+    out: list[str] = []
+    if not canon_i:
+        return out
+    pct_canon = _pct_active_num(canon_i)
+    pct_nombre = _parse_pct_activo(nombre)
+    if pct_canon and pct_nombre and abs(pct_canon - pct_nombre) / pct_nombre > _TOL_COHERENCIA:
+        out.append(
+            f"% de activo en conflicto: la ficha dice {pct_canon:g} % y el nombre "
+            f"declara {pct_nombre:g} %. ACTIVE mg y %VRN dependen de cuál sea el bueno."
+        )
+    return out
 
 
 def _dosis_activo(ing: dict, canonical: dict | None = None) -> str:
@@ -282,6 +375,28 @@ _ING_SYN = {
     "curcuminoids": "curcuminoid", "glucosamina": "glucosamine",
     "astaxantina": "astaxanthin", "sucralosa": "sucralose",
     "bovino": "bovine", "frutos": "fruits", "rojos": "red",
+    # ES↔EN para emparejar formas consolidadas y botánicos con la canónica (FT PDF en EN).
+    "silice": "silicon", "silicio": "silicon", "silica": "silicon", "bambu": "bamboo",
+    "colageno": "collagen", "peptidos": "peptides",
+    # Excipientes y auxiliares tecnológicos. Sin ellos, 10 de las 21 filas del
+    # #13 (agua, dextrosa, ácido cítrico, sorbato, L-citrulina, aroma…) no
+    # casaban con la canónica y publicaban la cifra del LLM en vez del dato de
+    # la ficha. Xavier (2026-08-25).
+    "agua": "water", "fructosa": "fructose", "dextrosa": "dextrose",
+    "glucosa": "glucose", "citrico": "citric", "malico": "malic",
+    "sorbato": "sorbate", "potasico": "potassium", "xantana": "xanthan",
+    "fresa": "strawberry", "carminico": "carminic", "citrulina": "citrulline",
+    "maltodextrina": "maltodextrin", "patata": "potato", "colorante": "colourant",
+    "anhidro": "anh", "anhidra": "anh", "anhydrous": "anh",
+    # Formas de sal: cuando un mismo elemento llega en dos sales (Mg citrato +
+    # Mg bisglicinato), el elemento no discrimina y el emparejamiento depende
+    # de la sal. Sin estos sinónimos las filas se quedaban sin canónica y
+    # perdían dosis, %VRN y REF (run_56: 5 de 18 ingredientes).
+    "citrato": "citrate", "bisglicinato": "bisglycinate", "glicinato": "glycinate",
+    "picolinato": "picolinate", "molibdato": "molybdate", "borato": "borate",
+    "gluconato": "gluconate", "malato": "malate", "fumarato": "fumarate",
+    "calcio": "calcium", "potasio": "potassium", "magnesio": "magnesium",
+    "levadura": "yeast", "boswelia": "boswellia",
 }
 
 # Ruido común a ambos lados que no discrimina ingredientes.
@@ -298,20 +413,66 @@ _ING_STOP = {
 
 
 def _ing_ascii(s: str) -> str:
-    return unicodedata.normalize("NFKD", str(s or "")).encode("ascii", "ignore").decode().lower()
+    # El punto medio de los hidratos (Na2MoO4·2H2O) no tiene equivalente ASCII y
+    # se perdía, pegando dos tokens en uno ('na2moo42h2o') que no casaba con la
+    # canónica escrita con espacio. Es un separador, así que lo tratamos como tal.
+    s = str(s or "").replace("·", " ").replace("•", " ")
+    return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower()
+
+
+# Minerales por símbolo o nombre (ES/EN). El símbolo va con \b…\b para no colisionar
+# con substrings (p. ej. «mo» dentro de «monohidratado»). Orden: raros antes que
+# ubicuos; las vitaminas (B, K2…) se comprueban antes en `_ing_ident_key`.
+_MIN_KEYS: list[tuple[str, tuple[str, ...]]] = [
+    ("min:mo", (r"molibdeno", r"molybd", r"\bmo\b")),
+    ("min:se", (r"selenio", r"selen", r"\bse\b")),
+    ("min:cr", (r"cromo", r"chrom", r"\bcr\b")),
+    ("min:mn", (r"manganes", r"mangan", r"\bmn\b")),
+    ("min:cu", (r"cobre", r"copper", r"\bcu\b")),
+    ("min:b",  (r"\bboro\b", r"\bboron\b", r"\bborax\b", r"\bborato\b")),
+    ("min:si", (r"silic", r"\bbamboo\b", r"\bbambu\b", r"\bsilicon\b", r"\bsilice\b")),
+    ("min:fe", (r"hierro", r"\biron\b", r"ferr")),
+    ("min:i",  (r"yodo", r"iod")),
+    ("min:f",  (r"fluor",)),
+    ("min:p",  (r"fosfo", r"fosfa", r"phosph")),
+    ("min:k",  (r"potasio", r"potassium", r"\bk\b")),
+    ("min:mg", (r"magnes", r"\bmg\b")),
+    ("min:zn", (r"zinc", r"\bzn\b")),
+    ("min:ca", (r"calci", r"\bca\b")),
+    # Cloruro y sodio van los ÚLTIMOS: son los aniones/cationes de acompañamiento
+    # de media tabla ("Zinc chloride", "Sodium selenite") y cualquier mineral más
+    # específico debe ganarles. Xavier (2026-08-25) sobre el #13: la fila NaCl
+    # caía sin identidad y heredaba el %VRN inventado por el LLM ("1,2% como Na").
+    ("min:cl", (r"\bcloruro\b", r"\bchloride\b", r"\bnacl\b")),
+    ("min:na", (r"\bsodio\b", r"\bsodium\b")),
+]
+
+
+# Aditivos cuyo nombre lleva un catión mineral que NO es el nutriente declarado.
+# El sorbato potásico del #13 se identificaba como «potasio» y se fusionaba con
+# el citrato tri-K: 44,94 + 82,56 = 127,5 mg de materia prima y 16 + 82,56 =
+# 98,56 mg de activo, con un 77,3 % de estandarización que no es de nadie. De ahí
+# salía el 4,9 % VRN que Xavier corrigió a 0,8 % (2026-08-25). Un conservante no
+# aporta el mineral de su contraión a efectos de declaración nutricional.
+_ADITIVOS_NO_NUTRIENTES = (
+    r"sorbat", r"benzoat", r"\be\s?[0-9]{3}\b", r"metabisulf", r"glutamat",
+)
 
 
 def _ing_ident_key(name: str) -> str | None:
     """Clave de identidad fuerte para vitaminas y minerales (inequívoca entre
     idiomas). Las vitaminas se comprueban ANTES que los minerales para que la
-    B5 (Ca D-Pantotenato) no se confunda con el Calcio."""
+    B5 (Ca D-Pantotenato) no se confunda con el Calcio. Los aditivos con catión
+    mineral quedan fuera: su contraión no es un nutriente declarable."""
     s = _ing_ascii(name)
+    if any(re.search(p, s) for p in _ADITIVOS_NO_NUTRIENTES):
+        return None
     m = re.search(r"\bb\s*([0-9]{1,2})\b", s)
     if m and ("vit" in s or ("b" + m.group(1)) in s.replace(" ", "")):
         return f"vit:b{int(m.group(1))}"
     if re.search(r"\bvit\.?\s*c\b", s) or "ascorbic" in s:
         return "vit:c"
-    if re.search(r"\bd3\b", s) or "cholecalciferol" in s:
+    if re.search(r"\bd3\b", s) or "cholecalciferol" in s or "colecalciferol" in s:
         return "vit:d3"
     if re.search(r"\bvit\.?\s*e\b", s) or "tocopherol" in s or "tocoferol" in s:
         return "vit:e"
@@ -319,12 +480,9 @@ def _ing_ident_key(name: str) -> str | None:
         return "vit:h"
     if re.search(r"\bk2\b", s) or "mk7" in s.replace("-", "").replace(" ", "") or "mk-7" in s:
         return "vit:k2"
-    if "magnes" in s or re.search(r"\bmg\b", s):
-        return "min:mg"
-    if "zinc" in s or re.search(r"\bzn\b", s):
-        return "min:zn"
-    if "calci" in s or re.search(r"\bca\b", s):
-        return "min:ca"
+    for key, pats in _MIN_KEYS:
+        if any(re.search(p, s) for p in pats):
+            return key
     return None
 
 
@@ -345,12 +503,56 @@ def _ing_dist_tokens(name: str) -> set[str]:
     return out
 
 
+def _merge_canonica(filas: list[dict]) -> dict:
+    """Fusiona varias filas canónicas de un mismo activo cuando KIC consolidó
+    varias formas en un solo ingrediente (p. ej. 'Magnesio (citrato +
+    bisglicinato)'): suma la dosis de activo y la materia prima, y recalcula el
+    % de estandarización de la mezcla."""
+    if len(filas) == 1:
+        return filas[0]
+    act = [f.get("active_mg") for f in filas if isinstance(f.get("active_mg"), (int, float))]
+    raw = [f.get("raw_mg") for f in filas if isinstance(f.get("raw_mg"), (int, float))]
+    total = sum(act) if act else None
+    total_raw = sum(raw) if raw else None
+    pct = f"{round(total / total_raw * 100, 1)}".replace(".", ",") if (total and total_raw) else ""
+    return {
+        "name": filas[0].get("name", ""),
+        "active_name": next((f.get("active_name") for f in filas if f.get("active_name")), ""),
+        "active_mg": total,
+        "raw_mg": total_raw,
+        "pct_active": pct,
+        "unit": next((f.get("unit") for f in filas if f.get("unit")), "mg"),
+    }
+
+
+_UMBRAL_TOKENS = 0.34
+
+
+def _score_tokens(tk: set[str], tc: set[str]) -> float:
+    """Parecido entre los tokens distintivos de dos nombres.
+
+    Jaccard puro castiga que un lado sea más verboso que el otro, y ese matiz
+    tumbaba emparejamientos evidentes: «Goma xantana (Satiaxane CX 911)» contra
+    «Satiaxane CX 911» daba 1/3 = 0,333 y se caía por una milésima del umbral,
+    pese a compartir una marca que no aparece en ninguna otra fila. Cuando los
+    tokens del lado más corto están TODOS en el otro, el nombre corto es un
+    subconjunto del largo y el emparejamiento es seguro: puntúa 1."""
+    inter = tk & tc
+    if inter and len(inter) == min(len(tk), len(tc)):
+        return 1.0
+    return len(inter) / len(tk | tc)
+
+
 def _alinear_canonica(kic_ings: list[dict], canonica: list[dict]) -> list[dict | None]:
-    """Empareja cada ingrediente de KIC con su fila canónica (FT PDF) por
-    IDENTIDAD, no por índice: KIC reordena y consolida (3 aromas→1, eggshell+
-    bisglicinato→'Calcio') por lo que los conteos casi nunca cuadran y el orden
-    no se conserva. Estrategia: (1) clave fuerte para vitaminas/minerales;
-    (2) tokens distintivos con asignación global 1-a-1 (Jaccard sobre la unión).
+    """Empareja cada ingrediente de KIC con su(s) fila(s) canónica(s) (FT PDF)
+    por IDENTIDAD, no por índice: KIC reordena y CONSOLIDA formas (citrato +
+    bisglicinato → 'Magnesio'; eggshell + bisglicinato → 'Calcio') por lo que
+    los conteos no cuadran y el orden no se conserva. Estrategia:
+      (1) Vitaminas/minerales por clave de identidad. Si una clave aparece en un
+          solo ingrediente KIC, este hereda TODAS las filas canónicas de esa
+          clave (consolidación: suma la dosis de activo). Si aparece en varios
+          KIC, se deja a (2) para que los tokens de forma los separen 1-a-1.
+      (2) El resto por tokens distintivos, asignación global 1-a-1 (Jaccard).
     Sin match → None (cae al cálculo puente de `_dosis_activo`)."""
     res: list[dict | None] = [None] * len(kic_ings)
     if not canonica:
@@ -358,17 +560,34 @@ def _alinear_canonica(kic_ings: list[dict], canonica: list[dict]) -> list[dict |
 
     cused: set[int] = set()
     ckeys = [_ing_ident_key(f"{c.get('name','')} {c.get('active_name','') or ''}") for c in canonica]
+    kkeys = [_ing_ident_key(ing.get("ingrediente", "")) for ing in kic_ings]
 
-    # (1) Vitaminas y minerales por clave de identidad.
-    for ki, ing in enumerate(kic_ings):
-        kk = _ing_ident_key(ing.get("ingrediente", ""))
-        if not kk:
+    # (1) Por identidad (vitaminas/minerales), agrupando por clave de elemento.
+    for ek in {k for k in kkeys if k}:
+        ki_list = [i for i, k in enumerate(kkeys) if k == ek]
+        cj_list = [j for j, k in enumerate(ckeys) if k == ek and j not in cused]
+        if not ki_list or not cj_list:
             continue
-        for cj, ck in enumerate(ckeys):
-            if cj not in cused and ck == kk:
-                res[ki] = canonica[cj]
-                cused.add(cj)
-                break
+        if len(ki_list) == 1:
+            # KIC consolidó varias formas → hereda todas (suma de activo).
+            res[ki_list[0]] = _merge_canonica([canonica[j] for j in cj_list])
+            cused.update(cj_list)
+        else:
+            # Varias KIC del mismo elemento (silicio bambú vs OSA): reparte 1-a-1
+            # por mejor solape de tokens de forma (ser del mismo elemento ya
+            # descarta al resto; no hace falta umbral).
+            cand = []
+            for i in ki_list:
+                kt = _ing_dist_tokens(kic_ings[i].get("ingrediente", ""))
+                for j in cj_list:
+                    ct = _ing_dist_tokens(f"{canonica[j].get('name','')} {canonica[j].get('active_name','') or ''}")
+                    inter = kt & ct
+                    if inter:
+                        cand.append((len(inter) / len(kt | ct), i, j))
+            for _, i, j in sorted(cand, reverse=True):
+                if res[i] is None and j not in cused:
+                    res[i] = canonica[j]
+                    cused.add(j)
 
     # (2) El resto por tokens distintivos; asignación global mejor-primero.
     pairs: list[tuple[float, int, int]] = []
@@ -384,58 +603,161 @@ def _alinear_canonica(kic_ings: list[dict], canonica: list[dict]) -> list[dict |
             tc = _ing_dist_tokens(f"{c.get('name','')} {c.get('active_name','') or ''}")
             inter = tk & tc
             if inter:
-                pairs.append((len(inter) / len(tk | tc), ki, cj))
+                pairs.append((_score_tokens(tk, tc), ki, cj))
     for score, ki, cj in sorted(pairs, reverse=True):
-        if res[ki] is None and cj not in cused and score >= 0.34:
+        if res[ki] is None and cj not in cused and score >= _UMBRAL_TOKENS:
             res[ki] = canonica[cj]
             cused.add(cj)
     return res
 
 
-# Nota al pie según la procedencia del dato.
+# Nota al pie según la procedencia del dato. El cliente pide la materia prima
+# explícita en la tabla → la nota deja de ser un aviso de confidencialidad y pasa
+# a explicar las dos columnas de dosificación (activo vs materia prima).
 NOTA_DOSIS_ACTIVO_CANON = (
-    "*Dosis de activo aportado según la ficha de fórmula (no la dosis de materia "
-    "prima, confidencial). «—» = excipiente.*"
+    "*ACTIVE mg: dosis de principio activo por unidad de consumo. Ingredient mg+: dosis "
+    "total de materia prima del ingrediente (incluye cargas, diluciones y "
+    "estandarización). «—» = dato no disponible o no aplica.*"
 )
 
 
-# Nota al pie reutilizable para las tablas de dosis de activo.
+# Nota al pie reutilizable para las tablas de dosis de activo (sin canónica).
 NOTA_DOSIS_ACTIVO = (
-    "*Dosis de activo aportado (no la dosis de materia prima, confidencial). "
-    "Estimada desde la estandarización; pendiente de conciliar con la Tabla "
-    "Cuantitativa. «—» = excipiente o activo sin estandarización declarada.*"
+    "*ACTIVE mg: dosis de principio activo estimada desde la estandarización "
+    "del ingrediente. Ingredient mg+: materia prima del ingrediente. «—» = "
+    "excipiente o activo sin estandarización declarada.*"
 )
 
 
 # ── Bloque 1 · Tabla maestra de ingredientes ────────────────────────────────
 # Sustituye las 3-4 tablas de ingredientes que antes repetían dosis y %NRV
 # (KIC "Perfil", Regulatorio "Evaluación", Ficha Técnica "Composición").
+# Formato exigido por el cliente: replica la "Tabla Cuantitativa.xlsm" que
+# Umbrella recibe para validar la fórmula. A partir de la migración, la materia
+# prima (Ingredient mg+) es PÚBLICA en este bloque (requisito explícito del
+# cliente); el resto de bloques siguen ocultándola.
 
-def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict, canonica: list[dict] | None = None) -> list[str]:
-    """Tabla ÚNICA de ingredientes fusionando los tres agentes:
-    dosis/%NRV/biodisponibilidad (KIC) + forma química (Ficha Técnica) +
-    semáforo regulatorio (Regulatorio). Cruce por nombre normalizado.
+# Fracción másica del anión con VRN dentro de la sal. En estas sales la ficha
+# técnica declara como activo el CATIÓN (NaCl → "Na, 60 mg"), pero el nutriente
+# que el Anexo XIII permite declarar es el ANIÓN. Sin esta conversión la fila se
+# quedaba sin %VRN utilizable: el sodio no tiene VRN y el cloruro nunca se
+# calculaba. Xavier (2026-08-25), fórmula #13.
+_FRACCION_ANION = {
+    # sal (patrón sobre el nombre normalizado) → (clave del anión, fracción másica)
+    "nacl":  ("min:cl", 35.453 / 58.443, "como Cl; el Na no tiene VRN"),
+    "kcl":   ("min:cl", 35.453 / 74.551, "como Cl"),
+}
 
-    `canonica` (de `formula_canonica.json`, FT PDF) aporta la dosis de activo
-    autoritativa, emparejada por índice (KIC conserva el orden del input)."""
+
+def _anion_con_vrn(nombre: str, canon_i: dict | None) -> tuple[str, float, str] | None:
+    """(clave, mg, nota) del anión con VRN de una sal, calculado desde la
+    MATERIA PRIMA por estequiometría. None si el ingrediente no es una de esas
+    sales o no conocemos su materia prima."""
+    s = _ing_ascii(nombre).replace(" ", "")
+    raw = canon_i.get("raw_mg") if canon_i else None
+    if not isinstance(raw, (int, float)) or not raw:
+        return None
+    for pat, (key, frac, nota) in _FRACCION_ANION.items():
+        if pat in s:
+            return key, raw * frac, nota
+    return None
+
+
+def _vrn_ingrediente(ing: dict, canon_i: dict | None) -> str:
+    """%VRN de una fila de la tabla de ingredientes, calculado con el VRN legal
+    del Anexo XIII en vez del texto del LLM.
+
+    El LLM inventaba la base de referencia caso a caso y se contradecía dentro
+    del mismo informe: zinc con base 11 mg en una fila y 10 mg en otra, y
+    vitamina D al '150% (15 µg/día)' cuando el VRN legal son 5 µg (Xavier tachó
+    la tabla entera, 2026-07-27). Cae al valor de KIC solo si no identificamos
+    el nutriente, y nunca inventa un % para boro o silicio, que no tienen VRN."""
+    nombre = ing.get("ingrediente", "")
+    key = _ing_ident_key(nombre)
+    if key is None and canon_i:
+        key = (_ing_ident_key(canon_i.get("active_name", ""))
+               or _ing_ident_key(canon_i.get("name", "")))
+    # Sales tipo NaCl: el activo de la ficha (Na) no tiene VRN, pero el anión
+    # (Cl) sí. Se calcula el anión y se deja constancia de por qué no es el Na.
+    anion = _anion_con_vrn(nombre, canon_i)
+    if anion is not None:
+        akey, amg, nota = anion
+        nrv_mg, _u = _NRV.get(akey, (None, None))
+        if nrv_mg:
+            return f"{_fmt_pct_num(amg / nrv_mg * 100)} ({nota})"
+    if key in _SIN_VRN:
+        return "Sin VRN"
+    mg = canon_i.get("active_mg") if canon_i else None
+    if key in _NRV and isinstance(mg, (int, float)):
+        nrv_mg, _unidad = _NRV[key]
+        if nrv_mg:
+            return _fmt_pct_num(mg / nrv_mg * 100)
+    return _fmt_pct(ing.get("porcentaje_nrv", ""))
+
+
+def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict,
+                      canonica: list[dict] | None = None,
+                      doc: dict | None = None) -> list[str]:
+    """Tabla ÚNICA de ingredientes (formato Excel del cliente: Tabla Cuantitativa).
+
+    Fusiona KIC (perfil) + Regulatorio (semáforo) + Canónica del FT PDF
+    (ACTIVE mg autoritativo + Ingredient mg+ de materia prima). Cruce por
+    IDENTIDAD, no por índice (KIC consolida formas y reordena).
+
+    `canonica`: lista del FT PDF (formula_canonica.json). Aporta active_mg,
+                raw_mg (materia prima), pct_active, active_name, unit.
+    `doc`:      agente 7 (Documentación Interna). Aporta `total_capsula_mg`
+                para calcular %Formula. Si falta, fallback = suma de raw_mg
+                de la tabla canónica (no 0 → evita divisiones triviales)."""
     reg_by_name = {
         _norm(i.get("nombre", "")): i
         for i in reg.get("ingredientes", []) if isinstance(i, dict)
     }
-    ft_comp = ft.get("fase_2_composicion", {})
-    ft_ings = ft_comp.get("ingredientes_activos", ft_comp.get("ingredientes", [])) if isinstance(ft_comp, dict) else []
-    ft_by_name: dict[str, dict] = {}
-    for i in (ft_ings if isinstance(ft_ings, list) else []):
-        if isinstance(i, dict):
-            nm = i.get("nombre_ingrediente", i.get("nombre", i.get("ingrediente", "")))
-            ft_by_name[_norm(nm)] = i
 
+    avisos: list[str] = []
     kic_ings = [i for i in kic.get("fase_2_ingredientes", []) if isinstance(i, dict)]
     canon_alineada = _alinear_canonica(kic_ings, canonica or [])
     usa_canon = any(c is not None for c in canon_alineada)
 
+    # A canonical FT may belong to a different run than the KIC payload (for
+    # example, an old 15-row KIC next to a new 18-row FT).  A few generic
+    # ingredients can still match by name, but those partial matches would
+    # silently leak doses from the wrong product.  Use the canonical only when
+    # it covers a meaningful majority of the KIC rows; otherwise all rows use
+    # the KIC fallback below.
+    if canon_alineada and kic_ings:
+        matched = sum(c is not None for c in canon_alineada)
+        if matched / len(kic_ings) < 0.5:
+            canon_alineada = [None] * len(kic_ings)
+            usa_canon = False
+
+    # total_capsula_mg: del agente 7 (Doc Internos) → fallback a suma de raw_mg.
+    total_capsula_mg = 0.0
+    if isinstance(doc, dict):
+        fq = doc.get("fase_2_formula_cuantitativa", {})
+        if isinstance(fq, dict):
+            for key in ("total_capsula_mg", "total_unidad_mg", "total"):
+                v = fq.get(key)
+                if v not in (None, "", 0):
+                    try:
+                        total_capsula_mg = float(v)
+                    except (TypeError, ValueError):
+                        total_capsula_mg = 0.0
+                    break
+    if not total_capsula_mg:
+        total_capsula_mg = sum(
+            (c.get("raw_mg") or 0) for c in canon_alineada
+            if isinstance(c, dict) and isinstance(c.get("raw_mg"), (int, float))
+        )
+
     lines = [_section("Tabla de ingredientes", 3)]
-    headers = ["#", "Ingrediente", "Nom Actiu", "% Actiu", "Dosis de activo", "% NRV/VRN", "Forma química", "Biodisponibilidad", "Reg."]
+    # Cabeceras del Excel del cliente (orden exacto de "Tabla Cuantitativa.xlsm").
+    # El sufijo "[mg]" va inline porque markdown no soporta cabeceras agrupadas.
+    headers = [
+        "REF", "Formula Ingredient Name", "List of Ingredients", "Active name",
+        "% Active", "ACTIVE mg", "%VRN", "Ingredient mg+ [mg]", "%Formula",
+        "Bioavailability", "REGA",
+    ]
     rows = []
     for idx, ing in enumerate(kic_ings):
         nombre = ing.get("ingrediente", "")
@@ -443,34 +765,81 @@ def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict, canonica: list[dict] | Non
         bio = ing.get("biodisponibilidad", {})
         bio_str = bio.get("nivel", "") if isinstance(bio, dict) else _val(bio)
 
-        ft_i = ft_by_name.get(key, {})
-        forma = ft_i.get("forma_quimica", ft_i.get("forma", "")) if isinstance(ft_i, dict) else ""
-
         reg_i = reg_by_name.get(key, {})
         sem = reg_i.get("semaforo", "") if isinstance(reg_i, dict) else ""
         sem_str = f"{SEMAFORO.get(sem, '')} {sem}".strip()
 
         canon_i = canon_alineada[idx]
+        canon_name = canon_i.get("name", "") if canon_i else ""
+        canon_code = canon_i.get("code", "") if canon_i else ""
         nom_actiu = canon_i.get("active_name", "") if canon_i else ""
-        pct_actiu = canon_i.get("pct_active", "") if canon_i else ""
-        if pct_actiu:
-            pct_actiu = f"{pct_actiu}%"
+        # % de activo: la columna de la ficha si viene, y si no el % declarado
+        # en el propio nombre («Copper Gluconate 14%»), que es el mismo dato con
+        # el que ya calculamos la materia prima. Xavier (2026-08-25) marcó como
+        # vacía la celda del cobre teniendo el 14 % escrito al lado.
+        pct_actiu_raw = canon_i.get("pct_active", "") if canon_i else ""
+        if not pct_actiu_raw:
+            pct_nombre = _parse_pct_activo(nombre) or (
+                _parse_pct_activo(canon_name) if canon_name else None)
+            pct_actiu_raw = f"{pct_nombre:g}".replace(".", ",") if pct_nombre else ""
+        pct_actiu = f"{pct_actiu_raw}%" if pct_actiu_raw else "—"
+        # Materia prima recalculada desde el activo: la ficha PDF la redondea a
+        # 2 decimales y la imprimíamos con 6 (Xavier, 2026-08-25).
+        canon_raw_mg = _raw_mg_preciso(canon_i, nombre)
+        canon_unit = (canon_i.get("unit", "mg") if canon_i else "mg") or "mg"
+
+        # ACTIVE mg: reusamos _dosis_activo (canónica prevalece sobre cálculo)
+        active_mg_str = _dosis_activo(ing, canon_i)
+        # Ingredient mg+: materia prima explícita (cliente la pide).
+        # Prioridad: canónica → KIC dosis_formula_mg → "—".
+        if isinstance(canon_raw_mg, (int, float)):
+            raw_mg_str = _fmt_mg(canon_raw_mg, canon_unit)
+        else:
+            kic_raw = ing.get("dosis_formula_mg")
+            if kic_raw not in (None, ""):
+                raw_mg_str = _fmt_mg(kic_raw, ing.get("dosis_formula_unidad", "") or "mg")
+            else:
+                raw_mg_str = "—"
+        # %Formula: ratio sobre el total de la cápsula.
+        if isinstance(canon_raw_mg, (int, float)) and total_capsula_mg:
+            pct_formula = canon_raw_mg / total_capsula_mg * 100.0
+            pct_formula_str = _fmt_pct_formula(pct_formula)
+        else:
+            pct_formula_str = "—"
+
+        for aviso in incoherencias_fila(nombre, canon_i):
+            avisos.append(f"**{nombre}** — {aviso}")
 
         rows.append([
-            str(idx + 1),
-            nombre,
-            nom_actiu or "—",
-            pct_actiu or "—",
-            _dosis_activo(ing, canon_i),
-            _fmt_pct(ing.get("porcentaje_nrv", "")),
-            forma or "—",
-            bio_str or "—",
-            sem_str or "—",
+            # REF: código de la fórmula canónica; si el ingrediente no casa
+            # con la canónica (o el PDF no traía code), cae al nº de orden.
+            str(canon_code) or str(idx + 1),               # REF
+            nombre,                                        # Formula Ingredient Name (KIC limpio)
+            canon_name or "—",                             # List of Ingredients (crudo del FT PDF)
+            nom_actiu or "—",                              # Active name
+            pct_actiu,                                     # % Active
+            active_mg_str,                                 # ACTIVE mg
+            _vrn_ingrediente(ing, canon_i),                # %VRN
+            raw_mg_str,                                    # Ingredient mg+ [mg]
+            pct_formula_str,                               # %Formula
+            bio_str or "—",                                # Bioavailability
+            sem_str or "—",                                # REGA
         ])
     lines += _table(headers, rows)
     lines.append("")
     lines.append(NOTA_DOSIS_ACTIVO_CANON if usa_canon else NOTA_DOSIS_ACTIVO)
     lines.append("")
+    if avisos:
+        # Un dato de origen que no cuadra no se corrige a ojo ni se publica en
+        # silencio: se enseña. Estas filas necesitan que el cliente confirme el
+        # valor bueno antes de que el informe salga.
+        lines.append("> ⚠️ **Filas pendientes de confirmar con la fórmula de origen.** "
+                     "Los valores de estas filas no son coherentes entre sí y las cifras "
+                     "publicadas para ellas no deben usarse para decidir claims:")
+        lines.append("")
+        for a in avisos:
+            lines.append(f"> - {a}")
+        lines.append("")
     return lines
 
 
@@ -489,7 +858,7 @@ def fmt_analisis_ingredientes(d: dict) -> list[str]:
     ]
     obj_sec = c.get("objetivos_funcionales_secundarios", [])
     if obj_sec:
-        lines.append(f"**Objetivos secundarios:** {', '.join(obj_sec)}  ")
+        lines.append(f"**Objetivos secundarios:** {', '.join(str(x) for x in obj_sec)}  ")
     lines.append("")
 
     for ing in d.get("fase_2_ingredientes", []):
@@ -504,8 +873,8 @@ def fmt_analisis_ingredientes(d: dict) -> list[str]:
             lines.append(f"- *Mecanismo:* {mec.get('descripcion','')} — Evidencia: **{mec.get('nivel_evidencia','')}**")
         bio = ing.get("biodisponibilidad", {})
         if isinstance(bio, dict):
-            mejora = "; ".join(bio.get("factores_positivos", bio.get("factores_mejora", [])) or [])
-            reduccion = "; ".join(bio.get("factores_negativos", bio.get("factores_reduccion", [])) or [])
+            mejora = "; ".join(str(x) for x in (bio.get("factores_positivos", bio.get("factores_mejora", [])) or []))
+            reduccion = "; ".join(str(x) for x in (bio.get("factores_negativos", bio.get("factores_reduccion", [])) or []))
             if mejora:
                 lines.append(f"- *Absorción (mejora):* {mejora}")
             if reduccion:
@@ -692,6 +1061,36 @@ ALERGENOS_ANEXO_II = [
 FT_DIETAS = ["Vegetariano", "Vegano", "Sin gluten", "Sin azúcar (<0,5 g/dosis)",
              "Kosher", "Halal", "Bio / Ecológico"]
 
+# Ingredientes de origen animal → el producto no es apto para vegetarianos/veganos.
+_ANIMAL = ("collagen", "colageno", "gelatin", "gelatina", "carmin", "carmine",
+           "lactos", "whey", "suero lacteo", "casein", "caseina", "miel ", "beeswax",
+           "cera de abeja", "lanolina", "lanolin", "grenetina")
+
+
+def _aptitud_dietas_rows(canonica: list[dict] | None, kic: dict | None) -> list[list[str]]:
+    """Estado por dieta derivado de la fórmula: 'No apto' cuando hay origen animal
+    (p. ej. colágeno). El resto NO se deduce de la fórmula — depende de la ficha
+    técnica del cliente, así que se marca como pendiente en lugar de afirmar
+    'Bajo petición', que Xavier corrigió en dos filas a la vez (2026-07-27):
+    la FT decía NO gluten free y SÍ sin azúcar."""
+    nombres = " ".join(
+        f"{c.get('name','')} {c.get('active_name','') or ''}"
+        for c in (canonica or []) if isinstance(c, dict)
+    )
+    nombres += " " + " ".join(
+        i.get("ingrediente", "") for i in (kic or {}).get("fase_2_ingredientes", [])
+        if isinstance(i, dict)
+    )
+    txt = _ing_ascii(nombres)
+    animal = next((a.strip() for a in _ANIMAL if a in txt), "")
+    rows = []
+    for d in FT_DIETAS:
+        estado = "Pendiente — según ficha técnica del cliente"
+        if animal and d in ("Vegetariano", "Vegano"):
+            estado = "No apto (contiene ingredientes de origen animal)"
+        rows.append([d, estado])
+    return rows
+
 # Boilerplate normativo de la plantilla Umbrella (no es output del LLM).
 FT_FOOD_GRADE = (
     "Todos los aditivos cumplen la legislación alimentaria de la UE. Extractos vegetales y "
@@ -703,10 +1102,89 @@ FT_TSE = "Fabricado sin materias primas de origen humano ni con riesgo TSE/BSE."
 FT_TRANSPORTE = "No clasificado como peligroso. Transportar a 15-25 °C, protegido de luz, calor y humedad."
 
 
-def _ft_nutricional_rows(nut: dict) -> list[list[str]]:
-    """Extrae las filas de la tabla nutricional (acepta los dos formatos del LLM)."""
+NUTRIENTE_LABELS = {
+    "valor_energetico_kj": "Valor energético (kJ)",
+    "valor_energetico_kcal": "Valor energético (kcal)",
+    "grasas_g": "Grasas (g)", "acidos_grasos_saturados_g": "— de las cuales saturadas (g)",
+    "hidratos_de_carbono_g": "Hidratos de carbono (g)", "azucares_g": "— de los cuales azúcares (g)",
+    "fibra_g": "Fibra (g)", "proteinas_g": "Proteínas (g)", "sal_g": "Sal (g)",
+}
+
+# Valores de Referencia de Nutrientes (VRN/NRV) del Anexo XIII del Reg. (UE)
+# 1169/2011: (VRN en mg, unidad de etiqueta). Son constantes legales fijas → el
+# %VRN se calcula, no se le pide al LLM (que se saltaba filas y daba 0% en B12).
+# Xavier (2026-07-27): la tabla incompleta hacía que los minerales sin entrada
+# cayeran al %VRN inventado por el LLM (zinc con base 11 mg, vit. D con base
+# 15 µg). Cubrimos el Anexo XIII entero para que ningún nutriente caiga al LLM.
+_NRV = {
+    "vit:a": (0.8, "µg"),
+    "vit:b1": (1.1, "mg"), "vit:b2": (1.4, "mg"), "vit:b3": (16.0, "mg"),
+    "vit:b5": (6.0, "mg"), "vit:b6": (1.4, "mg"), "vit:b9": (0.2, "µg"),
+    "vit:b12": (0.0025, "µg"), "vit:c": (80.0, "mg"), "vit:d3": (0.005, "µg"),
+    "vit:e": (12.0, "mg"), "vit:h": (0.05, "µg"), "vit:k2": (0.075, "µg"),
+    "min:ca": (800.0, "mg"), "min:cl": (800.0, "mg"), "min:cr": (0.04, "µg"),
+    "min:cu": (1.0, "mg"), "min:f": (3.5, "mg"), "min:fe": (14.0, "mg"),
+    "min:i": (0.15, "µg"), "min:k": (2000.0, "mg"), "min:mg": (375.0, "mg"),
+    "min:mn": (2.0, "mg"), "min:mo": (0.05, "µg"), "min:p": (700.0, "mg"),
+    "min:se": (0.055, "µg"), "min:zn": (10.0, "mg"),
+}
+
+# Boro y silicio NO tienen VRN en el Anexo XIII: se declaran en cantidad, sin
+# porcentaje. Cualquier % para ellos sería inventado.
+# El sodio tampoco: el Anexo XIII declara SAL (g), no Na, y no le fija VRN.
+# Xavier (2026-08-25): "el sodi (Na) no en té VRN; el clorur sí".
+_SIN_VRN = {"min:b", "min:si", "min:na"}
+
+# Nombre de NUTRIENTE para la tabla de información nutricional. Xavier
+# (2026-07-27) tachó la tabla entera porque listaba materias primas ("tri-Mg
+# Citrate", "Mg Bisglycinate") en vez de nutrientes: el Anexo XIII exige
+# declarar el elemento, agregado, no cada sal de origen.
+_NUTRIENTE_NOMBRE = {
+    "vit:a": "Vitamina A", "vit:b1": "Tiamina (B1)", "vit:b2": "Riboflavina (B2)",
+    "vit:b3": "Niacina (B3)", "vit:b5": "Ácido pantoténico (B5)",
+    "vit:b6": "Vitamina B6", "vit:b9": "Ácido fólico (B9)", "vit:b12": "Vitamina B12",
+    "vit:c": "Vitamina C", "vit:d3": "Vitamina D", "vit:e": "Vitamina E",
+    "vit:h": "Biotina", "vit:k2": "Vitamina K",
+    "min:b": "Boro", "min:ca": "Calcio", "min:cl": "Cloruro", "min:cr": "Cromo",
+    "min:cu": "Cobre", "min:f": "Flúor", "min:fe": "Hierro", "min:i": "Yodo",
+    "min:k": "Potasio", "min:mg": "Magnesio", "min:mn": "Manganeso",
+    "min:mo": "Molibdeno", "min:p": "Fósforo", "min:se": "Selenio",
+    "min:si": "Silicio", "min:zn": "Zinc",
+}
+
+
+def _fmt_cantidad(mg: float, unidad: str) -> str:
+    """0.000375 mg en µg -> '0,375 µg'; 56.25 mg -> '56,25 mg' (decimal español)."""
+    val = mg * 1000 if unidad == "µg" else mg
+    s = f"{val:.4f}".rstrip("0").rstrip(".").replace(".", ",")
+    return f"{s} {unidad}"
+
+
+def _fmt_pct_num(pct: float) -> str:
+    """25.0 -> '25%'; 13.33 -> '13,3%'."""
+    if abs(pct - round(pct)) < 0.05:
+        return f"{round(pct)}%"
+    return f"{pct:.1f}".replace(".", ",") + "%"
+
+
+def _ft_macro_rows(nut: dict) -> list[list[str]]:
+    """Macronutrientes (energía, grasas, HC, proteínas, sal) de la Ficha Técnica."""
+    tab = nut.get("tabla_nutricional_por_dosis", {})
+    sec = tab.get("seccion_obligatoria", {}) if isinstance(tab, dict) else {}
+    rows: list[list[str]] = []
+    if isinstance(sec, dict):
+        for k, v in sec.items():
+            if k == "metodo_calculo":
+                continue
+            rows.append([NUTRIENTE_LABELS.get(k, k.replace("_", " ").capitalize()), _val(v), "—"])
+    return rows
+
+
+def _ft_vitmin_rows(nut: dict) -> list[list[str]]:
+    """Vitaminas/minerales tal y como los devuelve la Ficha Técnica (fallback si
+    KIC no está disponible). Acepta los dos formatos del LLM."""
     tabla = nut.get("tabla_nutricional", nut.get("tabla", []))
-    tab_por_dosis = nut.get("tabla_nutricional_por_dosis", {})
+    tab = nut.get("tabla_nutricional_por_dosis", {})
     rows: list[list[str]] = []
     if isinstance(tabla, list) and tabla:
         for fila in tabla:
@@ -716,21 +1194,8 @@ def _ft_nutricional_rows(nut: dict) -> list[list[str]]:
                     _val(fila.get("cantidad_por_dosis", fila.get("por_dosis", fila.get("valor_por_dosis", "")))),
                     _val(fila.get("pct_vrn_dosis", fila.get("porcentaje_vrd", fila.get("vrd", "")))),
                 ])
-    elif isinstance(tab_por_dosis, dict):
-        NUTRIENTE_LABELS = {
-            "valor_energetico_kj": "Valor energético (kJ)",
-            "valor_energetico_kcal": "Valor energético (kcal)",
-            "grasas_g": "Grasas (g)", "acidos_grasos_saturados_g": "— de las cuales saturadas (g)",
-            "hidratos_de_carbono_g": "Hidratos de carbono (g)", "azucares_g": "— de los cuales azúcares (g)",
-            "fibra_g": "Fibra (g)", "proteinas_g": "Proteínas (g)", "sal_g": "Sal (g)",
-        }
-        sec = tab_por_dosis.get("seccion_obligatoria", {})
-        if isinstance(sec, dict):
-            for k, v in sec.items():
-                if k == "metodo_calculo":
-                    continue
-                rows.append([NUTRIENTE_LABELS.get(k, k.replace("_", " ").capitalize()), _val(v), "—"])
-        vit = tab_por_dosis.get("vitaminas_minerales", {})
+    elif isinstance(tab, dict):
+        vit = tab.get("vitaminas_minerales", {})
         if isinstance(vit, dict):
             for k, v in vit.items():
                 if isinstance(v, dict):
@@ -742,6 +1207,64 @@ def _ft_nutricional_rows(nut: dict) -> list[list[str]]:
                     cant_str = f"{cant} ({eq})" if eq else cant
                     rows.append([label_str, _val(cant_str), _val(v.get("porcentaje_nrv", v.get("pct_vrn", "")))])
     return rows
+
+
+def _nutricional_vitmin_rows(kic: dict | None, canonica: list[dict] | None) -> list[list[str]]:
+    """Vitaminas/minerales de forma determinista: filas de KIC (procesa TODO
+    ingrediente, así que no se salta ninguno), dosis de activo de la canónica
+    (FT PDF, exacta — recupera microdosis como la B12) y %VRN del Anexo XIII.
+
+    AGREGA por elemento: un nutriente aportado por varias sales (calcio de
+    citrato + bisglicinato) es UNA sola fila con la suma, como exige el Anexo
+    XIII; declarar cada sal por separado es lo que Xavier tachó (2026-07-27).
+
+    Cae a la dosis/%VRN de KIC cuando no se identifica el VRN de referencia."""
+    kic_ings = [i for i in (kic or {}).get("fase_2_ingredientes", []) if isinstance(i, dict)]
+    if not kic_ings:
+        return []
+    canon = _alinear_canonica(kic_ings, canonica or [])
+
+    # 1ª pasada: acumula mg de activo por clave de nutriente; lo que no se
+    # identifica conserva su fila propia (orden de aparición).
+    agregado: dict[str, float] = {}
+    orden: list[str] = []
+    sueltos: list[list[str]] = []
+    for idx, ing in enumerate(kic_ings):
+        if (ing.get("tipologia") or "").upper() not in ("VITAMINA", "MINERAL"):
+            continue
+        nombre = ing.get("ingrediente", "")
+        c = canon[idx]
+        key = _ing_ident_key(nombre)
+        if key is None and c:
+            key = _ing_ident_key(c.get("active_name", "")) or _ing_ident_key(c.get("name", ""))
+        mg = c.get("active_mg") if c else None
+        if key and isinstance(mg, (int, float)):
+            if key not in agregado:
+                orden.append(key)
+                agregado[key] = 0.0
+            agregado[key] += mg
+            continue
+        d = ing.get("dosis_formula_mg", "")
+        u = ing.get("dosis_formula_unidad") or "mg"
+        sueltos.append([
+            nombre,
+            f"{d} {u}".strip() if d not in ("", None) else "—",
+            _fmt_pct(ing.get("porcentaje_nrv", "")),
+        ])
+
+    rows: list[list[str]] = []
+    for key in orden:
+        mg = agregado[key]
+        nombre = _NUTRIENTE_NOMBRE.get(key, key)
+        if key in _NRV:
+            nrv_mg, unidad = _NRV[key]
+            rows.append([nombre, _fmt_cantidad(mg, unidad),
+                         _fmt_pct_num(mg / nrv_mg * 100) if nrv_mg else "—"])
+        else:
+            # Sin VRN en el Anexo XIII (boro, silicio): cantidad sí, % nunca.
+            nota = "Sin VRN establecido" if key in _SIN_VRN else "—"
+            rows.append([nombre, _fmt_cantidad(mg, "mg"), nota])
+    return rows + sueltos
 
 
 # ── Bloque 2 · Ficha Técnica (formato Umbrella de 6 secciones) ───────────────
@@ -863,10 +1386,26 @@ def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
 
     # ── 3 · Información nutricional, vida útil y reactividad ──────────
     lines.append(_section("3 · Información nutricional", 3))
-    nut_rows = _ft_nutricional_rows(ft.get("fase_3_informacion_nutricional", {}))
+    nut = ft.get("fase_3_informacion_nutricional", {})
+    # Vitaminas/minerales deterministas (KIC + canónica + VRN legal); macros de
+    # la Ficha Técnica. Cae a la tabla del LLM solo si no hay datos de KIC.
+    vm_rows = _nutricional_vitmin_rows(kic, canonica) or _ft_vitmin_rows(nut)
+    nut_rows = _ft_macro_rows(nut) + vm_rows
     if nut_rows:
-        lines += _table(["Nutriente", "Por dosis", "% VRN*"], nut_rows)
-        lines.append("*\\* % Valores de Referencia de la Nutrición*")
+        lines += _table(["Nutriente", "Por unidad*", "% VRN**"], nut_rows)
+        # La base de cálculo es la fórmula íntegra = UNA unidad (cápsula), no la
+        # dosis diaria. Se explicita porque el informe la daba por equivalente y
+        # eso infravalora todos los %VRN (Xavier, 2026-07-27).
+        peso = sum(c["raw_mg"] for c in (canonica or [])
+                   if isinstance(c, dict) and isinstance(c.get("raw_mg"), (int, float)))
+        peso_str = f" (≈ {peso:.0f} mg de materia prima)" if peso else ""
+        lines.append(
+            f"*\\* Cantidades por UNA unidad de producto{peso_str}, es decir la fórmula íntegra. "
+            "Para expresarlas por dosis diaria hay que multiplicarlas por el número de "
+            "unidades de la toma: dato pendiente de confirmar con el cliente.*"
+        )
+        lines.append("*\\*\\* % Valores de Referencia de la Nutrición (Anexo XIII, Reg. (UE) 1169/2011), "
+                     "calculados sobre esa misma base de una unidad.*")
         lines.append("")
 
     cons = ft.get("fase_6_conservacion_vida_util", {})
@@ -937,12 +1476,17 @@ def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
         lines.append(f"**Declaración:** {dec if isinstance(dec, str) else dec.get('texto_recomendado', str(dec))}")
     lines.append("")
     lines.append(_section("Tabla de alérgenos (Anexo II Reg. UE 1169/2011)", 4))
-    lines.append("*Marcado a verificar con fichas de proveedor y plan HACCP; no analizado en esta fase.*")
+    # Xavier (2026-07-27): "a la fitxa tècnica ja està avaluat". El cliente ya
+    # tiene esta evaluación hecha; pedirle que la "verifique" es devolverle
+    # trabajo que ya hizo. La tabla queda como checklist de trazabilidad.
+    lines.append("*La evaluación de alérgenos ya consta en la ficha técnica del producto. "
+                 "Esta tabla es la plantilla del Anexo II para volcar ese dato; se rellena "
+                 "desde la ficha técnica del cliente, no requiere análisis nuevo.*")
     lines += _table(["Grupo de alérgenos", "Estado"],
-                    [[a, "Verificar"] for a in ALERGENOS_ANEXO_II])
+                    [[a, "Según ficha técnica"] for a in ALERGENOS_ANEXO_II])
     lines.append("")
     lines.append(_section("Aptitud para dietas", 4))
-    lines += _table(["Dieta", "Estado"], [[d, "Bajo petición"] for d in FT_DIETAS])
+    lines += _table(["Dieta", "Estado"], _aptitud_dietas_rows(canonica, kic))
     lines.append("")
 
     # ── 6 · Datos de producto y conservación ─────────────────────────
@@ -1174,10 +1718,14 @@ def _etq_panel(caras: dict, lista_ing_es: str, lang: str, nombre_producto: str) 
         L.append(f"  - {a.get('texto', a) if isinstance(a, dict) else a}")
     op_es = [("operador_responsable", "Operador responsable"), ("fabricante", "Fabricado por")]
     op_en = [("operador_responsable", "Responsible operator"), ("fabricante", "Manufactured by")]
+    # Xavier (2026-07-27) anotó "Distribuidor" sobre el operador responsable: en
+    # este producto ambos roles recaen en la misma empresa, así que lo decimos
+    # en vez de dejar un placeholder que parece un dato que falta.
+    nota_op = {"operador_responsable": " *(el distribuidor asume este rol)*"}
     for key, lab in (op_en if lang == "en" else op_es):
         v = gn(cl, key)  # administrativo → valor común (no se traduce)
         if v:
-            L.append(f"- {lab}: {v.splitlines()[0] if v else v}")
+            L.append(f"- {lab}: {v.splitlines()[0] if v else v}{nota_op.get(key, '')}")
     L.append("- Distribuido por: " + (gn(cl, "distribuido_por") or "—"))
     L.append(f"- Peso neto · Lote · Caducidad: {gn(cl, 'fecha_duracion_minima') or '—'}")
     L.append(f"- {ETIQUETA_ECOEMBES}")
@@ -1453,10 +2001,21 @@ def fmt_docs_internos(d: dict) -> list[str]:
                 continue
             nombre = mat.get("denominacion_navision", mat.get("ingrediente", mat.get("descripcion_navision", mat.get("denominacion", ""))))
             ref = mat.get("codigo_referencia", mat.get("referencia_navision", ""))
+            # "PENDIENTE_PROVEEDOR"/"NUEVO" no son referencias: son el juicio de
+            # homologación que el agente no puede emitir sin ERP. Se descartan
+            # para no repetir en la columna de código lo que ya dice el estado.
+            if str(ref).strip().upper() in ("PENDIENTE_PROVEEDOR", "NUEVO",
+                                            "NO_DISPONIBLE", "EN_EVALUACION", ""):
+                ref = ""
             nombre_str = f"{nombre} ({ref})" if ref else nombre
             cant_ud = mat.get("cantidad_por_unidad_mg", mat.get("cantidad_por_unidad", mat.get("cantidad_ud", "")))
             cant_lote = mat.get("cantidad_lote_con_merma_g", mat.get("cantidad_lote_g", mat.get("cantidad_por_lote", mat.get("cantidad_lote", ""))))
-            estado = mat.get("estado_material", mat.get("estado", mat.get("estado_homologacion", "")))
+            # El estado de homologación vive en NAVISION y el pipeline no está
+            # conectado al ERP (fase de discovery), así que el agente lo estaba
+            # infiriendo del nombre del material. Xavier marcó cinco filas como
+            # ya homologadas (2026-07-27): no las damos por evaluadas, las
+            # dejamos explícitamente pendientes de verificación contra el ERP.
+            estado = "Pendiente de verificación en NAVISION"
             rows.append([
                 _val(mat.get("orden_incorporacion", mat.get("orden", mat.get("numero_linea", "")))),
                 nombre_str,
@@ -1546,13 +2105,28 @@ def fmt_docs_internos(d: dict) -> list[str]:
         items = alertas if isinstance(alertas, list) else alertas.get("alertas", list(alertas.values()) if isinstance(alertas, dict) else [])
         if items:
             lines.append(_section("Alertas NAVISION", 3))
+            # Sin conexión al ERP estas alertas son hipótesis, no incidencias
+            # reales: se derivaban de estados de homologación inferidos.
+            lines.append(
+                "Las alertas siguientes se derivan únicamente de la fórmula, sin consultar "
+                "NAVISION. Son puntos a contrastar, no incidencias confirmadas: la "
+                "verificación real requiere la conexión al ERP prevista para la fase 2.")
+            lines.append("")
             for a in items:
                 if isinstance(a, dict):
                     mat_a = a.get("material", a.get("ingrediente", ""))
+                    # El estado de homologación es el mismo juicio que el agente no
+                    # puede emitir sin ERP: aquí también se descarta en vez de
+                    # repetirlo como si fuera un dato verificado (Xavier, 2026-07-27).
                     estado_a = a.get("estado", "")
+                    if str(estado_a).strip().upper() in (
+                            "PENDIENTE_PROVEEDOR", "EN_EVALUACION", "NUEVO",
+                            "NO_DISPONIBLE", "PENDIENTE_VERIFICACION_ERP", ""):
+                        estado_a = ""
                     accion_a = a.get("accion", a.get("descripcion", ""))
                     prior_a = a.get("prioridad", "")
-                    lines.append(f"- **{mat_a}** _{estado_a}_ (prioridad: {prior_a}) — {accion_a}")
+                    estado_str = f" _{estado_a}_" if estado_a else ""
+                    lines.append(f"- **{mat_a}**{estado_str} (prioridad: {prior_a}) — {accion_a}")
                 elif isinstance(a, str):
                     lines.append(f"- {a}")
             lines.append("")
@@ -1810,6 +2384,26 @@ def fmt_portfolio(d: dict) -> list[str]:
 
 # ── Compositor principal ────────────────────────────────────────────────────
 
+# Rangos CJK (kana, han unificado, hangul). Un informe regulatorio en español
+# nunca los contiene: si aparecen es fuga de idioma del LLM, y llegan al PDF
+# como cuadrados negros porque la fuente Helvetica no tiene esos glifos.
+# Pasó en run_56 (agentes 6 y 7): "sin esfuerzo de撕裂", "complemento en包装".
+_CJK_RE = re.compile(r"[぀-ヿ㐀-鿿가-힯]+")
+
+
+def _detectar_fuga_idioma(texto: str, ventana: int = 40) -> list[str]:
+    """Fragmentos del informe que contienen caracteres CJK, con su contexto.
+
+    No los corrige: sustituir texto que no entendemos en un documento
+    regulatorio sería peor que señalarlo. La corrección es rehacer la salida
+    del agente que los generó."""
+    out = []
+    for m in _CJK_RE.finditer(texto):
+        ini = max(0, m.start() - ventana)
+        out.append(texto[ini:m.end() + ventana].replace("\n", " ").strip())
+    return out
+
+
 def compose_informe(formula: str, path: str, agent_models: dict | None = None,
                     timings: dict | None = None, total_elapsed: float = 0,
                     output_dir: str | None = None) -> None:
@@ -1902,7 +2496,7 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
     if kic or reg or ft:
         lines.append(_section("1. Fórmula Cuantitativa", 2))
         if kic:
-            lines += fmt_tabla_maestra(kic, reg, ft, canonica=canonica)
+            lines += fmt_tabla_maestra(kic, reg, ft, canonica=canonica, doc=doc)
             lines += fmt_analisis_ingredientes(kic)
         if reg:
             lines += fmt_validacion_regulatoria(reg)
@@ -2023,6 +2617,14 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
             )
 
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    texto = "\n".join(lines)
     with open(path, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines))
+        f.write(texto)
     print(f"📋 Informe compuesto guardado en {path}")
+
+    fugas = _detectar_fuga_idioma(texto)
+    if fugas:
+        print(f"⚠️  FUGA DE IDIOMA: {len(fugas)} fragmento(s) CJK en el informe. "
+              "Corrige el JSON del agente y recompón antes de entregar:")
+        for frag in fugas:
+            print(f"    · {frag}")
