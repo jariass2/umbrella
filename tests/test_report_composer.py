@@ -507,6 +507,18 @@ def test_raw_mg_incoherente_no_se_reescribe():
     assert _raw_mg_preciso({"active_mg": 16.0, "pct_active": "35.6", "raw_mg": 127.5}) == 127.5
 
 
+def test_raw_mg_carga_no_declarada_no_se_reescribe():
+    """La colina del #13: 150 mg de activo al 40 % dan 375 mg teóricos, pero la
+    ficha declara 372,12 porque la materia prima lleva un 1 % de sílice. La
+    diferencia (2,88 mg) no la explica el redondeo a dos decimales del PDF, así
+    que manda la ficha: el informe publicaba 375 en la Tabla Cuantitativa y
+    372,12 en el escandallo, dos cifras del mismo ingrediente."""
+    from pipeline.report_composer import _raw_mg_preciso
+    assert _raw_mg_preciso(
+        {"active_mg": 150.0, "pct_active": "40", "raw_mg": 372.12}
+    ) == 372.12
+
+
 def test_incoherencia_pct_activo_potasio():
     """El fallo del #13: la ficha traía 77,3 % (pureza del citrato) y el nombre
     declara 35,6 % K. Multiplicar por el primero publicó 98,56 mg y 4,9 % VRN

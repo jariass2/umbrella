@@ -240,7 +240,15 @@ def _activo_desde_raw(raw_mg, pct_active) -> float | None:
 
 # Umbral de discrepancia por encima del cual dejamos de tratar un desajuste como
 # redondeo del PDF y lo tratamos como dato de origen incoherente.
-_TOL_COHERENCIA = 0.01  # 1 %
+_TOL_COHERENCIA = 0.01  # 1 % — comparación de PORCENTAJES de estandarización
+
+# Tolerancia para la materia prima, en la unidad del ingrediente. NO es relativa:
+# lo único que legitima sustituir el dato de la ficha por el recalculado es el
+# redondeo a 2 decimales del PDF, que como mucho desplaza 0,005 mg. Un 1 %
+# relativo dejaba pasar 2,88 mg en la colina del #13 (ficha 372,12 / recalculado
+# 375,00: la diferencia es la sílice al 1 %, no un redondeo) y publicaba 375 en la
+# Tabla Cuantitativa mientras el escandallo del mismo informe decía 372,12.
+_TOL_RAW_MG_ABS = 0.01
 
 
 def _pct_active_num(canon_i: dict | None):
@@ -263,8 +271,10 @@ def _raw_mg_preciso(canon_i: dict | None, nombre: str = ""):
     la imprimía con 6, fingiendo una precisión que no tenía: el cobre salía como
     '7.140000 mg' cuando 1 mg al 14 % son 7,142857 mg (Xavier, 2026-08-25).
     Recalculamos desde el activo, que sí es autoritativo. Si el valor recalculado
-    se aleja más de `_TOL_COHERENCIA` del que trae la ficha, la diferencia ya no
-    es redondeo: devolvemos el de la ficha sin tocar y que lo cace la coherencia.
+    se aleja de la ficha más de `_TOL_RAW_MG_ABS` —el margen que puede explicar el
+    redondeo a 2 decimales del PDF— la diferencia ya no es redondeo sino materia
+    real que el activo no recoge (cargas, antiaglomerantes): devolvemos el de la
+    ficha sin tocar y que lo cace la coherencia.
     """
     if not canon_i:
         return None
@@ -278,7 +288,7 @@ def _raw_mg_preciso(canon_i: dict | None, nombre: str = ""):
     esperado = activo / pct * 100.0
     if not isinstance(raw, (int, float)) or not raw:
         return esperado
-    return esperado if abs(esperado - raw) / raw <= _TOL_COHERENCIA else raw
+    return esperado if abs(esperado - raw) <= _TOL_RAW_MG_ABS else raw
 
 
 def incoherencias_fila(nombre: str, canon_i: dict | None) -> list[str]:
