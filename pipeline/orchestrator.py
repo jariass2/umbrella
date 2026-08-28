@@ -227,8 +227,18 @@ def _enriquecer_formula(F: str, output_dir: str) -> str:
         mg = _fmt_mg(ing["active_mg"])
         if not mg:
             continue
-        activo = ing.get("active_name") or ing.get("name", "")
-        filas.append(f"- {ing.get('name','')} → {mg} {ing.get('unit','mg')} de {activo}")
+        activo = ing.get("active_name")
+        if activo:
+            filas.append(f"- {ing.get('name','')} → {mg} {ing.get('unit','mg')} de {activo}")
+        else:
+            # Sin `active_name` no hay a qué sustancia atribuir la cifra. Repetir
+            # el nombre de la materia prima (que suele llevar el % de titulación
+            # incrustado, p.ej. "... 40% Choline") invita al agente a aplicar ese
+            # porcentaje OTRA VEZ sobre una cifra que YA es el activo. Se explicita.
+            filas.append(
+                f"- {ing.get('name','')} → {mg} {ing.get('unit','mg')} de activo "
+                f"(cifra YA estandarizada; NO reaplicar el % del nombre)"
+            )
     if not filas:
         return F
 
@@ -238,7 +248,10 @@ def _enriquecer_formula(F: str, output_dir: str) -> str:
         "---\n"
         "DOSIS DE ACTIVO APORTADO POR TOMA (dato autoritativo de la ficha de "
         "fórmula). Usa SIEMPRE esta dosis de activo para dosis eficaz, %VRN, "
-        "claims, etiqueta y cualquier comunicación o análisis. La dosis de "
+        "claims, etiqueta y cualquier comunicación o análisis. Cada cifra de "
+        "esta lista ES YA la sustancia activa estandarizada: NO le apliques "
+        "ningún porcentaje de titulación, aunque aparezca en el nombre de la "
+        "materia prima. La dosis de "
         "materia prima/extracto que aparece arriba es CONFIDENCIAL y solo debe "
         "usarse en documentación interna de producción y control de calidad: "
         "NO la cites ni la reproduzcas en el análisis de ingredientes, la "
