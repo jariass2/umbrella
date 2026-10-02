@@ -38,11 +38,30 @@ def _to_float(s: str) -> float:
     return float(s.replace(".", "").replace(",", "."))
 
 
+# pdfium no emite salto de línea entre algunas filas de la tabla: la última columna
+# (L.M. Kg, siempre 6 decimales) queda pegada al código de la fila siguiente
+# ("0,0013461163 Magnesium…"). Se reinserta el salto tras esos 6 decimales.
+_GLUED_ROW = re.compile(r"(,\d{6})(\d{3,6}\s+[^\d\s])")
+
+
+def _split_glued_rows(text: str) -> str:
+    return _GLUED_ROW.sub(r"\1\n\2", text)
+
+
 def _extract_text(source) -> str:
-    """Texto plano del PDF. `source` puede ser una ruta o bytes."""
+    """Texto plano del PDF. `source` puede ser una ruta o bytes.
+
+    Itera TODAS las páginas: el parser asume que la tabla de la FT cabe en una
+    página, pero en fórmulas largas la tabla cruza varias páginas y perderíamos
+    filas si solo leyéramos `pdf[0]`. Concatenamos con `"\n" para que cada página
+    aporte líneas independientes al `splitlines()` posterior (pegar con "" fusionaría
+    la última línea de una página con la primera de la siguiente si alguna acabara
+    sin salto de línea, formando filas mixtas que no matchean `_ROW`).
+    """
     pdf = pdfium.PdfDocument(source)
     try:
-        return pdf[0].get_textpage().get_text_range()
+        parts = [page.get_textpage().get_text_range() for page in pdf]
+        return _split_glued_rows("\n".join(parts))
     finally:
         pdf.close()
 
