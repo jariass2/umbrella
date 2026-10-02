@@ -14,6 +14,7 @@ from queue import Queue
 from flask import Flask, render_template, request, redirect, url_for, jsonify, make_response
 from markupsafe import Markup
 
+from pipeline.pricing import agent_cost_usd
 from dashboard.api.runner import AGENT_ORDER, run_pipeline
 from dashboard.api.store import (
     init_db, create_run, update_run_status, save_agent_result,
@@ -1740,6 +1741,76 @@ def download_report(run_id):
             story.append(KeepTogether(section_header + content[:3]))
             story.extend(content[3:])
             story.append(Spacer(1, 10 * mm))
+
+    # Anexo de coste: modelo, tokens y coste por agente a partir de `_trazabilidad`.
+    cost_rows = []
+    total_in = total_out = 0
+    total_cost = 0.0
+    unpriced = False
+    for agent in AGENT_ORDER:
+        data = results.get(agent)
+        trace = data.get("_trazabilidad") if isinstance(data, dict) else None
+        if not trace:
+            continue
+        t_in = int(trace.get("input_tokens") or 0)
+        t_out = int(trace.get("output_tokens") or 0)
+        cost = agent_cost_usd(trace.get("model"), t_in, t_out)
+        total_in += t_in
+        total_out += t_out
+        if cost is None:
+            unpriced = True
+        else:
+            total_cost += cost
+        cost_rows.append([
+            agent,
+            trace.get("model") or "—",
+            f"{t_in:,}".replace(",", "."),
+            f"{t_out:,}".replace(",", "."),
+            f"{float(trace.get('duration_s') or 0):.0f} s",
+            "—" if cost is None else f"{cost:.3f} $".replace(".", ","),
+        ])
+
+    if cost_rows:
+        story.append(PageBreak())
+        story.append(Paragraph("Anexo — Coste de ejecución por agente", h1_s))
+        story.append(Paragraph(
+            "Esta tabla recoge, para cada agente del análisis, el modelo que lo ejecutó, "
+            "los tokens consumidos y el coste estimado según las tarifas de OpenRouter. "
+            "Los tokens corresponden al intento que produjo el resultado; los reintentos "
+            "previos, si los hubo, no se incluyen.", body_s))
+        header = ["Agente", "Modelo", "Tokens entrada", "Tokens salida", "Tiempo", "Coste"]
+        total_row = [
+            "Total", "",
+            f"{total_in:,}".replace(",", "."),
+            f"{total_out:,}".replace(",", "."),
+            "",
+            f"{total_cost:.2f} $".replace(".", ",") + (" *" if unpriced else ""),
+        ]
+        table_data = (
+            [[Paragraph(h, tbl_hd_inv_s) for h in header]]
+            + [[Paragraph(_esc(c), tbl_bd_s) for c in row] for row in cost_rows]
+            + [[Paragraph(f"<b>{_esc(c)}</b>", tbl_bd_s) for c in total_row]]
+        )
+        cost_table = Table(table_data, colWidths=[30*mm, 54*mm, 22*mm, 22*mm, 16*mm, 18*mm], repeatRows=1)
+        cost_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), NAVY),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -2), [HexColor("#FFFFFF"), ZEBRA]),
+            ("LINEABOVE", (0, -1), (-1, -1), 0.8, NAVY),
+            ("BOX", (0, 0), (-1, -1), 0.4, BORDER),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        story.append(Spacer(1, 3 * mm))
+        story.append(cost_table)
+        story.append(Spacer(1, 4 * mm))
+        nota = (f"El coste total estimado del análisis es de "
+                f"{total_cost:.2f} $".replace(".", ",")
+                + f" para {total_in + total_out:,} tokens.".replace(",", "."))
+        if unpriced:
+            nota += (" * Algún modelo no figura en la tabla de precios "
+                     "(pipeline/pricing.py) y su coste no se ha sumado.")
+        story.append(Paragraph(nota, body_s))
 
     doc.build(story, onFirstPage=_first_page, onLaterPages=_later_pages)
     pdf_bytes = buf.getvalue()
