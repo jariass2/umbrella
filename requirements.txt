@@ -6,7 +6,7 @@ agno>=2.6.21,<3.0
 openai>=2.0,<3.0
 
 # Search tools
-duckduckgo-search>=8.1,<9.0
+ddgs
 tavily-python>=0.7,<1.0
 
 # Pipeline core
