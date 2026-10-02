@@ -104,8 +104,11 @@ def _get_semaphore(base_url: str | None) -> threading.Semaphore:
 #   1 reintento rápido — el LLM a veces se recupera al segundo intento.
 TRANSIENT_BUDGET = 3
 TRANSIENT_BASE_DELAY = 5  # segundos: 5, 10, 20
-DETERMINISTIC_BUDGET = 1
+DETERMINISTIC_BUDGET = 2
 DETERMINISTIC_DELAY = 1   # segundos: reintento inmediato
+
+# Rangos CJK: han (chino/kanji), hiragana, katakana, hangul.
+_CJK_RE = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]")
 
 _DETERMINISTIC_TYPES = {
     "JSONDecodeError",
@@ -461,6 +464,7 @@ def run_agent(agent: Agent, prompt: str, label: str,
     deterministic_count = 0
     attempt = 0
     max_intentos = 1 + TRANSIENT_BUDGET + DETERMINISTIC_BUDGET  # cota superior
+    prompt_base = prompt
 
     while attempt < max_intentos:
         attempt += 1
@@ -524,6 +528,17 @@ def run_agent(agent: Agent, prompt: str, label: str,
             elapsed = time.time() - t0
             monitor_agent_end(label, success=True, duration_s=elapsed)
 
+            # Un carácter CJK en la salida es texto ilegible publicado dentro de
+            # un entregable al cliente. En el run_59 llegaron cuatro al informe
+            # porque solo se detectaban al componer, cuando el agente ya no
+            # estaba. Aquí todavía se puede pedir la respuesta otra vez.
+            _fuga = _CJK_RE.search(json.dumps(data, ensure_ascii=False))
+            if _fuga:
+                raise ValueError(
+                    f"Fuga de idioma: carácter no latino «{_fuga.group(0)}» en la "
+                    "respuesta. Reescribe la respuesta íntegra en castellano."
+                )
+
             # Validación defensiva: avisa de drift contra el schema Pydantic
             # pero NO aborta — el `data` original se entrega al siguiente agente.
             _validate_defensively(data, output_model, label)
@@ -580,6 +595,15 @@ def run_agent(agent: Agent, prompt: str, label: str,
                 monitor_agent_retry(label, attempt + 1, max_intentos, delay)
                 time.sleep(delay)
             else:
+                if "Fuga de idioma" in str(e):
+                    # El reintento repetía el mismo prompt y el modelo reincidía:
+                    # se le dice qué carácter sobró y que reescriba sin él.
+                    prompt = (
+                        f"{prompt_base}\n\nCORRECCIÓN: tu respuesta anterior se "
+                        f"rechazó porque contenía caracteres chinos/japoneses/coreanos "
+                        f"({e}). Devuelve el JSON completo otra vez, solo en castellano "
+                        "y con caracteres latinos."
+                    )
                 if deterministic_count >= DETERMINISTIC_BUDGET:
                     print(f"❌ Reintento determinista agotado ({type(e).__name__}). Abortando sin más backoff.")
                     break
@@ -770,6 +794,14 @@ def ctx_etiqueta(results: dict) -> str:
 
 
 
+_REGLA_IDIOMA = (
+    "\n\nIDIOMA: responde íntegramente en castellano. Ni una sola palabra, "
+    "carácter o abreviatura en chino, japonés o coreano en NINGÚN campo del "
+    "JSON, tampoco intercalada dentro de una frase en castellano. Estos textos "
+    "se publican tal cual en un informe que lee el cliente."
+)
+
+
 def _run_step(key: str, label: str, env_prefix: int,
                instructions: str, prompt: str,
                started_event: threading.Event | None = None):
@@ -783,7 +815,9 @@ def _run_step(key: str, label: str, env_prefix: int,
         instructions = instructions.replace(
             "{search_max}", str(get_search_max_queries(prefix))
         )
-    agent.instructions = instructions
+    # Se añade a los nueve agentes desde un único sitio: la fuga de idioma no fue
+    # de un agente concreto, apareció en cuatro distintos en el mismo run.
+    agent.instructions = instructions + _REGLA_IDIOMA
     t0 = time.time()
     output_model = AGENT_OUTPUT_MODELS.get(key)
     prompt_version = AGENT_PROMPT_VERSIONS.get(key)
