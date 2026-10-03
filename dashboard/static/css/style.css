@@ -953,3 +953,31 @@ body {
     padding: 16px;
   }
 }
+
+
+/* ── Avisos de control ────────────────────────────────────────────── */
+.avisos-panel {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--text-muted);
+  border-radius: 6px;
+  background: var(--surface-2);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+.avisos-panel.avisos-alta { border-left-color: #DC2626; background: #FEF2F2; }
+.avisos-panel.avisos-ok   { border-left-color: var(--done); background: var(--done-bg); }
+.avisos-head {
+  font-size: 12px; font-weight: 600; color: var(--text);
+  letter-spacing: 0.2px; margin-bottom: 6px;
+}
+.avisos-nota { font-size: 11px; color: var(--text-2); margin: 0 0 8px; line-height: 1.5; }
+.avisos-lista { list-style: none; margin: 0; padding: 0; }
+.avisos-lista .aviso {
+  font-size: 11px; line-height: 1.5; color: var(--text-2);
+  padding: 6px 0; border-top: 1px solid var(--border-dim);
+}
+.aviso-origen {
+  display: inline-block; font-weight: 600; color: var(--text);
+  margin-right: 6px;
+}
+.aviso.sev-alta .aviso-origen { color: #DC2626; }

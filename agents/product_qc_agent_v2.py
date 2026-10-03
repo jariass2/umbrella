@@ -1,6 +1,12 @@
 """
-QC Interno Agent v2 — Agente 08
+QC de Producto v2 — Agente 08
 Pipeline multi-agente PAYMSA / qaizn
+
+Este agente hace control de calidad DEL PRODUCTO, no de la salida de los
+demás agentes. El nombre corto «QC» hacía pensar que alguien revisaba el
+informe; nadie lo hacía. Esa función la cubren los cruces deterministas de
+`report_composer.py` (`cruces_entre_agentes`), que comparan cifras en Python
+en lugar de pedirle a un décimo LLM que revise a los otros nueve.
 
 Define el plan de control de calidad completo:
   - Especificaciones analíticas (FTIR, granulometría, densidad, pH, aspecto)
@@ -99,14 +105,18 @@ class Fase6EnsayosAnaliticosAdicionales(BaseModel):
     cuantificacion_activos: list[dict] = Field(default_factory=list)
     uniformidad_contenido: dict = Field(default_factory=dict)
     humedad: dict = Field(default_factory=dict)
-    metales_pesados: dict = Field(default_factory=dict)
+    # Una fila por metal (Pb, Cd, Hg, As…) o un bloque único; el composer
+    # pinta las dos formas.
+    metales_pesados: list[dict] | dict = Field(default_factory=dict)
     microbiologia: dict = Field(default_factory=dict)
 
 
 class VidaUtilEstimadaQC(BaseModel):
     model_config = {"extra": "allow"}
     objetivo_meses: Optional[int] = None
-    alcanzable: Optional[bool] = None
+    # Sí/no, o una respuesta condicionada («Condicional: no demostrable a
+    # priori», run_70), que es honesta antes de tener datos de estabilidad.
+    alcanzable: Optional[bool | str] = None
     condiciones_para_alcanzabilidad: str = ""
 
 

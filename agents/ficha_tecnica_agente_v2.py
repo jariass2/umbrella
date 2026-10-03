@@ -84,8 +84,9 @@ class Fase3InformacionNutricional(BaseModel):
 
 class Fase4Alergenos(BaseModel):
     model_config = {"extra": "allow"}
-    presentes: str = ""
-    trazas: str = ""
+    # El prompt pide listas; se acepta también texto por compatibilidad.
+    presentes: list[str] | str = ""
+    trazas: list[str] | str = ""
     declaracion_etiqueta: str = ""
 
 
@@ -98,7 +99,7 @@ class Fase5EspecificacionesTecnicas(BaseModel):
 
 class VidaUtilEstimada(BaseModel):
     model_config = {"extra": "allow"}
-    meses: str = ""
+    meses: int | str = ""  # el ejemplo del prompt da un número (24)
     justificacion: str = ""
 
 
@@ -162,7 +163,10 @@ class FichaTecnica(BaseModel):
     fase_6_conservacion_vida_util: Fase6ConservacionVidaUtil = Field(default_factory=Fase6ConservacionVidaUtil)
     fase_7_modo_empleo_advertencias: Fase7ModoEmpleoAdvertencias = Field(default_factory=Fase7ModoEmpleoAdvertencias)
     fase_8_marco_normativo: Fase8MarcoNormativo = Field(default_factory=Fase8MarcoNormativo)
-    sugerencias_mejora_ficha_kic: dict = Field(default_factory=dict)
+    # El campo existía en el schema y el prompt nunca lo pedía: ningún run lo
+    # ha devuelto y cada ejecución levantaba un aviso por su ausencia (run_67,
+    # run_68). Ahora el prompt lo pide como lista; se acepta dict por runs viejos.
+    sugerencias_mejora_ficha_kic: list[dict] | dict = Field(default_factory=list)
     fuentes_consultadas: list[FuenteConsultada] = Field(default_factory=list)
     metadata: dict = Field(default_factory=lambda: {
         "version": "2.0",
@@ -172,7 +176,7 @@ class FichaTecnica(BaseModel):
 
 # ── Instructions ─────────────────────────────────────────────────────
 
-PROMPT_VERSION = "2.0.0"
+PROMPT_VERSION = "2.1.0"
 
 FICHA_TECNICA_INSTRUCTIONS = """\
 # ROL
@@ -289,6 +293,16 @@ Lista completa de normativas que aplican al producto. Como mínimo:
 - Reg. (CE) 1924/2006 (declaraciones nutricionales y de salud)
 - Añadir otras según tipología de ingredientes (aditivos, aromas, Novel Food)
 
+## FASE 9 — Sugerencias de mejora de la ficha KIC
+Al montar la ficha detectas qué datos de entrada (fórmula, ficha KIC, fichas de \
+proveedor) faltan, son ambiguos o se contradicen. Lista aquí cada uno con la acción \
+concreta para cerrarlo: dato que pedir al cliente o al proveedor, unidad que aclarar, \
+forma química sin especificar, %VRN que no cuadra, especificación analítica pendiente.
+- Entre 1 y 6 entradas, de mayor a menor impacto en la ficha.
+- Nunca vacía: si la entrada es completa, añade una única entrada que lo diga y \
+  que indique qué conviene confirmar con el primer análisis de lote.
+- No repitas lo que ya es una advertencia de la FASE 7.
+
 # USO DE WEB_SEARCH
 NO uses web_search. Este agente no tiene acceso a herramientas externas.
 La mayor parte de los datos los tienes en tu conocimiento o en el contexto upstream (KIC \
@@ -383,6 +397,9 @@ Usa EXACTAMENTE estas claves de nivel superior:
     "normativa_especifica_por_ingrediente": [],
     "requisitos_notificacion": ["Notificación AESAN previa a comercialización"]
   },
+  "sugerencias_mejora_ficha_kic": [
+    {"sugerencia": "dato que falta o no cuadra", "detalle": "por qué afecta a la ficha", "accion_sugerida": "qué pedir o comprobar, y a quién"}
+  ],
   "fuentes_consultadas": [
     {"id": 1, "fuente": "nombre", "url": "", "tipo": "web_search | normativa | conocimiento_experto"}
   ],
@@ -412,4 +429,6 @@ IMPORTANTE: Usa SIEMPRE las claves exactas indicadas arriba. No uses nombres alt
    la clave "fuentes_consultadas" a nivel raíz (no dentro de fases) con la lista completa: \
    [{"id": N, "fuente": "nombre descriptivo", "url": "https://...", "tipo": "web_search|normativa|conocimiento_experto"}]. \
    Si no consultaste ninguna fuente externa, incluye igualmente la clave con array vacío [].
+9. Incluye SIEMPRE la clave "sugerencias_mejora_ficha_kic" a nivel raíz, con al menos \
+   una entrada (ver FASE 9).
 """

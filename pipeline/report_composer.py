@@ -13,6 +13,9 @@ import unicodedata
 from collections import OrderedDict
 from datetime import date
 
+from pipeline import avisos as _avisos_mod
+from pipeline.pricing import PRICES_USD_PER_M
+
 SEMAFORO = {
     "PERMITIDO": "✅",
     "CONDICIONADO": "⚠️",
@@ -55,9 +58,14 @@ PRICING_PER_1M: list[tuple[str, float, float]] = [
 
 
 def _lookup_price(model_id: str) -> tuple[float, float]:
-    """Devuelve (precio_in, precio_out) por millón de tokens. (0, 0) si desconocido."""
+    """Devuelve (precio_in, precio_out) por millón de tokens. (0, 0) si desconocido.
+
+    Manda la tabla de `pipeline/pricing.py`, la que se mantiene al día; la lista
+    de arriba queda para los modelos antiguos de runs ya guardados."""
     if not model_id:
         return (0.0, 0.0)
+    if model_id in PRICES_USD_PER_M:
+        return PRICES_USD_PER_M[model_id]
     lower = model_id.lower()
     for key, p_in, p_out in PRICING_PER_1M:
         if key in lower:
@@ -68,9 +76,7 @@ def _lookup_price(model_id: str) -> tuple[float, float]:
 def _format_cost(usd: float) -> str:
     if usd == 0.0:
         return "—"
-    if usd < 0.001:
-        return f"${usd * 1000:.4f}m"
-    return f"${usd:.4f}"
+    return f"{usd:.3f} $".replace(".", ",")
 
 
 def _load(filename: str, output_dir: str) -> dict:
@@ -311,6 +317,16 @@ def incoherencias_fila(nombre: str, canon_i: dict | None) -> list[str]:
         return out
     pct_canon = _pct_active_num(canon_i)
     pct_nombre = _parse_pct_activo(nombre)
+    # Si la propia ficha escribe los dos porcentajes («Amaranthus Extract, 100%
+    # Extract; 9% Nitric Oxide (NO)», run_70), son dos niveles —materia prima y
+    # marcador de estandarización—, no un conflicto. El potasio del #13 sigue
+    # saltando: su 77,3 % no aparecía en el nombre de la ficha.
+    pcts_ficha = [float(p.replace(",", ".")) for p in
+                  re.findall(r"(\d+(?:[.,]\d+)?)\s*%", str(canon_i.get("name", "")))]
+    if pct_canon and pct_nombre and all(
+            any(abs(p - q) <= 1e-6 * max(q, 1) for p in pcts_ficha)
+            for q in (pct_canon, pct_nombre)):
+        return out
     if pct_canon and pct_nombre and abs(pct_canon - pct_nombre) / pct_nombre > _TOL_COHERENCIA:
         out.append(
             f"% de activo en conflicto: la ficha dice {pct_canon:g} % y el nombre "
@@ -397,13 +413,16 @@ _ING_SYN = {
     "gluconato": "gluconate", "malato": "malate", "fumarato": "fumarate",
     "calcio": "calcium", "potasio": "potassium", "magnesio": "magnesium",
     "levadura": "yeast", "boswelia": "boswellia",
+    # Elemento como sustantivo o como adjetivo: «bisglicinato cúprico» y
+    # «bisglicinato de cobre» son la misma sal (run_68).
+    "cobre": "copper", "cuprico": "copper", "molibdeno": "molybdenum",
 }
 
 # Ruido común a ambos lados que no discrimina ingredientes.
 _ING_STOP = {
     "vit", "vitamina", "vitamin", "extract", "extracto", "powder", "polvo", "cwd",
     "natural", "pure", "microencapsulated", "microencapsulado", "microencapsulada",
-    "de", "del", "la", "el", "en", "como", "soluble", "sodico", "sodium", "na",
+    "de", "del", "la", "el", "en", "como", "soluble", "sodico", "sodio", "sodium", "na",
     "acido", "acid", "oil", "aceite", "algae", "algas", "root", "s", "medium",
     "chain", "triglycerides", "triglyceridos", "cadena", "media", "complex",
     "flavour", "flavor", "sabor", "saborizantes", "deshidratada", "dehydrated",
@@ -608,6 +627,35 @@ def _alinear_canonica(kic_ings: list[dict], canonica: list[dict]) -> list[dict |
         if res[ki] is None and cj not in cused and score >= _UMBRAL_TOKENS:
             res[ki] = canonica[cj]
             cused.add(cj)
+
+    # (3) Lo que siga suelto, por dosis. KIC traduce los nombres al castellano
+    # («Aroma de limón» frente a «Lemon Flavour ST») y los tokens no se tocan:
+    # en run_72 solo casaban 7 de 21 filas, la guarda del 50 % tiraba la
+    # canónica entera y la tabla salía sin % ni ACTIVE mg. La dosis no depende
+    # del idioma: vale si coincide con la materia prima o con el activo de la
+    # fila. Entre varias con la misma dosis (500 mg de taurina y de tirosina)
+    # gana la más cercana en el orden de la ficha, que KIC suele conservar.
+    for ki, ing in enumerate(kic_ings):
+        if res[ki] is not None:
+            continue
+        if str(ing.get("dosis_formula_unidad") or "mg").strip().lower() != "mg":
+            continue
+        try:
+            dosis = float(str(ing.get("dosis_formula_mg")).replace(",", "."))
+        except (TypeError, ValueError):
+            continue
+        if dosis <= 0:
+            continue
+        cands = [
+            cj for cj, c in enumerate(canonica)
+            if cj not in cused and str(c.get("unit") or "mg").lower() == "mg"
+            and any(isinstance(c.get(f), (int, float)) and abs(c[f] - dosis) <= 0.01 * dosis
+                    for f in ("raw_mg", "active_mg"))
+        ]
+        if cands:
+            cj = min(cands, key=lambda j: abs(j - ki))
+            res[ki] = canonica[cj]
+            cused.add(cj)
     return res
 
 
@@ -663,6 +711,44 @@ def _anion_con_vrn(nombre: str, canon_i: dict | None) -> tuple[str, float, str] 
     return None
 
 
+# Sales cuyo activo en la ficha es la SAL, no la vitamina que fija el VRN.
+# Run_67 (MIX 260025): 0,9 mg de pantotenato cálcico daban un 15 % que el
+# producto no alcanza; como ácido pantoténico es el 13,8 %, por debajo del
+# umbral de «fuente de». Factores por peso molecular (equimolar para el folato).
+_FRACCION_VITAMINA = (
+    # (patrones que deben aparecer todos, clave, fracción, nota)
+    (("pantothen", "calc"), "vit:b5", 2 * 218.2 / 476.5, "como ácido pantoténico"),
+    (("pantoten", "calc"), "vit:b5", 2 * 218.2 / 476.5, "como ácido pantoténico"),
+    (("methylfolat", "calc"), "vit:b9", 441.4 / 497.5, "como folato"),
+    (("metilfolat", "calc"), "vit:b9", 441.4 / 497.5, "como folato"),
+)
+
+
+def _vitamina_desde_sal(key: str | None, canon_i: dict | None) -> tuple[float, str] | None:
+    """(fracción, nota) si el activo de la ficha es la sal de la vitamina."""
+    if not canon_i:
+        return None
+    s = _ing_ascii(f"{canon_i.get('active_name', '')} {canon_i.get('name', '')}")
+    for pats, k, frac, nota in _FRACCION_VITAMINA:
+        if k == key and all(p in s for p in pats):
+            return frac, nota
+    return None
+
+
+def _pct_vrn_calculado(nombre: str, kic_ings: list[dict],
+                       canon_alineada: list[dict | None]) -> float | None:
+    """%VRN calculado desde la ficha para el ingrediente que nombra Claims.
+    None si no es una vitamina/mineral con VRN o no se localiza en KIC."""
+    for ing, canon_i in zip(kic_ings, canon_alineada):
+        if _mismo_ingrediente(nombre, ing.get("ingrediente", "")):
+            key = (_ing_ident_key(ing.get("ingrediente", ""))
+                   or (canon_i and _ing_ident_key(canon_i.get("active_name", ""))))
+            if key not in _NRV or not canon_i:
+                return None
+            return _num_pct(_vrn_ingrediente(ing, canon_i))
+    return None
+
+
 def _vrn_ingrediente(ing: dict, canon_i: dict | None) -> str:
     """%VRN de una fila de la tabla de ingredientes, calculado con el VRN legal
     del Anexo XIII en vez del texto del LLM.
@@ -691,13 +777,763 @@ def _vrn_ingrediente(ing: dict, canon_i: dict | None) -> str:
     if key in _NRV and isinstance(mg, (int, float)):
         nrv_mg, _unidad = _NRV[key]
         if nrv_mg:
+            sal = _vitamina_desde_sal(key, canon_i)
+            if sal is not None:
+                frac, nota = sal
+                return f"{_fmt_pct_num(mg * frac / nrv_mg * 100)} ({nota})"
             return _fmt_pct_num(mg / nrv_mg * 100)
     return _fmt_pct(ing.get("porcentaje_nrv", ""))
 
 
+# ── Verificación cruzada entre agentes ───────────────────────────────────────
+#
+# Hasta el 2026-08-29 no existía ninguna: la cadena es KIC → Regulatorio →
+# Ficha Técnica → Claims → Etiqueta y cada agente ingiere el JSON del
+# anterior como si fuera verdad. Si KIC se inventa una dosis, Regulatorio la
+# valida, FT la tabula, Claims construye una alegación sobre ella y Etiqueta
+# la imprime. Cinco agentes coincidiendo no son cinco confirmaciones: son una
+# sola invención repetida cuatro veces, y esa unanimidad es exactamente lo
+# que la hace parecer fiable al revisarla.
+#
+# Estos cruces son deterministas a propósito. Un agente revisor añadiría otra
+# fuente de alucinación; comparar cifras en Python, no.
+
+# Diferencia relativa admisible al contrastar dos cifras que deberían ser la
+# misma dosis. Generosa: la ficha PDF redondea a 2 decimales y los agentes
+# reformatean, así que por debajo de esto la discrepancia es de presentación.
+_TOL_CRUCE_DOSIS = 0.02
+
+# %VRN: la diferencia que importa es la que cambia si hay claim o no (el umbral
+# «fuente de» está en el 15 %). Un punto porcentual absoluto deja pasar el
+# ruido de redondeo y caza el factor 6 del potasio del #13 (4,9 % vs 0,8 %).
+_TOL_CRUCE_VRN_PP = 1.0
+
+
+def _num_pct(v) -> float | None:
+    """Primer porcentaje de un texto ('50%' → 50.0; '0,8 %' → 0.8).
+
+    Devuelve None cuando no hay número, que es el caso de los 'N/A — sin VRN
+    en Anexo XIII' de la tabla nutricional: sin cifra no hay nada que cruzar.
+    """
+    m = re.search(r"(\d+(?:[.,]\d+)?)\s*%", str(v or ""))
+    if not m:
+        return None
+    try:
+        return float(m.group(1).replace(",", "."))
+    except ValueError:
+        return None
+
+
+def _mismo_ingrediente(a: str, b: str) -> bool:
+    """¿Dos nombres, escritos por dos agentes distintos, son el mismo
+    ingrediente? Reutiliza la identidad fuerte de vitaminas/minerales y, para
+    el resto, los tokens distintivos con el mismo umbral que la canónica."""
+    ka, kb = _ing_ident_key(a), _ing_ident_key(b)
+    if ka and kb:
+        return ka == kb
+    ta, tb = _ing_dist_tokens(a), _ing_dist_tokens(b)
+    if not ta or not tb:
+        return False
+    return _score_tokens(ta, tb) >= _UMBRAL_TOKENS
+
+
+def _buscar_por_nombre(nombre: str, items: list[dict], campo: str) -> dict | None:
+    """Primer item de `items` cuyo `campo` nombra al mismo ingrediente."""
+    for it in items:
+        if isinstance(it, dict) and _mismo_ingrediente(nombre, it.get(campo, "")):
+            return it
+    return None
+
+
+def _cruce_dosis_kic_canonica(kic_ings: list[dict],
+                              canon_alineada: list[dict | None]) -> list[dict]:
+    """La dosis que KIC declara debe ser una de las dos cifras de la ficha.
+
+    KIC unas veces extrae la materia prima y otras el activo — en el run_59 la
+    B6 sale como 0,7 mg, que es `active_mg` (la materia prima es 1,22). Las dos
+    lecturas son legítimas, así que solo se denuncia la tercera: una cifra que
+    no es ninguna de las dos y que, por tanto, no viene de la ficha.
+    """
+    out: list[dict] = []
+    for ing, canon_i in zip(kic_ings, canon_alineada):
+        if not canon_i:
+            continue
+        v = ing.get("dosis_formula_mg")
+        if not isinstance(v, (int, float)) or not v:
+            continue
+        # Pese al nombre del campo, KIC escribe la K2 o la B12 en µg y lo dice
+        # en `dosis_formula_unidad` (run_67: 11,25 µg leídos como 11,25 mg).
+        v *= _A_MG.get(str(ing.get("dosis_formula_unidad", "mg")).strip(), 1.0)
+        candidatas = [c for c in (canon_i.get("raw_mg"), canon_i.get("active_mg"))
+                      if isinstance(c, (int, float)) and c]
+        if not candidatas:
+            continue
+        if any(abs(v - c) / c <= _TOL_CRUCE_DOSIS for c in candidatas):
+            continue
+        nombre = ing.get("ingrediente", "") or canon_i.get("name", "")
+        out.append({
+            "severidad": "alta",
+            "origen": "Cruce KIC ↔ ficha de fórmula",
+            "mensaje": (
+                f"**{nombre}** — KIC declara {v:g} mg, que no es ni la materia prima "
+                f"({canon_i.get('raw_mg', '—')}) ni el activo ({canon_i.get('active_mg', '—')}) "
+                f"de la ficha. La cifra no sale del dato de origen."
+            ),
+        })
+    return out
+
+
+def _cruce_claims_regulatorio(clm: dict, reg: dict) -> list[dict]:
+    """Un claim aplicado sobre un ingrediente que Regulatorio no da por bueno.
+
+    Claims y Regulatorio corren en ondas distintas sobre la misma fórmula y
+    hoy pueden contradecirse sin que nadie lo note: el informe publica el
+    dictamen y la alegación uno al lado del otro.
+    """
+    out: list[dict] = []
+    reg_ings = [i for i in reg.get("ingredientes", []) if isinstance(i, dict)]
+    if not reg_ings:
+        return out
+    parte_a = clm.get("parte_a_claims_regulatorios", {})
+    if not isinstance(parte_a, dict):
+        return out
+    for bloque in parte_a.get("claims_por_ingrediente", []) or []:
+        if not isinstance(bloque, dict):
+            continue
+        nombre = bloque.get("ingrediente", "")
+        reg_i = _buscar_por_nombre(nombre, reg_ings, "nombre")
+        if not reg_i:
+            continue
+        semaforo = str(reg_i.get("semaforo", ""))
+        if "❌" not in semaforo:
+            continue
+        aplicados = [c for c in (bloque.get("claims") or [])
+                     if isinstance(c, dict) and c.get("aplica_a_formula") is True]
+        if not aplicados:
+            continue
+        textos = "; ".join(
+            str(c.get("texto_traduccion_es") or c.get("texto_claim", ""))[:80]
+            for c in aplicados[:2])
+        out.append({
+            "severidad": "alta",
+            "origen": "Cruce Claims ↔ Regulatorio",
+            "mensaje": (
+                f"**{nombre}** — Claims aplica {len(aplicados)} alegación(es) "
+                f"({textos}) sobre un ingrediente que Regulatorio marca ❌: "
+                f"«{str(reg_i.get('dictamen', ''))[:160]}». Los dos no pueden tener razón."
+            ),
+        })
+    return out
+
+
+# El estado de hidratación no forma parte de la denominación legal del
+# ingrediente: la fórmula dice «Ácido cítrico anhidro» y la etiqueta declara
+# «Ácido cítrico (E 330, acidulante)», correctamente. Solo se retira al cruzar
+# con la etiqueta — en la ficha de fórmula distinguir el hidrato sí importa,
+# porque cambia la masa y con ella la dosis de activo.
+_CALIF_ESTADO = re.compile(
+    r"\b(?:anhidr[oa]s?|anhydrous|anh|"
+    r"(?:mono|di|tri|tetra|penta|hexa|hepta|deca)?hidrat(?:o|ad[oa])s?|"
+    r"(?:mono|di|tri|tetra|penta|hexa|hepta|deca)?hydrated?|"
+    r"\d*\s*h2o)\b\.?",
+    re.IGNORECASE,
+)
+
+
+def _trocear_lista(lista: str) -> list[str]:
+    """Trocea la lista de ingredientes de la etiqueta en entradas.
+
+    El separador cambia según quién redacte: unas etiquetas usan «;» y otras
+    «,». Con solo «;» una lista separada por comas quedaba como un único
+    segmento gigantesco, y el score de cualquier ingrediente se diluía contra
+    él: en run_57_v3 eso marcaba once ingredientes como ausentes de una lista
+    que los contenía casi todos.
+
+    Las comas DENTRO de un paréntesis no separan: «(L-Leucina, L-Isoleucina,
+    L-Valina en proporción 2:1:1)» es el desarrollo de un solo ingrediente.
+    """
+    partes: list[str] = []
+    buf: list[str] = []
+    prof = 0
+    for ch in lista:
+        if ch in "([":
+            prof += 1
+        elif ch in ")]":
+            prof = max(0, prof - 1)
+        if prof == 0 and ch in ";,.":
+            partes.append("".join(buf))
+            buf = []
+            continue
+        buf.append(ch)
+    partes.append("".join(buf))
+    out: list[str] = []
+    for p in partes:
+        out.extend(x for x in re.split(r"\s+y\s+", p) if x.strip())
+    return out
+
+
+def _sin_calificativo_estado(texto: str) -> str:
+    return _CALIF_ESTADO.sub(" ", texto or "")
+
+
+def _cruce_etiqueta_formula(etq: dict, kic_ings: list[dict],
+                            canonica: list[dict] | None) -> list[dict]:
+    """Todo ingrediente de la fórmula tiene que aparecer en la lista de la
+    etiqueta. La lista llega como texto libre (`fase_4_...` es un string), así
+    que se busca por tokens, no por igualdad.
+
+    La referencia son los nombres de KIC, no los de la ficha canónica: la ficha
+    del cliente viene en inglés («Caffeine Anh., 100%») y la etiqueta se redacta
+    en castellano («Cafeína anhidra»). Comparar entre idiomas marcaba como
+    ausentes dos tercios de la fórmula — un control que grita catorce veces en
+    un run limpio enseña a ignorar la sección entera.
+
+    Solo se comprueba en esta dirección. La inversa —algo en la etiqueta que no
+    está en la fórmula— exigiría trocear un texto con aromas, coadyuvantes y
+    notas al pie, y produciría más falsos positivos que hallazgos.
+    """
+    out: list[dict] = []
+    lista = etq.get("fase_4_lista_ingredientes_completa")
+    if not isinstance(lista, str) or len(lista) < 40:
+        return out
+    referencia = [i.get("ingrediente", "") for i in kic_ings]
+    if not referencia and canonica:
+        referencia = [c.get("name", "") for c in canonica]
+    # «E 202» y «E202» son el mismo aditivo; sin esto cada conservante
+    # declarado con espacio salía como no encontrado.
+    norm = lambda t: re.sub(r"\b([eE])\s+(\d{3})\b", r"\1\2", t or "")
+    lista_n = norm(lista)
+    segmentos = [seg for seg in _trocear_lista(lista_n) if seg.strip()]
+    tokens_seg = [_ing_dist_tokens(_sin_calificativo_estado(seg)) for seg in segmentos]
+    # Ratios de la etiqueta: «(L-Leucina, L-Isoleucina, L-Valina en proporción
+    # 2:1:1)» y «BCAAs (Leu:Iso:Val = 2:1:1)» son el mismo ingrediente escrito
+    # con la denominación reglamentaria en un lado y con el acrónimo comercial
+    # en el otro. Ningún token se repite; la proporción sí.
+    ratios_lista = set(re.findall(r"\d+:\d+(?::\d+)*", lista_n))
+    clave_lista = {_ing_ident_key(seg) for seg in segmentos}
+    ausentes = []
+    for nombre in referencia:
+        if not nombre:
+            continue
+        clave = _ing_ident_key(nombre)
+        if clave and clave in clave_lista:
+            continue
+        nombre_n = _sin_calificativo_estado(norm(nombre))
+        ratios = set(re.findall(r"\d+:\d+(?::\d+)*", nombre_n))
+        if ratios & ratios_lista:
+            continue
+        # El Reg. (UE) 1169/2011 (anexo VII, parte D) permite declarar los
+        # aromas con el genérico «aroma(s)»: en el run_69 los tres aromas de la
+        # fórmula salían como ausentes de una etiqueta que decía «aromas».
+        if (re.match(r"(?i)\s*aromas?\b", nombre_n)
+                and any(re.search(r"(?i)\baromas?\b", s) for s in segmentos)):
+            continue
+        # KIC añade al nombre el soporte y la marca comercial; la etiqueta
+        # declara solo la sustancia (run_70: «Ácido carmínico con maltodextrina
+        # de patata (Linicol IPHL20)» frente a «ácido carmínico (E 120)», y
+        # «Fase acuosa (agua)» frente a «Agua»). Se prueba también el nombre sin
+        # el soporte ni el paréntesis, y lo que va entre paréntesis.
+        sin_par = re.sub(r"\([^)]*\)", " ", nombre_n)
+        variantes = [nombre_n, re.split(r"(?i)\s+(?:con|sobre|en)\s+", sin_par)[0],
+                     *re.findall(r"\(([^)]*)\)", nombre_n)]
+        tks = [t for t in (_ing_dist_tokens(v) for v in variantes) if t]
+        if not tks:
+            continue
+        # Se compara contra cada entrada de la lista por separado, no contra el
+        # texto entero: un ingrediente con tres tokens no puede diluirse en un
+        # párrafo que además lleva notas al pie y alertas regulatorias.
+        if max((_score_tokens(tk, ts) for tk in tks for ts in tokens_seg),
+               default=0.0) >= _UMBRAL_TOKENS:
+            continue
+        ausentes.append(nombre)
+    if ausentes:
+        out.append({
+            "severidad": "media",
+            "origen": "Cruce Etiqueta ↔ fórmula",
+            "mensaje": (
+                f"{len(ausentes)} ingrediente(s) de la fórmula no se localizan por "
+                f"nombre en la lista de la etiqueta: {', '.join(ausentes[:8])}"
+                + (" …" if len(ausentes) > 8 else "")
+                + ". Puede ser una denominación distinta (un compuesto declarado "
+                  "por sus componentes, p. ej.) o una omisión: verificar antes de "
+                  "dar la etiqueta por completa."
+            ),
+        })
+    return out
+
+
+def _cruce_vrn_etiqueta(etq: dict, kic_ings: list[dict],
+                        canon_alineada: list[dict | None]) -> list[dict]:
+    """El %VRD que escribe Etiqueta contra el %VRN que calcula este compositor.
+
+    Es el fallo del #13 reproducido en otro agente: allí el informe publicó un
+    4,9 % de potasio donde el cálculo desde la ficha da 0,8 %, y la diferencia
+    decide si el claim se puede usar. Aquí la cifra autoritativa es la del
+    compositor, que sale de la ficha; la de Etiqueta la escribió un LLM.
+    """
+    out: list[dict] = []
+    tabla = etq.get("fase_3_tabla_nutricional_completa", {})
+    filas = tabla.get("filas", []) if isinstance(tabla, dict) else []
+    if not filas:
+        return out
+    # La etiqueta declara el nutriente, no la fuente: en el run_68 el magnesio
+    # venía de citrato y de bisglicinato, la fila decía 7,5 % (3,4 + 4) y cada
+    # fuente por separado saltaba como descuadre. Se suma por fila de etiqueta.
+    por_fila: dict[int, tuple[dict, list[str], float]] = {}
+    for ing, canon_i in zip(kic_ings, canon_alineada):
+        propio = _num_pct(_vrn_ingrediente(ing, canon_i))
+        if propio is None:
+            continue
+        nombre = ing.get("ingrediente", "")
+        fila = _buscar_por_nombre(nombre, [f for f in filas if isinstance(f, dict)],
+                                  "nutriente")
+        if not fila:
+            continue
+        _, nombres, suma = por_fila.get(id(fila), (fila, [], 0.0))
+        por_fila[id(fila)] = (fila, nombres + [nombre], suma + propio)
+    for fila, nombres, propio in por_fila.values():
+        ajeno = _num_pct(fila.get("porcentaje_vrd"))
+        if ajeno is None or abs(ajeno - propio) <= _TOL_CRUCE_VRN_PP:
+            continue
+        sujeto = (f"**{nombres[0]}**" if len(nombres) == 1 else
+                  f"**{fila.get('nutriente', '')}** ({' + '.join(nombres)})")
+        # Es alta si las dos cifras caen a distinto lado del 15 % (decide el
+        # claim) o si la etiqueta sale de la tolerancia de la guía UE de
+        # tolerancias para vitaminas y minerales en complementos (−20 %/+50 %;
+        # el 4,9 % frente a 0,8 % del #13). Dentro de ella y del mismo lado
+        # (run_69: B5 25 % frente a 22,9 %, la sal contada como vitamina) es
+        # una cifra de etiqueta que corregir.
+        cruza = (ajeno >= 15) != (propio >= 15)
+        fuera_tol = propio <= 0 or not (0.8 <= ajeno / propio <= 1.5)
+        if cruza:
+            consecuencia = ("El umbral de «fuente de» está en el 15 %: la "
+                            "diferencia decide si el claim es legal.")
+        elif fuera_tol:
+            consecuencia = ("La cifra de la etiqueta sale de la tolerancia "
+                            "admitida (−20 %/+50 %): hay que corregirla.")
+        else:
+            consecuencia = ("Las dos cifras quedan del mismo lado del 15 % y "
+                            "dentro de la tolerancia, así que el claim no cambia, "
+                            "pero la etiqueta debe declarar la cifra calculada.")
+        out.append({
+            "severidad": "alta" if cruza or fuera_tol else "media",
+            "origen": "Cruce Etiqueta ↔ %VRN calculado",
+            "mensaje": (
+                f"{sujeto} — la etiqueta declara {ajeno:g} % VRD y el cálculo "
+                f"desde la ficha da {round(propio, 1):g} %. {consecuencia}"
+            ),
+        })
+    return out
+
+
+# ── Volumen de toma: el denominador de todo mg/kg ──────────────────────
+
+_TOL_VOLUMEN = 0.02          # relativa; «~50 mL» y «50 mL» son lo mismo
+_TOL_NUTRI = 0.02            # relativa, entre la ficha técnica y la etiqueta
+_TOL_SUMA_FORMULA = 0.005    # relativa; la ficha redondea cada línea
+_DENSIDAD_MAX_LIQUIDO = 1.25  # g/mL; un jarabe azucarado no pasa de aquí
+
+
+_CONCENTRACION_ANTES = re.compile(r"(?:/|\b(?:por|per|cada)\s+)\s*$", re.IGNORECASE)
+
+
+def _volumenes_mL(texto: str) -> list[float]:
+    """Todos los volúmenes en mL que menciona un texto.
+
+    Se usa para comprobar que los agentes hablan del mismo envase. No es una
+    curiosidad de formato: el límite legal de un aditivo se expresa en mg/kg,
+    y el volumen de toma es el denominador. Equivocarlo mueve la cifra que
+    decide si el producto es conforme.
+    """
+    out = []
+    for m in re.finditer(r"(\d+(?:[.,]\d+)?)\s*m[Ll]\b", texto or ""):
+        # «mg/100 mL» o «por 100 mL» es una concentración, no un envase: en el
+        # run_72 la advertencia de cafeína («con el contenido en mg/100 mL»)
+        # dio un volumen de toma de 100 mL donde Regulatorio decía 50 g.
+        if _CONCENTRACION_ANTES.search((texto or "")[max(0, m.start() - 12):m.start()]):
+            continue
+        try:
+            v = float(m.group(1).replace(",", "."))
+        except ValueError:
+            continue
+        # Por debajo de 5 mL no es un envase de shot, es una gota de aroma.
+        if 5 <= v <= 2000:
+            out.append(v)
+    return out
+
+
+# «Disolver 55 g de polvo en 400-500 mL de agua»: la toma son los 55 g, no
+# el agua de reconstitución. En el run_66 los 500 mL se tomaron por la toma
+# y saltaron dos alarmas falsas (volumen y tabla nutricional).
+_POLVO_DISUELTO = re.compile(
+    r"(\d+(?:[.,]\d+)?)\s*g\b[^.;]{0,60}?(?:disuel|disolv|dilu|reconstitu|dissolv)"
+    r"|(?:disuel|disolv|dilu|reconstitu|dissolv)\w*\s+(\d+(?:[.,]\d+)?)\s*g\b",
+    re.IGNORECASE)
+
+
+def _toma_polvo_g(texto: str) -> float | None:
+    """Gramos de polvo por toma si el texto describe una reconstitución."""
+    m = _POLVO_DISUELTO.search(texto or "")
+    if not m:
+        return None
+    try:
+        return float((m.group(1) or m.group(2)).replace(",", "."))
+    except ValueError:
+        return None
+
+
+# «Disolver cada toma en 200 mL de fase acuosa» sin gramos al lado (run_67,
+# Regulatorio): ese volumen es el agua, no la toma, y no se compara.
+_AGUA_RECONSTITUCION = re.compile(
+    r"(?:disuel|disolv|dilu|reconstitu|dissolv)\w*[^.;]{0,60}?"
+    r"\d+(?:[.,]\d+)?(?:\s*[-–]\s*\d+(?:[.,]\d+)?)?\s*m[Ll]\b",
+    re.IGNORECASE)
+
+
+def _volumen_declarado(*textos: str) -> float | None:
+    """El volumen de toma más repetido entre los textos dados.
+
+    En un polvo que se disuelve, la toma son los gramos de polvo (g ≈ mL,
+    la misma equivalencia que usa la suma de la fórmula canónica), y el agua
+    de reconstitución no cuenta como volumen de toma.
+    """
+    vals: list[float] = []
+    for t in textos:
+        g = _toma_polvo_g(t)
+        vals += ([g] if g is not None
+                 else _volumenes_mL(_AGUA_RECONSTITUCION.sub(" ", t or "")))
+    if not vals:
+        return None
+    return max(set(vals), key=vals.count)
+
+
+def _cruce_volumen_toma(ft: dict, etq: dict, reg: dict,
+                        canonica: list[dict] | None) -> list[dict]:
+    """Todos los agentes tienen que dosificar sobre el mismo envase.
+
+    En el run_59 la ficha técnica y la etiqueta trabajaban sobre 50 mL y
+    Regulatorio sobre 40 mL, y de ahí salió un «875 mg/kg» de sucralosa que
+    debía ser 700, con una corrección recomendada («≤ 16 mg por toma»)
+    calculada sobre un envase que no existe. La suma de la fórmula canónica
+    manda: si las materias primas suman 50.000 mg, la toma es de 50 mL.
+    """
+    out: list[dict] = []
+    v_ft = _volumen_declarado(
+        str(ft.get("fase_1_identificacion", {}).get("formato_comercial", "")),
+        str(ft.get("fase_3_informacion_nutricional", {})
+              .get("declaracion_nutricional_por_dosis_diaria", {})
+              .get("base_calculo", "")))
+    v_etq = _volumen_declarado(
+        str(etq.get("fase_3_tabla_nutricional_completa", {}).get("dosis_referencia", "")))
+    v_reg = _volumen_declarado(json.dumps(reg.get("evaluacion_global", {}),
+                                          ensure_ascii=False))
+    # Referencia dura: la suma de materia prima de la ficha del cliente.
+    v_canon = None
+    if canonica:
+        suma = sum(c.get("raw_mg") or 0 for c in canonica)
+        if suma > 1000:
+            v_canon = suma / 1000.0     # mg → g ≈ mL en un líquido acuoso
+
+    declarados = {"ficha técnica": v_ft, "etiqueta": v_etq, "regulatorio": v_reg}
+    referencia = v_canon or v_ft or v_etq
+    if referencia is None:
+        return out
+    discrepan = {k: v for k, v in declarados.items()
+                 if v is not None and abs(v - referencia) / referencia > _TOL_VOLUMEN}
+    if discrepan:
+        detalle = ", ".join(f"{k} {v:g} mL" for k, v in discrepan.items())
+        origen = ("la suma de la fórmula" if v_canon else "el resto de agentes")
+        out.append({
+            "severidad": "alta",
+            "origen": "Cruce volumen de toma",
+            "mensaje": (
+                f"Los agentes no dosifican sobre el mismo envase: {detalle}, frente a "
+                f"{referencia:g} mL según {origen}. Todo mg/kg calculado sobre el volumen "
+                f"equivocado —y con él cualquier dictamen de conformidad de un aditivo— "
+                f"es incorrecto."
+            ),
+        })
+    return out
+
+
+def _cruce_suma_formula_volumen(canonica: list[dict] | None,
+                                ft: dict) -> list[dict]:
+    """La suma de las materias primas tiene que dar el contenido del envase.
+
+    Si no cuadra, o falta un ingrediente en la ficha o sobra cantidad en
+    alguno. Cualquiera de las dos cosas invalida los porcentajes del informe.
+    """
+    out: list[dict] = []
+    if not canonica:
+        return out
+    suma = sum(c.get("raw_mg") or 0 for c in canonica)
+    if suma <= 0:
+        return out
+    textos = (str(ft.get("fase_1_identificacion", {}).get("formato_comercial", "")),
+              str(ft.get("fase_1_identificacion", {}).get("peso_neto_por_unidad", "")))
+    v = _volumen_declarado(*textos)
+    if v is None:
+        return out
+    esperado = v * 1000.0
+    desvio = (suma - esperado) / esperado
+    # En un líquido el envase se declara en mL y la ficha en mg: un jarabe con
+    # azúcares pesa más que el agua (run_70: 41,28 g en 41 mL, densidad 1,007).
+    # Se admite hasta 1,25 g/mL por encima; por debajo de 1 sigue avisando.
+    liquido = all(_toma_polvo_g(t) is None for t in textos)
+    if -_TOL_SUMA_FORMULA <= desvio <= (_DENSIDAD_MAX_LIQUIDO - 1 if liquido
+                                        else _TOL_SUMA_FORMULA):
+        return out
+    fmt = lambda x, d: f"{x:,.{d}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    out.append({
+        "severidad": "media",
+        "origen": "Cruce suma de fórmula ↔ envase",
+        "mensaje": (
+            f"Las materias primas de la ficha suman {fmt(suma, 1)} mg y el envase declara "
+            f"{fmt(esperado, 0)} mg ({v:g} mL). Faltan o sobran {fmt(abs(suma - esperado), 1)} mg: "
+            f"revisar si falta una línea en la ficha antes de fiarse de los porcentajes."
+        ),
+    })
+    return out
+
+
+# ── Tabla nutricional: ficha técnica ↔ etiqueta, y coherencia interna ──
+
+_NUTRI_FT_A_ETIQUETA = {
+    "valor_energetico_kj": "valor energético",
+    "grasas_g": "grasas",
+    "acidos_grasos_saturados_g": "ácidos grasos saturados",
+    "hidratos_de_carbono_g": "hidratos de carbono",
+    "azucares_g": "azúcares",
+    "fibra_g": "fibra",
+    "proteinas_g": "proteínas",
+    "sal_g": "sal",
+}
+
+
+def _primer_numero(v) -> float | None:
+    """Primer número de un texto ('120 kJ / 29 kcal' → 120; '7,34 g' → 7.34)."""
+    m = re.search(r"(\d+(?:[.,]\d+)?)", str(v if v is not None else ""))
+    if not m:
+        return None
+    try:
+        return float(m.group(1).replace(".", "").replace(",", ".")
+                     if re.match(r"^\d{1,3}(\.\d{3})+(,\d+)?$", m.group(1))
+                     else m.group(1).replace(",", "."))
+    except ValueError:
+        return None
+
+
+_A_MG = {"g": 1000.0, "mg": 1.0, "µg": 0.001, "μg": 0.001, "mcg": 0.001, "ug": 0.001}
+
+
+def _en_mg(v) -> float | None:
+    """'9,09 g' → 9090; '5000 mg' → 5000; None si no lleva unidad de masa.
+
+    La etiqueta mezcla unidades entre columnas (9,09 g por 100 g frente a
+    5000 mg por toma); sin convertir, el cruce las da por desproporcionadas.
+    """
+    m = re.search(r"(\d+(?:[.,]\d+)?)\s*(mg|µg|μg|mcg|ug|g)\b", str(v or ""))
+    if not m:
+        return None
+    n = _primer_numero(m.group(1))
+    return None if n is None else n * _A_MG[m.group(2)]
+
+
+def _media_unidad_redondeo(v, en_mg: bool) -> float:
+    """'0,2 g' → 0,05 (g), o 50 si en_mg; '5000 mg' → 0,5. Cero si no hay número."""
+    m = re.search(r"\d+(?:[.,](\d+))?\s*(mg|µg|μg|mcg|ug|g)?", str(v or ""))
+    if not m:
+        return 0.0
+    media = 0.5 * 10 ** -len(m.group(1) or "")
+    if en_mg and m.group(2):
+        media *= _A_MG[m.group(2)]
+    return media
+
+
+def _filas_etiqueta(etq: dict) -> list[dict]:
+    tabla = etq.get("fase_3_tabla_nutricional_completa", {})
+    if not isinstance(tabla, dict):
+        return []
+    return [f for f in (tabla.get("filas") or []) if isinstance(f, dict)]
+
+
+def _cruce_nutricional_ft_etiqueta(ft: dict, etq: dict) -> list[dict]:
+    """La declaración nutricional obligatoria sale dos veces del pipeline.
+
+    La escribe la ficha técnica y la vuelve a escribir la etiqueta. Son el
+    mismo dato en dos documentos que el cliente lee juntos: si no coinciden,
+    uno de los dos está inventado.
+    """
+    out: list[dict] = []
+    obl = (ft.get("fase_3_informacion_nutricional", {})
+             .get("declaracion_nutricional_por_dosis_diaria", {})
+             .get("seccion_obligatoria", {}))
+    filas = _filas_etiqueta(etq)
+    if not isinstance(obl, dict) or not obl or not filas:
+        return out
+    for clave, etiqueta in _NUTRI_FT_A_ETIQUETA.items():
+        if clave not in obl:
+            continue
+        v_ft = _primer_numero(obl.get(clave))
+        fila = next((f for f in filas
+                     if _ing_ascii(str(f.get("nutriente", ""))).lower().strip()
+                     == _ing_ascii(etiqueta).lower()), None)
+        if v_ft is None or fila is None:
+            continue
+        v_etq = _primer_numero(fila.get("valor_por_dosis"))
+        if v_etq is None:
+            continue
+        base = max(abs(v_ft), abs(v_etq))
+        if base == 0 or abs(v_ft - v_etq) / base <= _TOL_NUTRI:
+            continue
+        out.append({
+            "severidad": "alta",
+            "origen": "Cruce nutricional FT ↔ Etiqueta",
+            "mensaje": (
+                f"**{etiqueta}** — la ficha técnica declara {v_ft:g} por dosis y la "
+                f"etiqueta {v_etq:g}. Es el mismo dato en dos documentos que el "
+                f"cliente lee juntos: uno de los dos no sale de la fórmula."
+            ),
+        })
+    return out
+
+
+def _cruce_nutricional_por_100(etq: dict, ft: dict) -> list[dict]:
+    """Dentro de la etiqueta, «por 100 g» y «por dosis» tienen que ser
+    proporcionales al tamaño de la toma.
+
+    Es la comprobación que caza el error de factor: una columna calculada
+    sobre 100 mL y la otra sobre la toma, o una regla de tres invertida.
+    """
+    out: list[dict] = []
+    filas = _filas_etiqueta(etq)
+    if not filas:
+        return out
+    tabla = etq.get("fase_3_tabla_nutricional_completa", {})
+    v = _volumen_declarado(str(tabla.get("dosis_referencia", "")),
+                           str(ft.get("fase_1_identificacion", {})
+                                 .get("formato_comercial", "")))
+    if not v:
+        return out
+    factor = v / 100.0
+    unidad = "g" if _toma_polvo_g(str(tabla.get("dosis_referencia", ""))) else "mL"
+    descuadres = []
+    for f in filas:
+        v100 = _primer_numero(f.get("valor_por_100g"))
+        vdosis = _primer_numero(f.get("valor_por_dosis"))
+        mg100, mgdosis = _en_mg(f.get("valor_por_100g")), _en_mg(f.get("valor_por_dosis"))
+        if mg100 is not None and mgdosis is not None:
+            v100, vdosis = mg100, mgdosis
+        if v100 is None or vdosis is None or v100 == 0:
+            continue
+        esperado = v100 * factor
+        base = max(abs(esperado), abs(vdosis))
+        # 0,4 g × 0,55 = 0,22 se declara 0,2: es redondeo de etiqueta, no error.
+        # Se tolera media unidad del último decimal declarado, en su unidad.
+        redondeo = _media_unidad_redondeo(f.get("valor_por_dosis"),
+                                          en_mg=mg100 is not None)
+        if (base == 0 or abs(esperado - vdosis) / base <= 0.05
+                or abs(esperado - vdosis) <= redondeo):
+            continue
+        descuadres.append(f"{f.get('nutriente', '—')} ({vdosis:g} declarado "
+                          f"frente a {esperado:g} esperado)")
+    if descuadres:
+        out.append({
+            "severidad": "alta",
+            "origen": "Cruce tabla nutricional (100 g ↔ dosis)",
+            "mensaje": (
+                f"En una toma de {v:g} {unidad}, {len(descuadres)} fila(s) de la tabla "
+                f"nutricional no son proporcionales entre columnas: "
+                f"{'; '.join(descuadres[:4])}"
+                + (" …" if len(descuadres) > 4 else "") + "."
+            ),
+        })
+    return out
+
+
+# ── Alertas que los agentes ya producen y nadie ve ─────────────────────
+
+def _alertas_de_agentes(reg: dict, etq: dict) -> list[dict]:
+    """Los agentes ya detectan bloqueantes; el informe los entierra.
+
+    Regulatorio escribe `evaluacion_global.bloqueantes` y la etiqueta lista
+    las menciones obligatorias que faltan. En el run_59 el más grave —la
+    sucralosa por encima del límite legal— viajaba como nota al pie número 6
+    de un párrafo de la lista de ingredientes. Un no conforme no es una nota
+    al pie: aquí se sube a la superficie sin reinterpretarlo.
+    """
+    out: list[dict] = []
+    glob = reg.get("evaluacion_global", {})
+    if isinstance(glob, dict):
+        # En el run_68 la lista traía «Ninguno confirmado como bloqueante.» y
+        # dos «Potencial: …»: la negación salía como aviso alto y lo condicional
+        # pesaba igual que un no conforme.
+        for b in (glob.get("bloqueantes") or []):
+            if not (isinstance(b, str) and b.strip()):
+                continue
+            texto = b.strip()
+            if re.match(r"(?i)(ninguno|ninguna|no hay|sin bloqueantes)\b", _ing_ascii(texto)):
+                continue
+            potencial = re.match(r"(?i)potencial\b", texto) is not None
+            out.append({
+                "severidad": "media" if potencial else "alta",
+                "origen": "Bloqueante regulatorio potencial" if potencial
+                          else "Bloqueante regulatorio",
+                "mensaje": texto,
+            })
+    # El filtro miraba solo estados que empezaran por PENDIENTE, y así se
+    # escapaba «BLOQUEO REGULATORIO CRÍTICO» en el run_59: el estado más grave
+    # de la lista era justo el único que no se contaba. Ahora cuenta todo lo
+    # que no declare cierre explícito.
+    _CERRADOS = ("OK", "COMPLETA", "COMPLETO", "CONFORME", "CERRAD", "RESUELT",
+                 "DISPONIBLE", "N/A", "NO APLICA")
+    pendientes = [m.get("mencion", "—")
+                  for m in (etq.get("fase_6_menciones_ausentes_incompletas") or [])
+                  if isinstance(m, dict)
+                  and not str(m.get("estado", "")).strip().upper().startswith(_CERRADOS)]
+    if pendientes:
+        out.append({
+            "severidad": "media",
+            "origen": "Menciones obligatorias de etiqueta",
+            "mensaje": (
+                f"{len(pendientes)} mención(es) obligatoria(s) siguen pendientes: "
+                f"{', '.join(pendientes[:6])}"
+                + (" …" if len(pendientes) > 6 else "")
+                + ". La etiqueta no es imprimible hasta cerrarlas."
+            ),
+        })
+    return out
+
+
+def cruces_entre_agentes(kic: dict, reg: dict, clm: dict, etq: dict,
+                         canonica: list[dict] | None,
+                         ft: dict | None = None) -> list[dict]:
+    """Todas las verificaciones cruzadas. Devuelve avisos; no corrige nada."""
+    kic_ings = [i for i in kic.get("fase_2_ingredientes", []) if isinstance(i, dict)]
+    canon_alineada = _alinear_canonica(kic_ings, canonica or [])
+    # Misma salvaguarda que la tabla maestra: una canónica que solo casa con
+    # una minoría de las filas es de otro producto y cruzarla inventa hallazgos.
+    if kic_ings and sum(c is not None for c in canon_alineada) / len(kic_ings) < 0.5:
+        canon_alineada = [None] * len(kic_ings)
+
+    out: list[dict] = []
+    out += _cruce_dosis_kic_canonica(kic_ings, canon_alineada)
+    out += _cruce_vrn_etiqueta(etq, kic_ings, canon_alineada)
+    out += _cruce_claims_regulatorio(clm, reg)
+    out += _cruce_etiqueta_formula(etq, kic_ings, canonica)
+    ft = ft or {}
+    out += _cruce_volumen_toma(ft, etq, reg, canonica)
+    out += _cruce_suma_formula_volumen(canonica, ft)
+    out += _cruce_nutricional_ft_etiqueta(ft, etq)
+    out += _cruce_nutricional_por_100(etq, ft)
+    out += _alertas_de_agentes(reg, etq)
+    return out
+
+
 def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict,
                       canonica: list[dict] | None = None,
-                      doc: dict | None = None) -> list[str]:
+                      doc: dict | None = None,
+                      avisos_out: list[dict] | None = None) -> list[str]:
     """Tabla ÚNICA de ingredientes (formato Excel del cliente: Tabla Cuantitativa).
 
     Fusiona KIC (perfil) + Regulatorio (semáforo) + Canónica del FT PDF
@@ -809,6 +1645,14 @@ def fmt_tabla_maestra(kic: dict, reg: dict, ft: dict,
 
         for aviso in incoherencias_fila(nombre, canon_i):
             avisos.append(f"**{nombre}** — {aviso}")
+            if avisos_out is not None:
+                # El aviso ya se pinta bajo la tabla, pero ahí solo lo ve quien
+                # abre el informe. Al registro va también para el dashboard.
+                avisos_out.append({
+                    "severidad": "alta",
+                    "origen": "Coherencia de la ficha de fórmula",
+                    "mensaje": f"**{nombre}** — {aviso}",
+                })
 
         rows.append([
             # REF: código de la fórmula canónica; si el ingrediente no casa
@@ -971,7 +1815,7 @@ def fmt_validacion_regulatoria(d: dict) -> list[str]:
 
 # ── Bloque 1 · Propuestas de mejora (consolida KIC + Regulatorio) ────────────
 
-def fmt_propuestas_mejora(kic: dict, reg: dict) -> list[str]:
+def fmt_propuestas_mejora(kic: dict, reg: dict, ft: dict | None = None) -> list[str]:
     """Consolida en un único bloque, sin duplicados, las recomendaciones de
     formulación de KIC (gaps/riesgos/sugerencias) y las modificaciones del
     agente Regulatorio."""
@@ -998,6 +1842,12 @@ def fmt_propuestas_mejora(kic: dict, reg: dict) -> list[str]:
     for x in ((reg.get("evaluacion_global", {}) or {}).get("modificaciones_recomendadas", []) or []):
         t, det, acc = _extract(x)
         items.append(("Modificaciones regulatorias", t, det, acc))
+    sug_ft = (ft or {}).get("sugerencias_mejora_ficha_kic") or []
+    if isinstance(sug_ft, dict):
+        sug_ft = [sug_ft]
+    for x in sug_ft:
+        t, det, acc = _extract(x)
+        items.append(("Datos de entrada a completar (ficha técnica)", t, det, acc))
 
     if not items:
         return []
@@ -1014,7 +1864,7 @@ def fmt_propuestas_mejora(kic: dict, reg: dict) -> list[str]:
 
     lines = [
         _section("Propuestas de mejora (IA)", 3),
-        "*Consolidado de los análisis de composición (KIC) y regulatorio, sin duplicados.*",
+        "*Consolidado de los análisis de composición (KIC), regulatorio y de ficha técnica, sin duplicados.*",
         "",
     ]
     for cat, lst in by_cat.items():
@@ -1229,6 +2079,7 @@ def _nutricional_vitmin_rows(kic: dict | None, canonica: list[dict] | None) -> l
     agregado: dict[str, float] = {}
     orden: list[str] = []
     sueltos: list[list[str]] = []
+    nombres_sal: dict[str, str] = {}
     for idx, ing in enumerate(kic_ings):
         if (ing.get("tipologia") or "").upper() not in ("VITAMINA", "MINERAL"):
             continue
@@ -1239,6 +2090,13 @@ def _nutricional_vitmin_rows(kic: dict | None, canonica: list[dict] | None) -> l
             key = _ing_ident_key(c.get("active_name", "")) or _ing_ident_key(c.get("name", ""))
         mg = c.get("active_mg") if c else None
         if key and isinstance(mg, (int, float)):
+            # La etiqueta declara la vitamina, no la sal (run_67: 0,9 mg de
+            # pantotenato cálcico son 0,82 mg de ácido pantoténico, 13,7 %).
+            sal = _vitamina_desde_sal(key, c)
+            if sal is not None:
+                mg *= sal[0]
+                if key == "vit:b9":
+                    nombres_sal[key] = "Folato (B9)"
             if key not in agregado:
                 orden.append(key)
                 agregado[key] = 0.0
@@ -1255,7 +2113,7 @@ def _nutricional_vitmin_rows(kic: dict | None, canonica: list[dict] | None) -> l
     rows: list[list[str]] = []
     for key in orden:
         mg = agregado[key]
-        nombre = _NUTRIENTE_NOMBRE.get(key, key)
+        nombre = nombres_sal.get(key) or _NUTRIENTE_NOMBRE.get(key, key)
         if key in _NRV:
             nrv_mg, unidad = _NRV[key]
             rows.append([nombre, _fmt_cantidad(mg, unidad),
@@ -1358,7 +2216,15 @@ def fmt_ficha_tecnica(ft: dict, qc: dict | None = None, kic: dict | None = None,
                 return not any(m in blob for m in invalidos)
 
             válidos = [c for c in cl if _es_valido(c)]
-            if válidos:
+            # Un claim de vitamina o mineral exige la condición «fuente de»
+            # (≥15 % VRN por toma). Claims lo da por bueno sin mirar la dosis:
+            # en el run_67 B5 y folato (13,7 % y 13,3 %) salían con claim.
+            pct = _pct_vrn_calculado(ic.get("ingrediente", ""), kic_ings, canon_alineada)
+            if válidos and pct is not None and pct < 15:
+                rows.append([ic.get("ingrediente", ""), "—",
+                             f"No aplicable: aporta el {_fmt_pct_num(pct)} del VRN, "
+                             f"por debajo del 15 % que exige «fuente de»"])
+            elif válidos:
                 c0 = válidos[0]
                 ejemplo = c0.get("texto_traduccion_es", c0.get("texto_claim", c0.get("texto", "")))[:90] or "—"
                 rows.append([ic.get("ingrediente", ""), str(len(válidos)), ejemplo])
@@ -1527,7 +2393,8 @@ def _claim_en_espera(c) -> bool:
     return (not txt.strip()) or any(m in blob for m in _SIN_CLAIM_MARKERS)
 
 
-def fmt_claims(d: dict) -> list[str]:
+def fmt_claims(d: dict, kic: dict | None = None,
+               canonica: list[dict] | None = None) -> list[str]:
     lines = [_section("Claims y diferenciación comercial", 3)]
 
     parte_a = d.get("parte_a_claims_regulatorios", d.get("claims_regulatorios", {}))
@@ -1546,6 +2413,8 @@ def fmt_claims(d: dict) -> list[str]:
                 claim_triple = claim_triple.get("texto_sugerido_etiqueta", claim_triple.get("texto", str(claim_triple)))
             lines += [f"**Claim compuesto recomendado:**", f"> {claim_triple}", ""]
 
+        kic_ings = [i for i in (kic or {}).get("fase_2_ingredientes", []) if isinstance(i, dict)]
+        canon_alineada = _alinear_canonica(kic_ings, canonica or [])
         for ing_claims in parte_a.get("claims_por_ingrediente", []):
             if not isinstance(ing_claims, dict):
                 continue
@@ -1558,6 +2427,14 @@ def fmt_claims(d: dict) -> list[str]:
             válidos = [c for c in claims_list if not _claim_en_espera(c)]
             if not válidos:
                 lines += ["*En espera (botánico) — sin claim autorizado en el Reg. (UE) 432/2012.*", ""]
+                continue
+            # Sin «fuente de» (≥15 % VRN) el claim de vitamina o mineral no se
+            # puede usar, aunque el texto esté autorizado (run_67: B5 y folato).
+            pct = _pct_vrn_calculado(nombre, kic_ings, canon_alineada)
+            if pct is not None and pct < 15:
+                lines += [f"*No aplicable con la dosis actual: aporta el {_fmt_pct_num(pct)} "
+                          f"del VRN y el claim exige al menos el 15 % («fuente de»). "
+                          f"Los textos autorizados quedan disponibles si se sube la dosis.*", ""]
                 continue
             headers = ["Texto del claim", "Condición de uso", "Ref. EFSA"]
             rows = []
@@ -2267,7 +3144,11 @@ def fmt_qc(d: dict) -> list[str]:
         if isinstance(vida, dict):
             vida_meses = vida.get("objetivo_meses", vida.get("meses", ""))
             vida_alcanzable = vida.get("alcanzable", "")
-            alcanzable_str = " ✅" if vida_alcanzable is True else (" ⚠️" if vida_alcanzable is False else "")
+            alcanzable_str = (" ✅" if vida_alcanzable is True else
+                              " ⚠️" if vida_alcanzable is False else
+                              f" ({vida_alcanzable.strip()})"
+                              if isinstance(vida_alcanzable, str) and vida_alcanzable.strip()
+                              else "")
             vida_str = f"{vida_meses} meses{alcanzable_str}"
         else:
             vida_str = str(vida)
@@ -2404,6 +3285,122 @@ def _detectar_fuga_idioma(texto: str, ventana: int = 40) -> list[str]:
     return out
 
 
+_MARCA_AVISOS = "<!--AVISOS-->"
+
+_ETIQUETA_SEV = {
+    "alta": "⛔ Alta",
+    "media": "⚠️ Media",
+    "info": "ℹ️ Info",
+}
+
+
+def fmt_avisos(avisos: list[dict]) -> list[str]:
+    """Sección «Avisos de la ejecución».
+
+    Va delante del contenido a propósito: un aviso que aparece en la página 40,
+    después de que el lector ya se haya creído las cifras, no cumple su función.
+    Si no hay avisos también se escribe la sección — el silencio explícito vale
+    como declaración; la ausencia de sección se confunde con no haber mirado.
+    """
+    if not avisos:
+        return [
+            _section("Avisos de la ejecución", 2),
+            "Los controles automáticos de esta ejecución no han detectado "
+            "contradicciones entre agentes, desviaciones de schema ni incoherencias "
+            "con la ficha de fórmula. Esto no sustituye la revisión humana: verifica "
+            "que ningún control se ha limitado a no encontrar el dato.",
+            "",
+            "---",
+            "",
+        ]
+    resumen = _avisos_mod.resumen(avisos)
+    cuenta = ", ".join(f"{n} de severidad {sev}"
+                       for sev, n in resumen.items() if n)
+    lines = [
+        _section("Avisos de la ejecución", 2),
+        f"Los controles automáticos han levantado {len(avisos)} aviso(s) "
+        f"({cuenta}). Un aviso no corrige nada ni bloquea el informe: señala un "
+        f"punto donde dos fuentes de este mismo documento no dicen lo mismo, o "
+        f"donde una cifra no procede del dato de origen. **Ninguna cifra señalada "
+        f"aquí debe usarse para decidir un claim ni salir hacia el cliente sin "
+        f"confirmarla contra la fórmula de origen.**",
+        "",
+    ]
+    lines += _table(
+        ["Severidad", "Control", "Aviso"],
+        [[_ETIQUETA_SEV.get(a.get("severidad", "media"), "⚠️ Media"),
+          a.get("origen", "—"),
+          # Un fragmento citado puede llevar una barra vertical dentro y romper
+          # la tabla justo en la fila que había que leer.
+          (a.get("mensaje", "") or "").replace("|", "\\|")] for a in avisos],
+    )
+    cierre = (
+        "Los avisos de severidad alta afectan a cifras publicadas en este informe. "
+        "Resuélvelos contra la ficha de fórmula antes de la entrega; los de "
+        "severidad media e info describen desviaciones que conviene mirar pero no "
+        "invalidan por sí solas el documento."
+    ) if resumen.get("alta") else (
+        "Ninguno de estos avisos es de severidad alta: no hay cifra publicada que "
+        "los controles den por incorrecta. Aun así describen desviaciones que "
+        "conviene resolver contra la ficha de fórmula antes de la entrega."
+    )
+    lines += [
+        "",
+        cierre,
+        "",
+        "---",
+        "",
+    ]
+    return lines
+
+
+def _anexo_informacion_pendiente(etq: dict | None) -> list[str]:
+    """Anexo con lo que falta para poder imprimir la etiqueta.
+
+    El dato ya lo publica el agente de etiqueta en `informacion_necesaria`,
+    pero viajaba como viñeta dentro de la sección de etiqueta, donde se lee
+    como una anotación técnica más. Es lo contrario: es la lista de deberes
+    que decide si el producto puede salir a mercado, y quien la tiene que
+    recorrer no es quien lee la sección 3. Aquí no se reinterpreta nada — se
+    reproduce lo que el agente escribió, con su estado.
+    """
+    if not isinstance(etq, dict):
+        return []
+    filas = [m for m in (etq.get("fase_6_menciones_ausentes_incompletas") or [])
+             if isinstance(m, dict) and m.get("mencion")]
+    if not filas:
+        return []
+    lines = [
+        "",
+        "---",
+        "",
+        "## Anexo — Información pendiente para cerrar la etiqueta",
+        "",
+        "La etiqueta no es imprimible mientras queden menciones abiertas: el "
+        "Reglamento (UE) 1169/2011 las exige todas, no la mayoría. La tabla "
+        "recoge cada una con el estado que le asigna el análisis y qué hace "
+        "falta exactamente para cerrarla. Ninguna se puede resolver desde este "
+        "informe: son datos del operador, verificaciones de laboratorio o "
+        "documentación que tiene que aportar un proveedor.",
+        "",
+        "| Mención obligatoria | Estado | Qué se necesita |",
+        "|---|---|---|",
+    ]
+    esc = lambda t: str(t or "—").replace("|", "\\|").replace("\n", " ").strip()
+    for m in filas:
+        lines.append(
+            f"| {esc(m.get('mencion'))} | {esc(m.get('estado'))} | "
+            f"{esc(m.get('informacion_necesaria', m.get('detalle')))} |"
+        )
+    lines += [
+        "",
+        f"Son {len(filas)} punto(s). Hasta que no estén los {len(filas)}, la "
+        "etiqueta es un borrador de trabajo, no un arte final.",
+        "",
+    ]
+    return lines
+
+
 def compose_informe(formula: str, path: str, agent_models: dict | None = None,
                     timings: dict | None = None, total_elapsed: float = 0,
                     output_dir: str | None = None) -> None:
@@ -2428,6 +3425,22 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
     qc  = _load("agente_8_qc_v2", output_dir)
     prt = _load("agente_9_portfolio_v2", output_dir)
     canonica = _load_canonica(output_dir)  # dosis de activo del FT PDF (si existe)
+
+    # Registro de avisos del run. Arranca con lo que ya anotó el orquestador
+    # (drift de schema de cada agente) y se completa aquí con lo que solo se ve
+    # al tener los nueve JSON delante: las contradicciones entre agentes.
+    # Los avisos de cruce se RECALCULAN aquí en cada composición, así que los
+    # de la composición anterior se descartan al cargar. Sin este filtro, cada
+    # recomposición de un mismo run duplicaba la lista: el run_59 mostraba a la
+    # vez «7 menciones pendientes» y «9 menciones pendientes», la vieja y la
+    # nueva, sin nada que dijese cuál valía.
+    _recalculables = ("Cruce ", "Bloqueante regulatorio",
+                      "Menciones obligatorias de etiqueta", "Fuga de idioma")
+    avisos_run: list[dict] = [
+        a for a in _avisos_mod.cargar(output_dir)
+        if not str(a.get("origen", "")).startswith(_recalculables)
+    ]
+    avisos_run += cruces_entre_agentes(kic, reg, clm, etq, canonica, ft)
 
     # Mapa prefix → _trazabilidad (para tokens y coste en el Anexo)
     _trazab_map: dict[str, dict] = {
@@ -2469,7 +3482,8 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
         "4. [Documentación Interna de Producción](#4-documentación-interna-de-producción)",
         "5. [Plan de Calidad](#5-plan-de-calidad)",
         "6. [Portfolio recomendado](#6-portfolio-recomendado)",
-        "7. [Anexo — Configuración del Pipeline](#anexo--configuración-del-pipeline)",
+        "7. [Anexo — Información pendiente para cerrar la etiqueta](#anexo--información-pendiente-para-cerrar-la-etiqueta)",
+        "8. [Anexo — Configuración del Pipeline](#anexo--configuración-del-pipeline)",
         "",
         "---",
         "",
@@ -2479,6 +3493,8 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
         "**dosis de activo aportado**.",
         "",
         "---",
+        "",
+        _MARCA_AVISOS,
     ]
 
     # ── Secciones ────────────────────────────────────────────────────
@@ -2496,11 +3512,12 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
     if kic or reg or ft:
         lines.append(_section("1. Fórmula Cuantitativa", 2))
         if kic:
-            lines += fmt_tabla_maestra(kic, reg, ft, canonica=canonica, doc=doc)
+            lines += fmt_tabla_maestra(kic, reg, ft, canonica=canonica, doc=doc,
+                                       avisos_out=avisos_run)
             lines += fmt_analisis_ingredientes(kic)
         if reg:
             lines += fmt_validacion_regulatoria(reg)
-        propuestas = fmt_propuestas_mejora(kic, reg)
+        propuestas = fmt_propuestas_mejora(kic, reg, ft)
         if propuestas:
             lines += propuestas
         lines.append("\n---")
@@ -2517,7 +3534,7 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
     if clm or fmt or etq:
         lines.append(_section("3. Información de Marketing", 2))
         if clm:
-            lines += fmt_claims(clm)
+            lines += fmt_claims(clm, kic=kic, canonica=canonica)
             lines += fmt_segmentos(clm)
         if fmt:
             lines += fmt_formatos(fmt)
@@ -2548,6 +3565,7 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
             "esta sección con la propuesta de gama a aconsejar al cliente.*"
         )
         lines.append("")
+    lines += _anexo_informacion_pendiente(etq)
     lines.append("\n---")
 
     # ── Anexo: modelos y tiempos de ejecución ────────────────────────
@@ -2567,13 +3585,42 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
         total_mm = int(total_elapsed // 60)
         total_ss = int(total_elapsed % 60)
 
-        # Calcular coste total
-        total_cost = 0.0
-        for prefix in agent_names:
+        def _miles(n: int) -> str:
+            return f"{n:,}".replace(",", ".")
+
+        filas = []
+        total_cost = total_in = total_out = 0
+        sin_precio = False
+        for prefix, cfg in agent_models.items():
+            key, name = agent_names.get(prefix, (prefix, prefix))
+            t = timings.get(key, {}) if timings else {}
+            elapsed = t.get("elapsed", 0)
+            t_str = f"{int(elapsed // 60)}m {int(elapsed % 60)}s" if elapsed else "—"
+
             tr = _trazab_map.get(prefix, {})
-            p_in, p_out = _lookup_price(tr.get("model") or (agent_models.get(prefix, None) and agent_models[prefix].model) or "")
-            total_cost += (tr.get("input_tokens", 0) / 1_000_000) * p_in
-            total_cost += (tr.get("output_tokens", 0) / 1_000_000) * p_out
+            in_tok = int(tr.get("input_tokens") or 0)
+            out_tok = int(tr.get("output_tokens") or 0)
+            total_in += in_tok
+            total_out += out_tok
+            modelo = tr.get("model") or cfg.model or ""
+            p_in, p_out = _lookup_price(modelo)
+            cost = (in_tok / 1_000_000) * p_in + (out_tok / 1_000_000) * p_out
+            if (in_tok or out_tok) and not (p_in or p_out):
+                sin_precio = True
+            total_cost += cost
+            temperature = tr.get("temperature", cfg.temperature)
+            filas.append(
+                f"| {name} | `{modelo}` | `{temperature}` | {t_str} | "
+                f"{_miles(in_tok) if in_tok else '—'} | {_miles(out_tok) if out_tok else '—'} | "
+                f"{_format_cost(cost)} |"
+            )
+
+        endpoints = sorted({str(cfg.base_url) for cfg in agent_models.values() if getattr(cfg, "base_url", None)})
+        nota = ("Los tokens corresponden al intento que produjo el resultado de cada agente; "
+                "los reintentos previos, si los hubo, no se incluyen. El coste se estima con "
+                "las tarifas por millón de tokens de `pipeline/pricing.py`.")
+        if sin_precio:
+            nota += " Algún modelo no figura en esa tabla de precios y su coste no se ha sumado (—)."
 
         lines += [
             "",
@@ -2584,47 +3631,69 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
             f"**Fecha de ejecución:** {hoy}  ",
             f"**Tiempo total de pipeline:** {total_mm}m {total_ss}s  ",
             f"**Coste estimado total:** {_format_cost(total_cost)}  ",
-            "",
-            "| Agente | Modelo | Temp | Tiempo | Tokens (in / out) | Coste est. | Endpoint |",
-            "|---|---|---|---|---|---|---|",
         ]
-        for prefix, cfg in agent_models.items():
-            key, name = agent_names.get(prefix, (prefix, prefix))
-            t = timings.get(key, {}) if timings else {}
-            elapsed = t.get("elapsed", 0)
-            if elapsed:
-                mm = int(elapsed // 60)
-                ss = int(elapsed % 60)
-                t_str = f"{mm}m {ss}s"
-            else:
-                t_str = "—"
-
-            tr = _trazab_map.get(prefix, {})
-            in_tok = tr.get("input_tokens", 0)
-            out_tok = tr.get("output_tokens", 0)
-            if in_tok or out_tok:
-                tok_str = f"{in_tok:,} / {out_tok:,}"
-            else:
-                tok_str = "—"
-
-            p_in, p_out = _lookup_price(tr.get("model") or cfg.model or "")
-            cost = (in_tok / 1_000_000) * p_in + (out_tok / 1_000_000) * p_out
-            cost_str = _format_cost(cost)
-            temperature = tr.get("temperature", cfg.temperature)
-
-            lines.append(
-                f"| {name} | `{cfg.model}` | `{temperature}` | {t_str} | {tok_str} | {cost_str} | `{cfg.base_url}` |"
-            )
+        if endpoints:
+            lines.append(f"**Endpoint:** {', '.join(f'`{e}`' for e in endpoints)}  ")
+        lines += [
+            "",
+            "La tabla recoge, para cada agente del análisis, el modelo y la temperatura con "
+            "que se ejecutó, el tiempo que tardó, los tokens consumidos y su coste estimado.",
+            "",
+            "| Agente | Modelo | Temp | Tiempo | Tokens entrada | Tokens salida | Coste est. |",
+            "|---|---|---|---|---|---|---|",
+            *filas,
+            f"| **Total** | | | **{total_mm}m {total_ss}s** | **{_miles(total_in)}** | "
+            f"**{_miles(total_out)}** | **{_format_cost(total_cost)}** |",
+            "",
+            nota,
+        ]
 
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+
+    # La fuga de idioma solo se puede medir sobre el texto ya compuesto, así que
+    # se detecta ANTES de escribir y entra en la misma sección de avisos que el
+    # resto. Antes se imprimía después de guardar y el fichero salía con la fuga
+    # dentro y sin rastro para quien lo abriera.
+    texto_provisional = "\n".join(lines)
+    for frag in _detectar_fuga_idioma(texto_provisional):
+        avisos_run.append({
+            "severidad": "alta",
+            "origen": "Fuga de idioma",
+            "mensaje": (f"Fragmento CJK en el informe: «{frag}». Corrige el JSON "
+                        f"del agente de origen y recompón antes de entregar."),
+        })
+
+    # El marcador se sustituye al final para que la sección pueda incluir los
+    # avisos que solo se conocen una vez compuesto el documento entero.
+    # Recomponer un informe sobre el mismo directorio no debe duplicar avisos:
+    # los del fichero y los recién calculados son los mismos hallazgos.
+    vistos: set[tuple] = set()
+    unicos: list[dict] = []
+    for a in avisos_run:
+        clave = (a.get("origen"), a.get("mensaje"))
+        if clave in vistos:
+            continue
+        vistos.add(clave)
+        unicos.append(a)
+    avisos_run[:] = _avisos_mod.ordenar(unicos)
+
+    seccion = fmt_avisos(avisos_run)
+    if _MARCA_AVISOS in lines:
+        idx = lines.index(_MARCA_AVISOS)
+        lines[idx:idx + 1] = seccion
+    else:
+        lines = seccion + lines
+
     texto = "\n".join(lines)
     with open(path, "w", encoding="utf-8") as f:
         f.write(texto)
     print(f"📋 Informe compuesto guardado en {path}")
 
-    fugas = _detectar_fuga_idioma(texto)
-    if fugas:
-        print(f"⚠️  FUGA DE IDIOMA: {len(fugas)} fragmento(s) CJK en el informe. "
-              "Corrige el JSON del agente y recompón antes de entregar:")
-        for frag in fugas:
-            print(f"    · {frag}")
+    # Persistir el registro completo: es lo que lee el dashboard.
+    _avisos_mod.limpiar(output_dir)
+    for a in avisos_run:
+        _avisos_mod.registrar(output_dir, a.get("origen", "—"),
+                              a.get("mensaje", ""), a.get("severidad", "media"))
+    if avisos_run:
+        print(f"⚠️  {len(avisos_run)} aviso(s) en esta ejecución — ver la sección "
+              f"«Avisos de la ejecución» del informe y {_avisos_mod.FICHERO}.")

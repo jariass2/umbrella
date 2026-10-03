@@ -37,7 +37,7 @@ from agents.claims_agent_v2 import ClaimsAnalysis  # noqa: E402
 from agents.etiqueta_agent_v2 import EtiquetaAnalysis  # noqa: E402
 from agents.formatos_agent_v2 import FormatosAnalysis  # noqa: E402
 from agents.docs_internos_agent_v2 import DocsInternosAnalysis  # noqa: E402
-from agents.qc_agent_v2 import PlanQCAnalysis  # noqa: E402
+from agents.product_qc_agent_v2 import PlanQCAnalysis  # noqa: E402
 
 OUTPUTS_DIR = Path(__file__).resolve().parent.parent / "outputs" / "v2"
 

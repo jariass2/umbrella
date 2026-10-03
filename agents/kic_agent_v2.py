@@ -75,7 +75,9 @@ class Fase1Clasificacion(BaseModel):
 
 class FuncionIngrediente(BaseModel):
     rol_primario: str = ""
-    rol_secundario: str = ""
+    # El prompt pide la función secundaria «si existe»: un null es una respuesta
+    # válida, no un fallo de formato (run_69: seis avisos por aromas y extractos).
+    rol_secundario: str | None = ""
 
 
 class MecanismoAccion(BaseModel):
@@ -152,7 +154,7 @@ class KICAnalysis(BaseModel):
 
 # ── Instructions ─────────────────────────────────────────────────────
 
-PROMPT_VERSION = "2.1.0"
+PROMPT_VERSION = "2.1.1"
 
 KIC_INSTRUCTIONS = """\
 # ROL
@@ -340,7 +342,9 @@ IMPORTANTE: Usa SIEMPRE las claves exactas indicadas arriba. No uses nombres alt
 3. En la matriz de interacciones, incluye SOLO pares con interacción documentada. \
    No generes pares triviales (ej: "excipiente X es neutro con vitamina Y").
 4. Las sugerencias de mejora deben ser concretas y accionables, no genéricas.
-5. Incluye SIEMPRE el disclaimer en metadata.
+5. El JSON termina SIEMPRE con "fuentes_consultadas" y "metadata" (con el disclaimer), \
+   aunque la respuesta sea larga. Si no has usado búsquedas, lista como \
+   "conocimiento_experto" las referencias que citas. Nunca omitas ninguna de las dos claves.
 6. Responde SIEMPRE en español.
 
 # REQUISITO DE CITAS

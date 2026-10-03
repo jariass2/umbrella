@@ -279,6 +279,27 @@ def test_alinear_canonica_por_identidad():
     assert all(o is not None for o in out)
 
 
+def test_alinear_canonica_por_dosis_si_kic_traduce_los_nombres():
+    """run_72 (Fórmula 7): KIC tradujo los nombres y solo 7 de 21 filas casaban
+    por tokens; la guarda del 50 % tiraba la canónica y la tabla perdía % y
+    ACTIVE mg. La dosis casa la fila; la posición desempata dosis repetidas."""
+    from pipeline.report_composer import _alinear_canonica
+    kic = [
+        {"ingrediente": "Aroma de limón (ST)", "dosis_formula_mg": 63},
+        {"ingrediente": "Taurina", "dosis_formula_mg": 500},
+        {"ingrediente": "L-arginina alfa-cetoglutarato", "dosis_formula_mg": 3000},
+        {"ingrediente": "L-tirosina", "dosis_formula_mg": 500},
+    ]
+    canon = [
+        {"name": "Lemon Flavour ST, 100%", "raw_mg": 63.0, "active_mg": 63.0},
+        {"name": "Taurine, 100%", "raw_mg": 500.0, "active_mg": 500.0},
+        {"name": "L-Arginine alfa-Ketoglutarate 1:1, 98%", "raw_mg": 3061.22, "active_mg": 3000.0},
+        {"name": "L-Tyrosine, 100%", "raw_mg": 500.0, "active_mg": 500.0},
+    ]
+    out = _alinear_canonica(kic, canon)
+    assert [o["name"] for o in out] == [c["name"] for c in canon]
+
+
 def test_tabla_nutricional_agrega_por_elemento():
     """El Anexo XIII declara NUTRIENTES, no las sales que los aportan. Xavier
     (2026-07-27) tachó la tabla porque listaba 'tri-Mg Citrate' y 'Mg
@@ -594,3 +615,11 @@ def test_excipientes_es_en_casan_con_la_canonica():
         "Dextrose Anh.", "L-Citrulline 100%", "Potassium Sorbate E202",
     ]]
     assert all(c is not None for c in _alinear_canonica(kic, canon))
+
+
+def test_volumen_ignora_concentraciones_por_100_ml():
+    """run_72: «mg/100 mL» de la advertencia de cafeína no es el volumen de toma."""
+    from pipeline.report_composer import _volumenes_mL
+    texto = ("Contenido elevado de cafeína, con el contenido en mg/100 mL y mg/toma. "
+             "Expresar también por 100 mL. Shot de 50 mL.")
+    assert _volumenes_mL(texto) == [50.0]

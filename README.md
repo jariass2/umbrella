@@ -14,7 +14,7 @@ umbrella/
 │   ├── etiqueta_agent_v2.py
 │   ├── formatos_agent_v2.py
 │   ├── docs_internos_agent_v2.py
-│   ├── qc_agent_v2.py
+│   ├── product_qc_agent_v2.py
 │   └── legacy/              # Agentes v1 (solo para referencia/tests)
 ├── pipeline/                # Orquestación y configuración
 │   ├── orchestrator.py      # Pipeline principal (ejecutar desde aquí)

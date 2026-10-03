@@ -14,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 from agno.agent import Agent
 from agno.models.openai.like import OpenAILike
 from json_repair import repair_json
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 import sys
 from pathlib import Path
@@ -36,8 +36,9 @@ from agents.claims_agent_v2 import CLAIMS_INSTRUCTIONS, ClaimsAnalysis, PROMPT_V
 from agents.etiqueta_agent_v2 import ETIQUETA_INSTRUCTIONS, EtiquetaAnalysis, PROMPT_VERSION as ETIQUETA_PROMPT_VERSION
 from agents.formatos_agent_v2 import FORMATOS_INSTRUCTIONS, FormatosAnalysis, PROMPT_VERSION as FORMATOS_PROMPT_VERSION
 from agents.docs_internos_agent_v2 import DOCS_INTERNOS_INSTRUCTIONS, DocsInternosAnalysis, PROMPT_VERSION as DOCS_PROMPT_VERSION
-from agents.qc_agent_v2 import QC_INSTRUCTIONS, PlanQCAnalysis, PROMPT_VERSION as QC_PROMPT_VERSION
+from agents.product_qc_agent_v2 import QC_INSTRUCTIONS, PlanQCAnalysis, PROMPT_VERSION as QC_PROMPT_VERSION
 from agents.portfolio_agent_v2 import PORTFOLIO_INSTRUCTIONS, PortfolioAnalysis, PROMPT_VERSION as PORTFOLIO_PROMPT_VERSION
+from pipeline import avisos
 from pipeline.config import (
     get_agent_config,
     get_search_max_queries,
@@ -242,8 +243,39 @@ def _enriquecer_formula(F: str, output_dir: str) -> str:
                 f"- {ing.get('name','')} → {mg} {ing.get('unit','mg')} de activo "
                 f"(cifra YA estandarizada; NO reaplicar el % del nombre)"
             )
+    # Masa de toma: la suma de materia prima de la ficha canónica. Sin este dato
+    # cada agente estimaba el volumen del envase por su cuenta —Regulatorio dijo
+    # 40 mL donde la fórmula suma 50— y todo mg/kg salía de una división por un
+    # denominador inventado, incluidos los dictámenes de conformidad de aditivos.
+    total_mg = 0.0
+    for ing in ings:
+        if not isinstance(ing, dict):
+            continue
+        try:
+            total_mg += float(ing.get("raw_mg") or 0)
+        except (TypeError, ValueError):
+            continue
+    toma = ""
+    if total_mg > 0:
+        g = total_mg / 1000.0
+        toma = (
+            "\n---\n"
+            f"MASA DE TOMA: {g:.1f} g por toma ({total_mg:.0f} mg), suma de la "
+            "materia prima de la ficha de fórmula. Es un dato AUTORITATIVO: no lo "
+            "estimes ni lo redondees a un formato comercial. Toda concentración "
+            "(mg/kg, mg/L, %) y todo dictamen de conformidad de un aditivo se "
+            "calcula sobre esta masa. Si la fórmula es líquida de densidad ~1, el "
+            f"volumen de toma es ~{g:.0f} mL. Si propones cambiar el volumen del "
+            "envase, dilo como recomendación explícita — no lo apliques como si "
+            "fuese el dato de partida.\n"
+            "NOMBRA SIEMPRE LA FASE ACUOSA COMO TAL: si citas el agua o el "
+            "disolvente, escribe «X mL de fase acuosa», nunca «X mL» a secas. "
+            "Un volumen suelto menor que la toma se lee como si fuese el "
+            "volumen de dosis y contamina todo cálculo posterior.\n"
+        )
+
     if not filas:
-        return F
+        return F + toma
 
     bloque = "\n".join(filas)
     return (
@@ -260,6 +292,7 @@ def _enriquecer_formula(F: str, output_dir: str) -> str:
         "NO la cites ni la reproduzcas en el análisis de ingredientes, la "
         "validación regulatoria, los claims ni el marketing.\n"
         f"{bloque}\n"
+        f"{toma}"
     )
 
 
@@ -376,6 +409,10 @@ def _validate_defensively(data: dict, output_model: type[BaseModel] | None, labe
     """
     if output_model is None or not isinstance(data, dict):
         return
+    # `metadata` es texto fijo (versión y disclaimer): si el modelo lo omite,
+    # se completa con el valor por defecto del schema en vez de avisar.
+    if "metadata" not in data and "metadata" in output_model.model_fields:
+        data["metadata"] = output_model().model_dump()["metadata"]
     try:
         obj = output_model.model_validate(data)
         dumped = obj.model_dump()
@@ -384,13 +421,73 @@ def _validate_defensively(data: dict, output_model: type[BaseModel] | None, labe
         missing = expected - got
         extra = got - expected
         if missing:
-            print(f"⚠️  [{label}] claves faltantes vs schema: {sorted(missing)}")
+            secciones = ", ".join(_nombre_campo(k) for k in sorted(missing))
+            avisos.registrar(
+                OUTPUT_DIR, label,
+                f"La respuesta no incluye estos apartados: {secciones}. "
+                "El informe se genera sin ellos.", "media")
         if extra:
-            print(f"ℹ️  [{label}] claves extra no contempladas en schema: {sorted(extra)}")
+            avisos.registrar(
+                OUTPUT_DIR, label,
+                f"La respuesta trae apartados no previstos: {sorted(extra)}", "info")
+    except ValidationError as e:
+        avisos.registrar(OUTPUT_DIR, label, _explicar_validacion(e), "media")
     except Exception as e:
-        # Truncamos el mensaje para no inundar logs cuando hay muchos errores
-        msg = str(e).replace("\n", " ")[:400]
-        print(f"⚠️  [{label}] drift contra schema {output_model.__name__}: {msg}")
+        avisos.registrar(
+            OUTPUT_DIR, label,
+            f"No se ha podido comprobar el formato de la respuesta: {str(e)[:200]}", "media")
+
+
+# Lo que pydantic esperaba, según el tipo de error, y lo que llegó, según el
+# tipo Python del valor. Sirve para redactar el aviso sin jerga.
+_ESPERADO = {
+    "dict_type": "un bloque de campos",
+    "list_type": "una lista",
+    "string_type": "un texto",
+    "int_type": "un número entero",
+    "int_parsing": "un número entero",
+    "float_type": "un número",
+    "float_parsing": "un número",
+    "bool_type": "un sí/no",
+    "bool_parsing": "un sí/no",
+}
+_RECIBIDO = {
+    dict: "un bloque de campos",
+    list: "una lista",
+    str: "un texto",
+    int: "un número",
+    float: "un número",
+    bool: "un sí/no",
+    type(None): "vacío",
+}
+
+
+def _nombre_campo(clave: str) -> str:
+    """`fase_6_ensayos_analiticos_adicionales` → «ensayos analiticos adicionales»."""
+    return "«" + re.sub(r"^fase_\d+_", "", str(clave)).replace("_", " ") + "»"
+
+
+def _explicar_validacion(e: ValidationError) -> str:
+    """Traduce un ValidationError a una frase por campo, sin URL ni volcado."""
+    frases = []
+    for err in e.errors()[:5]:
+        ruta = " › ".join(
+            f"elemento {p + 1}" if isinstance(p, int) else _nombre_campo(p)
+            for p in err.get("loc", ())
+        )
+        esperado = _ESPERADO.get(err.get("type", ""))
+        recibido = _RECIBIDO.get(type(err.get("input")))
+        if err.get("type") == "missing":
+            frases.append(f"falta el campo {ruta}")
+        elif esperado and recibido:
+            frases.append(f"{ruta} llegó como {recibido} y se esperaba {esperado}")
+        else:
+            frases.append(f"{ruta}: formato inesperado")
+    resto = len(e.errors()) - len(frases)
+    if resto > 0:
+        frases.append(f"y {resto} más")
+    return ("Formato distinto del previsto en " + "; ".join(frases) +
+            ". El informe usa el dato tal como llegó; revisar que esa sección se vea bien.")
 
 
 def _collect_tool_calls(agent: Agent) -> dict[str, int]:
@@ -859,6 +956,10 @@ def main(argv: list[str] | None = None):
     # `run_agent` y `save_markdown` leen OUTPUT_DIR como global del módulo,
     # así que basta con reasignarlo antes de lanzar el DAG.
     OUTPUT_DIR = args.output_dir
+
+    # Los avisos del run anterior en este mismo directorio no son de este run.
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    avisos.limpiar(OUTPUT_DIR)
 
     # 7b.4: si el dashboard dejó `formula_canonica.json` (del FT PDF), enriquece
     # la fórmula con la dosis de activo + framing de confidencialidad para todos
