@@ -1383,6 +1383,8 @@ def _cruce_nutricional_ft_etiqueta(ft: dict, etq: dict) -> list[dict]:
         v_etq = _primer_numero(fila.get("valor_por_dosis"))
         if v_etq is None:
             continue
+        if _es_cota_superior(fila.get("valor_por_dosis")) and v_ft <= v_etq:
+            continue
         base = max(abs(v_ft), abs(v_etq))
         if base == 0 or abs(v_ft - v_etq) / base <= _TOL_NUTRI:
             continue
@@ -1396,6 +1398,11 @@ def _cruce_nutricional_ft_etiqueta(ft: dict, etq: dict) -> list[dict]:
             ),
         })
     return out
+
+
+def _es_cota_superior(valor) -> bool:
+    """«< 0,5 g», «<0.5», «≤ 0,1 g»: el valor declarado es un máximo."""
+    return bool(re.match(r"\s*(?:<|≤|&lt;)", str(valor or "")))
 
 
 def _cruce_nutricional_por_100(etq: dict, ft: dict) -> list[dict]:
@@ -1427,6 +1434,12 @@ def _cruce_nutricional_por_100(etq: dict, ft: dict) -> list[dict]:
         if v100 is None or vdosis is None or v100 == 0:
             continue
         esperado = v100 * factor
+        # «< 0,5 g» es la forma reglamentaria de declarar un valor pequeño: es una
+        # cota, no un dato. Con 0,2 g/100 g en 50 g salen 0,1 g, y la etiqueta lo
+        # declara «< 0,5 g» (run_72); solo descuadra si lo esperado supera la cota.
+        if _es_cota_superior(f.get("valor_por_dosis")):
+            if esperado <= vdosis:
+                continue
         base = max(abs(esperado), abs(vdosis))
         # 0,4 g × 0,55 = 0,22 se declara 0,2: es redondeo de etiqueta, no error.
         # Se tolera media unidad del último decimal declarado, en su unidad.

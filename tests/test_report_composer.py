@@ -623,3 +623,19 @@ def test_volumen_ignora_concentraciones_por_100_ml():
     texto = ("Contenido elevado de cafeína, con el contenido en mg/100 mL y mg/toma. "
              "Expresar también por 100 mL. Shot de 50 mL.")
     assert _volumenes_mL(texto) == [50.0]
+
+
+def test_tabla_nutricional_acepta_cota_inferior_a():
+    """run_72: azúcares 0,2 g/100 g y «< 0,5 g» por dosis de 50 g no descuadran."""
+    from pipeline.report_composer import _cruce_nutricional_por_100
+    etq = {"fase_3_tabla_nutricional_completa": {
+        "dosis_referencia": "1 vial monodosis (50 g)",
+        "filas": [
+            {"nutriente": "de los cuales azúcares", "valor_por_100g": "0,2 g", "valor_por_dosis": "< 0,5 g"},
+            {"nutriente": "Proteínas", "valor_por_100g": "15,0 g", "valor_por_dosis": "7,5 g"},
+        ]}}
+    ft = {"fase_1_identificacion": {"formato_comercial": "Vial monodosis de 50 mL"}}
+    assert _cruce_nutricional_por_100(etq, ft) == []
+    # La cota no tapa un error real: 2 g/100 g en 50 g son 1 g, más que «< 0,5 g».
+    etq["fase_3_tabla_nutricional_completa"]["filas"][0]["valor_por_100g"] = "2 g"
+    assert _cruce_nutricional_por_100(etq, ft)
