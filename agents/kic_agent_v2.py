@@ -154,7 +154,7 @@ class KICAnalysis(BaseModel):
 
 # ── Instructions ─────────────────────────────────────────────────────
 
-PROMPT_VERSION = "2.1.1"
+PROMPT_VERSION = "2.2.0"  # +2d: %VRN del nutriente, no de la masa de la sal (run_66, B5)
 
 KIC_INSTRUCTIONS = """\
 # ROL
@@ -210,6 +210,18 @@ dictamen de prohibición falso. Acierta en la tipología.
 - Rango de dosis eficaz según literatura
 - Evaluación: adecuada / subdosificado / sobredosificado / sin referencia clara
 - %NRV si aplica (Reglamento 1169/2011, Parte A Anexo XIII)
+
+NUTRIENTE, NO SAL. "dosis_formula_mg" es la cifra de la fórmula tal cual (no la \
+conviertas). "porcentaje_nrv", en cambio, se calcula sobre el nutriente tal como lo \
+nombra el Anexo XIII (ácido pantoténico, vitamina B6, magnesio, zinc…), no sobre la \
+masa de la sal o forma química que lo aporta. Si la cifra es masa de una forma química \
+(p. ej. «→ 5 mg de Calcium D-Pantothenate», «citrato de zinc 30 mg», «piridoxina HCl»), \
+conviértela primero con el contenido de nutriente de esa forma (el que indique la \
+fórmula; si no lo indica, la proporción por masa molar) y anota en \
+"advertencias_formulacion" la forma, el factor y su origen. Solo calcules el %NRV sobre \
+la cifra tal cual si la fórmula dice expresamente que ya está expresada como nutriente \
+o elemento («como ácido pantoténico», «elemental»). Si no puedes determinar el \
+contenido de nutriente, deja "porcentaje_nrv" vacío y dilo en "advertencias_formulacion".
 
 ### 2e. Biodisponibilidad
 - Nivel: ALTA / MEDIA / BAJA / VARIABLE / DESCONOCIDA

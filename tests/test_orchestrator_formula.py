@@ -150,3 +150,16 @@ def test_ctx_reg_inyecta_tabla_de_aditivos_solo_si_hay_aditivos():
     assert "TABLA DE LÍMITES DE ADITIVOS VERIFICADOS" in ctx_reg(con)
     assert "E 955 Sucralosa | 240" in ctx_reg(con)
     assert "TABLA DE LÍMITES" not in ctx_reg(sin)
+
+
+def test_kic_ft_y_etiqueta_declaran_el_nutriente_no_la_sal():
+    # run_66: 5 mg de pantotenato cálcico se declaraban como 5 mg de B5 (83 %)
+    # en KIC, FT y Etiqueta. Los tres prompts llevan la regla de conversión.
+    from agents.etiqueta_agent_v2 import ETIQUETA_INSTRUCTIONS
+    from agents.ficha_tecnica_agente_v2 import FICHA_TECNICA_INSTRUCTIONS
+    from agents.kic_agent_v2 import KIC_INSTRUCTIONS
+    for prompt in (KIC_INSTRUCTIONS, FICHA_TECNICA_INSTRUCTIONS, ETIQUETA_INSTRUCTIONS):
+        assert "NUTRIENTE, NO SAL" in prompt
+        assert "Calcium D-Pantothenate" in prompt
+    # KIC no reinterpreta la dosis de fórmula: el compositor la lee como materia prima.
+    assert '"dosis_formula_mg" es la cifra de la fórmula tal cual' in KIC_INSTRUCTIONS

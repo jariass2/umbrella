@@ -176,7 +176,7 @@ class FichaTecnica(BaseModel):
 
 # ── Instructions ─────────────────────────────────────────────────────
 
-PROMPT_VERSION = "2.1.0"
+PROMPT_VERSION = "2.2.0"  # +FASE 2/3: cantidad y %VRN del nutriente, no de la sal (run_66, B5)
 
 FICHA_TECNICA_INSTRUCTIONS = """\
 # ROL
@@ -217,6 +217,22 @@ Para cada ingrediente:
 - Cantidad por 100g (si aplica al tipo de producto)
 - %VRN cuando exista (Anexo XIII Parte A, Reg. 1169/2011)
 - Origen (sintético, natural, fermentación)
+
+NUTRIENTE, NO SAL. En vitaminas y minerales, "cantidad_por_dosis" y "porcentaje_nrv" \
+son del nutriente tal como lo nombra el Anexo XIII (ácido pantoténico, vitamina B6, \
+magnesio, zinc…), no de la masa de la sal o forma química que lo aporta; la forma va \
+en "forma_quimica". Si la fórmula da la cifra como masa de una forma química \
+(p. ej. «→ 5 mg de Calcium D-Pantothenate», «citrato de zinc 30 mg», «piridoxina HCl»), \
+esa cifra NO es el nutriente: conviértela con el contenido de nutriente de esa forma \
+(el que indique el contexto; si no lo indica, la proporción por masa molar) y calcula \
+el %VRN sobre el resultado. Anota cada conversión en "notas_tabla_nutricional" con la \
+forma, el factor y su origen (contexto o masa molar). Solo usa la cifra tal cual si el \
+contexto dice expresamente que ya está expresada como nutriente o elemento («como \
+ácido pantoténico», «elemental»). Si no puedes determinar el contenido de nutriente, \
+no pongas la masa de la sal como si fuese el nutriente: deja el %VRN vacío y márcalo \
+en "notas_tabla_nutricional" como pendiente de verificación. Lo mismo vale para la \
+tabla de la FASE 3. Si el %VRN del KIC no sigue esta regla, recalcúlalo y regístralo \
+en la FASE 9.
 
 Genera también la **lista de ingredientes para etiqueta** en orden decreciente \
 de peso, con alérgenos en NEGRITA, según Art. 18 y 21 del Reg. 1169/2011.
@@ -356,7 +372,8 @@ Usa EXACTAMENTE estas claves de nivel superior:
       "vitaminas_minerales": {
         "vitamina_c": {"nombre_etiqueta": "Vitamina C", "unidad": "mg", "cantidad_por_dosis": "80", "porcentaje_nrv": "100%"}
       }
-    }
+    },
+    "notas_tabla_nutricional": "conversiones forma química → nutriente y VRN pendientes de verificar"
   },
   "fase_4_alergenos": {
     "presentes": ["alergeno presente 1"],
