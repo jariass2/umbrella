@@ -309,3 +309,111 @@ class TestMatcherEtiqueta:
         assert len(avisos) == 1
         assert "Cafeína" in avisos[0]["mensaje"]
         assert "Creatina" in avisos[0]["mensaje"]
+
+
+# ── Límites de aditivos (Reg. 1333/2008) ──────────────────────────────
+
+from pipeline.report_composer import (  # noqa: E402
+    _control_limites_aditivos, _ing_ident_key, cruces_entre_agentes,
+)
+
+
+def _adit(nombre, mg):
+    return {"ingrediente": nombre, "tipologia": "ADITIVO_TECNOLÓGICO",
+            "dosis_formula_mg": mg, "dosis_formula_unidad": "mg"}
+
+
+_REG_CA = {"clasificacion_producto": {"tipo": "complemento_alimentario",
+                                      "justificacion": "Preparación líquida."}}
+_FT_SHOT = {"fase_1_identificacion": {"forma_presentacion": "líquido",
+                                      "formato_comercial": "Vial monodosis de 50 g (~50 mL)"}}
+
+
+def test_sucralosa_en_shot_supera_240_mg_L():
+    # run_72: 35 mg en 50 mL = 700 mg/L frente a 240 en la 17.2.
+    avisos, _ = _control_limites_aditivos(
+        [_adit("Sucralosa (E955)", 35)], _REG_CA, _FT_SHOT, {})
+    assert len(avisos) == 1
+    assert avisos[0]["severidad"] == "alta"
+    assert "700 mg/L" in avisos[0]["mensaje"] and "240 mg/L" in avisos[0]["mensaje"]
+
+
+def test_sorbato_benzoato_por_debajo_sin_convertir_es_conforme_y_calla():
+    avisos, resumen = _control_limites_aditivos(
+        [_adit("Sorbato potásico (E202)", 50), _adit("Benzoato sódico (E211)", 50)],
+        _REG_CA, _FT_SHOT, {})
+    assert avisos == []
+    assert "conforme" in resumen["E202"]
+
+
+def test_conservantes_indeterminados_si_dependen_del_factor_no_verificado():
+    # run_70: 82,56 mg de sorbato en 41 mL = 2014 mg/L de sal; como ácido
+    # libre ≈ 1503. El factor no está verificado: no se da por conforme.
+    ft = {"fase_1_identificacion": {"forma_presentacion": "líquido",
+                                    "formato_comercial": "Monodosis de 41 mL"}}
+    avisos, _ = _control_limites_aditivos(
+        [_adit("Sorbato potásico", 82.56)], _REG_CA, ft, {})
+    assert len(avisos) == 1 and avisos[0]["severidad"] == "media"
+    assert "no está verificado" in avisos[0]["mensaje"]
+    assert "82,56 mg" in avisos[0]["mensaje"]
+
+
+def test_polvo_disuelto_compara_listo_para_consumo():
+    # run_66: 100 mg en 55 g + 400-500 mL de agua ≈ 180-220 mg/kg frente a 800.
+    ft = {"fase_1_identificacion": {"forma_presentacion": "polvo"}}
+    etq = {"fase_3_tabla_nutricional_completa": {
+        "dosis_referencia": "1 toma de 55 g disuelta en 400-500 mL de fase acuosa"}}
+    avisos, resumen = _control_limites_aditivos(
+        [_adit("Sucralosa", 100)], _REG_CA, ft, etq)
+    assert avisos == []
+    assert "180-220 mg/kg" in resumen["E955"] and "Conforme" in resumen["E955"]
+
+
+def test_polvo_sin_agua_declarada_avisa_en_media():
+    ft = {"fase_1_identificacion": {"forma_presentacion": "polvo para reconstituir"}}
+    etq = {"fase_3_tabla_nutricional_completa": {"dosis_referencia": "1 toma diaria de 12,2 g"}}
+    avisos, _ = _control_limites_aditivos(
+        [_adit("Sucralosa (E-955)", 30)], _REG_CA, ft, etq)
+    assert len(avisos) == 1 and avisos[0]["severidad"] == "media"
+    assert "agua de reconstitución" in avisos[0]["mensaje"]
+
+
+def test_bloqueante_de_limite_lo_sustituye_el_control():
+    reg = dict(_REG_CA, evaluacion_global={"bloqueantes": [
+        "Sucralosa (E955): pendiente de verificar el límite aplicable",
+        "Sorbato potásico (E202) y benzoato sódico (E211): pendientes de verificar el límite aplicable",
+        "Extracto de Amaranthus: estatus Novel Food sin confirmar",
+    ]})
+    kic = {"fase_2_ingredientes": [_adit("Sucralosa (E955)", 35),
+                                   _adit("Sorbato potásico (E202)", 50),
+                                   _adit("Benzoato sódico (E211)", 50)]}
+    out = cruces_entre_agentes(kic, reg, {}, {}, None, _FT_SHOT)
+    bloq = [a for a in out if a["origen"] == "Bloqueante regulatorio"]
+    assert [a["mensaje"][:18] for a in bloq] == ["Extracto de Amaran"]
+    adit = [a for a in out if a["origen"].startswith("Límite de aditivo")]
+    assert {a["severidad"] for a in adit} == {"alta", "info"}
+    assert all("Regulatorio decía" in a["mensaje"] for a in adit)
+    assert all("_codigos" not in a for a in out)
+
+
+def test_bloqueante_sin_limite_no_se_sustituye():
+    # Un bloqueante sobre otra cosa (pureza, estatus) se queda tal cual.
+    reg = dict(_REG_CA, evaluacion_global={"bloqueantes": [
+        "Sucralosa (E955): especificación de pureza del proveedor no aportada"]})
+    kic = {"fase_2_ingredientes": [_adit("Sucralosa (E955)", 35)]}
+    out = cruces_entre_agentes(kic, reg, {}, {}, None, _FT_SHOT)
+    assert any(a["origen"] == "Bloqueante regulatorio" for a in out)
+
+
+def test_sin_clasificacion_de_complemento_no_se_compara():
+    avisos, resumen = _control_limites_aditivos(
+        [_adit("Sucralosa", 35)], {"clasificacion_producto": {"tipo": "bebida"}},
+        _FT_SHOT, {})
+    assert avisos == [] and resumen == {}
+
+
+def test_silice_excipiente_no_es_silicio():
+    assert _ing_ident_key("Bitartrato de colina (Vitacholine®, 40% colina + 1% sílice)") is None
+    assert _ing_ident_key("Choline L(+)-Bitartrate 40% Choline + Silica 1%") is None
+    assert _ing_ident_key("Bamboo Extract (85% Silica), 39,73% Silicon") == "min:si"
+    assert _ing_ident_key("Extracto de bambú (silicio)") == "min:si"

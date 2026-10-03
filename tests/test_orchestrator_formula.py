@@ -139,3 +139,14 @@ if __name__ == "__main__":
         print(f"✅ {fn.__name__}")
     test_api_error_envelope_detecta_error_disfrazado_de_exito()
     print("✅ test_api_error_envelope_detecta_error_disfrazado_de_exito")
+
+
+def test_ctx_reg_inyecta_tabla_de_aditivos_solo_si_hay_aditivos():
+    from pipeline.orchestrator import ctx_reg
+    con = {"KIC": {"fase_2_ingredientes": [
+        {"ingrediente": "Sucralosa", "tipologia": "ADITIVO_TECNOLÓGICO"}]}}
+    sin = {"KIC": {"fase_2_ingredientes": [
+        {"ingrediente": "Vitamina C", "tipologia": "VITAMINA"}]}}
+    assert "TABLA DE LÍMITES DE ADITIVOS VERIFICADOS" in ctx_reg(con)
+    assert "E 955 Sucralosa | 240" in ctx_reg(con)
+    assert "TABLA DE LÍMITES" not in ctx_reg(sin)

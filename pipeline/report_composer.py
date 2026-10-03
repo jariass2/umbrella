@@ -498,6 +498,15 @@ _RE_CANTIDAD = re.compile(
     r"\d+(?:[.,]\d+)?\s*(?:mg|mcg|ug|g|kg|ml|l|ui|iu|%)(?![a-z])")
 
 
+_SILICE_EXCIPIENTE = re.compile(
+    r"(\d+(?:[.,]\d+)?)\s*%\s*(?:de\s+)?(?:silice|silica|silicon dioxide|dioxido de silicio)\b"
+    r"|\b(?:silice|silica|silicon dioxide|dioxido de silicio)\s*(\d+(?:[.,]\d+)?)\s*%")
+
+
+def _num(s: str) -> float:
+    return float(s.replace(",", "."))
+
+
 def _ing_ident_key(name: str) -> str | None:
     """Clave de identidad fuerte para vitaminas y minerales (inequívoca entre
     idiomas). Las vitaminas se comprueban ANTES que los minerales para que la
@@ -506,6 +515,11 @@ def _ing_ident_key(name: str) -> str | None:
     s = _ing_ascii(name)
     if any(re.search(p, s) for p in _ADITIVOS_NO_NUTRIENTES):
         return None
+    # «Bitartrato de colina (40% colina + 1% sílice)»: un porcentaje pequeño de
+    # sílice es antiaglomerante, no la fuente de silicio, y la colina salía como
+    # silicio. El bambú (85% sílice) sí es fuente y conserva su clave.
+    s = _SILICE_EXCIPIENTE.sub(
+        lambda m: " " if _num(m.group(1) or m.group(2)) < 10 else m.group(0), s)
     # Las cantidades fuera antes de buscar símbolos: la unidad «mg» casaba con
     # el símbolo del magnesio y «Zinc — 1,391 mg por toma» o «Curcuminoides
     # (75 mg por toma)» salían como magnesio (runs 42 y 68, 2026-10-03).
@@ -1538,9 +1552,262 @@ def _cruce_nutricional_por_100(etq: dict, ft: dict) -> list[dict]:
     return out
 
 
+# ── Límites de aditivos (Reg. 1333/2008) ───────────────────────────────
+#
+# Fuente única: knowledge/regulatory/limites_aditivos_1333_2008.md, leído del
+# consolidado de 18.02.2026. Regulatorio fallaba aquí en casi todos los runs:
+# 400 mg/kg en el run_59, 580 en el 69, «pendiente de verificar» en el 72.
+# Las cifras se copian de esa tabla; lo que la tabla marca como NO VERIFICADO
+# no se resuelve aquí.
+
+_FUENTE_1333 = "Reg. (CE) 1333/2008, Anexo II, Parte E (consolidado 18.02.2026)"
+
+# Límites en mg/kg o mg/L del producto listo para consumo.
+_LIM_EDULCORANTES = {
+    "17.2": {"E950": 350, "E951": 600, "E955": 240, "E959": 50, "E961": 20, "E969": 6},
+    "17.1": {"E950": 500, "E951": 2000, "E955": 800, "E959": 100, "E961": 60, "E969": 20},
+}
+_LIM_JARABE_172 = {"E950": 2000, "E951": 5500, "E955": 2400, "E959": 400,
+                   "E961": 185, "E969": 55}
+_LIM_E200_213_172 = 2000
+
+# Masa molar del ácido libre / masa molar de la sal. Cálculo estequiométrico,
+# no dato del Reglamento: la tabla lo deja NO VERIFICADO (Reg. 231/2012).
+_FACTOR_ACIDO_LIBRE = {"E200": 1.0, "E202": 112.13 / 150.22,
+                       "E210": 1.0, "E211": 122.12 / 144.11, "E212": 122.12 / 160.21}
+
+_NOMBRES_ADITIVO = (
+    (r"sucralos", "E955"), (r"acesulfam", "E950"), (r"aspartam", "E951"),
+    (r"neohesperidin", "E959"), (r"neotam", "E961"), (r"advantam", "E969"),
+    (r"acido sorbico", "E200"), (r"sorbato potasic|potassium sorbate", "E202"),
+    (r"acido benzoico", "E210"), (r"benzoato sodic|sodium benzoate", "E211"),
+    (r"benzoato potasic|potassium benzoate", "E212"),
+)
+_NOMBRE_E = {"E950": "acesulfamo K", "E951": "aspartamo", "E955": "sucralosa",
+             "E959": "neohesperidina DC", "E961": "neotamo", "E969": "advantamo",
+             "E200": "ácido sórbico", "E202": "sorbato potásico", "E210": "ácido benzoico",
+             "E211": "benzoato sódico", "E212": "benzoato potásico"}
+
+
+def _codigos_aditivo(texto: str) -> set[str]:
+    """Códigos E que nombra un texto, por número o por nombre."""
+    t = _ing_ascii(texto)
+    out = {"E" + m.group(1).upper()
+           for m in re.finditer(r"\be[\s-]?(\d{3}[a-d]?)\b", t)}
+    out |= {code for pat, code in _NOMBRES_ADITIVO if re.search(pat, t)}
+    return out
+
+
+_RANGO_AGUA = re.compile(
+    r"(?:disuel|disolv|dilu|reconstitu|dissolv)\w*[^.;]{0,60}?"
+    r"(\d+(?:[.,]\d+)?)(?:\s*(?:[-–]|a)\s*(\d+(?:[.,]\d+)?))?\s*m[Ll]\b",
+    re.IGNORECASE)
+
+
+def _agua_reconstitucion_mL(*textos: str) -> tuple[float, float] | None:
+    for t in textos:
+        m = _RANGO_AGUA.search(t or "")
+        if m:
+            a = _num(m.group(1))
+            return (a, _num(m.group(2)) if m.group(2) else a)
+    return None
+
+
+def _gramos_toma(*textos: str) -> float | None:
+    for t in textos:
+        g = _toma_polvo_g(t)
+        if g is None:
+            m = re.search(r"(\d+(?:[.,]\d+)?)\s*g\b", t or "")
+            g = _num(m.group(1)) if m else None
+        if g:
+            return g
+    return None
+
+
+def _fmt_n(x: float) -> str:
+    return f"{x:,.0f}".replace(",", ".")
+
+
+def _fmt_dosis(x: float) -> str:
+    """Dosis tal como la declara la ficha: sin redondear 82,56 a 83."""
+    if abs(x - round(x)) < 1e-9:
+        return _fmt_n(x)
+    return f"{x:.2f}".rstrip("0").replace(".", ",")
+
+
+def _control_limites_aditivos(kic_ings: list[dict], reg: dict, ft: dict,
+                              etq: dict) -> tuple[list[dict], dict[str, str]]:
+    """Compara edulcorantes y conservantes con la tabla verificada.
+
+    Devuelve los avisos y, por código E, la frase que resume la comparación
+    (la usa `_alertas_de_agentes` para sustituir el bloqueante del agente).
+    Solo emite aviso cuando hay algo que contar; un «conforme» calla salvo
+    que sustituya un bloqueante de Regulatorio.
+    """
+    clas = reg.get("clasificacion_producto", {}) if isinstance(reg, dict) else {}
+    if "complemento" not in _ing_ascii(str(clas.get("tipo", ""))):
+        return [], {}
+
+    f1 = ft.get("fase_1_identificacion", {}) if isinstance(ft, dict) else {}
+    forma = _ing_ascii(str(f1.get("forma_presentacion", "")))
+    textos = [str(f1.get("formato_comercial") or ""),
+              str(f1.get("peso_neto_unidad") or f1.get("peso_neto_por_unidad") or ""),
+              str(ft.get("fase_3_informacion_nutricional", {})
+                    .get("declaracion_nutricional_por_dosis_diaria", {})
+                    .get("base_calculo") or ""),
+              str(etq.get("fase_3_tabla_nutricional_completa", {})
+                     .get("dosis_referencia") or "")]
+    todo = _ing_ascii(" ".join(textos + [forma]))
+    # Masticables y efervescentes tienen filas propias que aquí no se cubren.
+    if re.search(r"mastica|chew|eferves", todo):
+        return [], {}
+
+    # Dosis por código E, solo en mg.
+    dosis: dict[str, float] = {}
+    for i in kic_ings:
+        if not str(i.get("tipologia", "")).upper().startswith("ADITIVO"):
+            continue
+        if str(i.get("dosis_formula_unidad") or "mg").strip().lower() != "mg":
+            continue
+        try:
+            mg = float(str(i.get("dosis_formula_mg")).replace(",", "."))
+        except (TypeError, ValueError):
+            continue
+        for code in _codigos_aditivo(str(i.get("ingrediente", ""))):
+            if code in _LIM_EDULCORANTES["17.2"] or code in _FACTOR_ACIDO_LIBRE \
+                    or code in ("E201", "E203", "E213"):
+                dosis[code] = dosis.get(code, 0.0) + mg
+    if not dosis:
+        return [], {}
+
+    jarabe = bool(re.search(r"jarabe|syrup",
+                            _ing_ascii(json.dumps(clas, ensure_ascii=False)) + " " + todo))
+    es_polvo = "polvo" in forma or "powder" in forma
+    es_liquido = (not es_polvo) and ("liquid" in forma or bool(_volumenes_mL(todo)))
+
+    avisos: list[dict] = []
+    resumen: dict[str, str] = {}
+    origen = "Límite de aditivo (Reg. 1333/2008)"
+
+    def emitir(codes, sev, msg):
+        avisos.append({"severidad": sev, "origen": origen, "mensaje": msg,
+                       "fuente": "compositor", "_codigos": set(codes)})
+        for c in codes:
+            resumen[c] = msg
+
+    if es_polvo:
+        g = _gramos_toma(*textos)
+        agua = _agua_reconstitucion_mL(*textos)
+        for code, mg in sorted(dosis.items()):
+            lim = _LIM_EDULCORANTES["17.1"].get(code)
+            if lim is None:
+                continue          # E200-213 en 17.1 solo con vit. A; fuera de alcance
+            nombre = _NOMBRE_E[code]
+            if g is None or agua is None:
+                emitir([code], "media",
+                       f"{nombre.capitalize()} ({code[0]} {code[1:]}): {_fmt_dosis(mg)} mg por toma. "
+                       f"El límite de {lim} mg/kg de la categoría 17.1 del {_FUENTE_1333} "
+                       "se aplica al producto listo para consumo, y el expediente no "
+                       "declara el volumen de agua de reconstitución. Sin ese dato la "
+                       "comparación no se puede hacer.")
+                continue
+            kg_min, kg_max = (g + agua[0]) / 1000, (g + agua[1]) / 1000
+            c_min, c_max = mg / kg_max, mg / kg_min
+            rango = (f"{_fmt_n(c_min)}-{_fmt_n(c_max)}" if round(c_min) != round(c_max)
+                     else _fmt_n(c_max))
+            base = (f"{nombre.capitalize()} ({code[0]} {code[1:]}): {_fmt_dosis(mg)} mg en "
+                    f"{_fmt_n(g)} g de polvo disueltos en {_fmt_n(agua[0])}"
+                    + (f"-{_fmt_n(agua[1])}" if agua[1] != agua[0] else "")
+                    + f" mL de agua ≈ {rango} mg/kg listo para consumo (agua a 1 g/mL), "
+                    f"frente a {lim} mg/kg en la categoría 17.1 del {_FUENTE_1333}.")
+            if c_max <= lim:
+                resumen[code] = base + " Conforme."
+            elif c_min > lim:
+                emitir([code], "alta", base + " Supera el límite.")
+            else:
+                emitir([code], "media", base + " Según el volumen de agua, puede superarlo.")
+        return avisos, resumen
+
+    if not es_liquido:
+        return [], {}
+
+    vols = sorted(set(_volumenes_mL(_AGUA_RECONSTITUCION.sub(" ", " ".join(textos)))))
+    nota_jarabe = (" El expediente menciona una forma tipo jarabe: si se clasifica "
+                   "así, la fila de 17.2 cambia" if jarabe else "")
+    for code, mg in sorted(dosis.items()):
+        lim = _LIM_EDULCORANTES["17.2"].get(code)
+        if lim is None:
+            continue
+        nombre = _NOMBRE_E[code]
+        if not vols:
+            emitir([code], "media",
+                   f"{nombre.capitalize()} ({code[0]} {code[1:]}): {_fmt_dosis(mg)} mg por toma. "
+                   f"El límite de {lim} mg/L de la categoría 17.2 del {_FUENTE_1333} se aplica "
+                   "al producto listo para consumo, y el expediente no declara el volumen "
+                   "de la toma en mL.")
+            continue
+        c_min, c_max = mg / vols[-1] * 1000, mg / vols[0] * 1000
+        v_txt = (f"{_fmt_n(vols[0])}-{_fmt_n(vols[-1])}" if len(vols) > 1
+                 else _fmt_n(vols[0]))
+        c_txt = (f"{_fmt_n(c_min)}-{_fmt_n(c_max)}" if round(c_min) != round(c_max)
+                 else _fmt_n(c_max))
+        base = (f"{nombre.capitalize()} ({code[0]} {code[1:]}): {_fmt_dosis(mg)} mg por toma "
+                f"en {v_txt} mL = {c_txt} mg/L, frente a {lim} mg/L en la categoría 17.2 "
+                f"del {_FUENTE_1333}.")
+        if jarabe:
+            base += nota_jarabe + f" a {_LIM_JARABE_172[code]} mg/L."
+        if c_max <= lim:
+            resumen[code] = base + " Conforme."
+        elif c_min > lim:
+            emitir([code], "alta" if not jarabe or c_min > _LIM_JARABE_172[code] else "media",
+                   base + " Supera el límite.")
+        else:
+            emitir([code], "media", base + " Según el volumen, puede superarlo.")
+
+    # Grupo E 200-213: suma expresada como ácido libre.
+    conserv = {c: mg for c, mg in dosis.items() if c.startswith("E2")}
+    if conserv and vols and all(c in _FACTOR_ACIDO_LIBRE for c in conserv):
+        codes = sorted(conserv)
+        sal = sum(conserv.values())
+        acido = sum(mg * _FACTOR_ACIDO_LIBRE[c] for c, mg in conserv.items())
+        techo = sal / vols[0] * 1000            # cota superior: sin convertir
+        est_min = acido / vols[-1] * 1000
+        est_max = acido / vols[0] * 1000
+        lista = " + ".join(f"{_fmt_dosis(conserv[c])} mg de {_NOMBRE_E[c]} ({c[0]} {c[1:]})"
+                           for c in codes)
+        base = (f"Conservantes E 200-213: {lista} en "
+                + (f"{_fmt_n(vols[0])}-{_fmt_n(vols[-1])}" if len(vols) > 1 else _fmt_n(vols[0]))
+                + f" mL. El límite conjunto de E 200-213 en la categoría 17.2 es "
+                f"{_LIM_E200_213_172} mg/L, como suma expresada en ácido libre, según el {_FUENTE_1333}.")
+        if jarabe:
+            base += (" El expediente menciona una forma tipo jarabe: esa fila excluye "
+                     "los complementos en forma de jarabe, que quedan sin entrada para "
+                     "estos conservantes.")
+        if techo <= _LIM_E200_213_172 and not jarabe:
+            resumen.update({c: base + f" Aun sin convertir a ácido libre suman "
+                                      f"{_fmt_n(techo)} mg/L: conforme." for c in codes})
+        else:
+            conv = (f" Sin convertir suman {_fmt_n(techo)} mg/L; convertidas a ácido libre "
+                    f"por masa molar ≈ {_fmt_n(est_min)}"
+                    + (f"-{_fmt_n(est_max)}" if round(est_min) != round(est_max) else "")
+                    + " mg/L. El factor de conversión a ácido libre no está verificado "
+                    "contra el Reg. (UE) 231/2012.")
+            if est_min > _LIM_E200_213_172:
+                emitir(codes, "alta", base + conv + " Supera el límite incluso con la conversión.")
+            else:
+                emitir(codes, "media", base + conv + " Confirmar el factor antes de "
+                       "darlo por conforme.")
+    return avisos, resumen
+
+
 # ── Alertas que los agentes ya producen y nadie ve ─────────────────────
 
-def _alertas_de_agentes(reg: dict, etq: dict) -> list[dict]:
+_HABLA_DE_LIMITE = re.compile(r"limite|mg/kg|mg/l\b|supera", re.IGNORECASE)
+
+
+def _alertas_de_agentes(reg: dict, etq: dict,
+                        aditivos_cubiertos: dict[str, str] | None = None,
+                        avisos_aditivos: list[dict] | None = None) -> list[dict]:
     """Los agentes ya detectan bloqueantes; el informe los entierra.
 
     Regulatorio escribe `evaluacion_global.bloqueantes` y la etiqueta lista
@@ -1560,6 +1827,26 @@ def _alertas_de_agentes(reg: dict, etq: dict) -> list[dict]:
                 continue
             texto = b.strip()
             if re.match(r"(?i)(ninguno|ninguna|no hay|sin bloqueantes)\b", _ing_ascii(texto)):
+                continue
+            # Si el compositor ya comparó esos aditivos con la tabla verificada,
+            # su cifra sustituye a la del agente (run_59: «400 mg/kg»; run_69:
+            # «580»). La frase del agente se conserva al lado para trazabilidad.
+            codes = _codigos_aditivo(texto)
+            if (aditivos_cubiertos and codes and codes <= set(aditivos_cubiertos)
+                    and _HABLA_DE_LIMITE.search(_ing_ascii(texto))):
+                propio = next((a for a in (avisos_aditivos or [])
+                               if codes & a.get("_codigos", set())), None)
+                if propio is not None:
+                    propio["mensaje"] += f" Regulatorio decía: «{texto}»."
+                else:
+                    out.append({
+                        "severidad": "info",
+                        "origen": "Límite de aditivo (Reg. 1333/2008)",
+                        "fuente": "compositor",
+                        "mensaje": " ".join(dict.fromkeys(
+                            aditivos_cubiertos[c] for c in sorted(codes)))
+                                   + f" Regulatorio decía: «{texto}».",
+                    })
                 continue
             potencial = re.match(r"(?i)potencial\b", texto) is not None
             out.append({
@@ -1613,7 +1900,11 @@ def cruces_entre_agentes(kic: dict, reg: dict, clm: dict, etq: dict,
     out += _cruce_suma_formula_volumen(canonica, ft)
     out += _cruce_nutricional_ft_etiqueta(ft, etq)
     out += _cruce_nutricional_por_100(etq, ft)
-    out += _alertas_de_agentes(reg, etq)
+    avisos_adit, cubiertos = _control_limites_aditivos(kic_ings, reg, ft, etq)
+    out += avisos_adit
+    out += _alertas_de_agentes(reg, etq, cubiertos, avisos_adit)
+    for a in avisos_adit:
+        a.pop("_codigos", None)
     return out
 
 

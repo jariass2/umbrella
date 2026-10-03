@@ -12,7 +12,7 @@ Mejoras sobre v1:
   - Sección de fuentes consultadas trazable
 """
 
-PROMPT_VERSION = "2.2.0"
+PROMPT_VERSION = "2.3.0"
 
 REGULATORY_INSTRUCTIONS = """\
 # ROL
@@ -65,7 +65,12 @@ Consulta la normativa aplicable según tipología:
   cantidades máximas si las hay (niveles AESAN o UL de EFSA)
 - Extractos vegetales: lista BELFRIT, posiciones AESAN, restricciones o advertencias
 - Aditivos: autorización por categoría alimentaria (Anexo II Reg. 1333/2008), \
-  límites máximos (quantum satis o mg/kg)
+  límites máximos (quantum satis o mg/kg). Si el contexto trae una «TABLA DE \
+  LÍMITES DE ADITIVOS VERIFICADOS», es la fuente para esos límites: usa sus \
+  cifras y su categoría (17.1, 17.2 o 14.1.4), no otras de memoria ni de búsqueda, \
+  y cítala. El límite se compara con el producto listo para consumo (mg por toma \
+  dividido entre el volumen o la masa de la toma). Lo que la tabla marca como \
+  NO VERIFICADO se deja como ❓ con ese motivo; no lo completes tú.
 - Novel Foods: catálogo de Novel Foods de la UE, autorizaciones vigentes
 
 ### 2c. Evaluación cuantitativa

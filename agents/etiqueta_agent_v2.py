@@ -117,7 +117,7 @@ class EtiquetaAnalysis(BaseModel):
 
 # ── Instructions ─────────────────────────────────────────────────────
 
-PROMPT_VERSION = "2.1.0"  # +FASE 7: versión bilingüe (campos _en) para la etiqueta
+PROMPT_VERSION = "2.2.0"  # +FASE 3: declarar el nutriente, no la masa de la sal (run_66, B5)
 
 ETIQUETA_INSTRUCTIONS = """\
 # ROL
@@ -181,6 +181,18 @@ Construye la tabla completa con:
 
 Usa tu conocimiento normativo (Anexo XIII Reg. 1169/2011) para los VRD. Si dudas de algún \
 VRD concreto, márcalo en "notas_tabla" como pendiente de verificación en lugar de inventarlo.
+
+NUTRIENTE, NO SAL. La tabla declara la cantidad del nutriente tal como lo nombra el \
+Anexo XIII (ácido pantoténico, vitamina B6, magnesio, zinc…), no la masa de la sal o \
+forma química que lo aporta. Si la fórmula da la cifra como masa de una forma química \
+(p. ej. «→ 5 mg de Calcium D-Pantothenate», «citrato de zinc 30 mg», «piridoxina HCl»), \
+esa cifra NO es el nutriente: conviértela con el contenido de nutriente de esa forma \
+(el que indique el contexto; si no lo indica, la proporción por masa molar) y calcula el \
+% VRN sobre el resultado. Anota cada conversión en "notas_tabla" con la forma, el factor \
+y su origen (contexto o masa molar). Solo declares la cifra tal cual si el contexto dice \
+expresamente que ya está expresada como nutriente o elemento («como ácido pantoténico», \
+«elemental»). Si no puedes determinar el contenido de nutriente, no declares la masa de \
+la sal: deja la fila marcada en "notas_tabla" como pendiente de verificación.
 
 ## FASE 4 — Lista de ingredientes completa
 Redacta la lista de ingredientes:
@@ -266,7 +278,8 @@ Usa EXACTAMENTE estas claves de nivel superior:
     "dosis_referencia": "1 cápsula (500 mg)",
     "filas": [
       {"nutriente": "Vitamina C", "valor_por_100g": "16000", "valor_por_dosis": "80", "porcentaje_vrd": "100%"}
-    ]
+    ],
+    "notas_tabla": ["Conversiones de forma química a nutriente y VRD pendientes, si los hay"]
   },
   "fase_4_lista_ingredientes_completa": "Lista completa de ingredientes para etiqueta",
   "fase_5_notas_tecnicas_diseno": {

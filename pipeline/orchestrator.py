@@ -789,12 +789,36 @@ def _slim_reg(reg: dict) -> dict:
     }
 
 
+_LIMITES_ADITIVOS_MD = (Path(__file__).resolve().parent.parent
+                        / "knowledge" / "regulatory" / "limites_aditivos_1333_2008.md")
+
+
+def _limites_aditivos_verificados() -> str:
+    """Tabla de límites del Reg. 1333/2008 contrastada con el consolidado.
+
+    En el run_72 Regulatorio no pudo abrir el consolidado y dejó la sucralosa
+    y los conservantes «pendientes de verificar», con una recomendación de
+    ≤ 300 mg/kg que es la cifra de bebidas (14.1.4), no la de 17.2 (240).
+    """
+    try:
+        return _LIMITES_ADITIVOS_MD.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+
+
 def ctx_reg(results: dict) -> str:
     """Contexto KIC reducido para el agente Regulatorio."""
     kic = results.get("KIC")
     if not kic:
         return ""
-    return f"CONTEXTO KIC:\n{json.dumps(_slim_kic(kic), ensure_ascii=False)}"
+    ctx = f"CONTEXTO KIC:\n{json.dumps(_slim_kic(kic), ensure_ascii=False)}"
+    lleva_aditivos = any(
+        str(i.get("tipologia", "")).upper().startswith("ADITIVO")
+        for i in kic.get("fase_2_ingredientes", []) if isinstance(i, dict))
+    tabla = _limites_aditivos_verificados() if lleva_aditivos else ""
+    if tabla:
+        ctx += f"\n\nTABLA DE LÍMITES DE ADITIVOS VERIFICADOS:\n{tabla}"
+    return ctx
 
 
 def ctx_ft(results: dict) -> str:
