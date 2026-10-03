@@ -55,9 +55,13 @@ def limpiar(output_dir: str) -> None:
 
 
 def registrar(output_dir: str | None, origen: str, mensaje: str,
-              severidad: str = "media") -> None:
+              severidad: str = "media", fuente: str | None = None) -> None:
     """Anota un aviso y lo imprime. Nunca lanza: un fallo aquí no puede
-    tumbar el run que está intentando vigilar."""
+    tumbar el run que está intentando vigilar.
+
+    `fuente` marca quién lo emitió cuando ese emisor necesita reconocer
+    después sus propios avisos (el compositor los recalcula en cada
+    composición y descarta los anteriores por esta marca)."""
     if severidad not in SEVERIDADES:
         severidad = "media"
     print(f"{_EMOJI[severidad]} [{origen}] {mensaje}")
@@ -69,6 +73,8 @@ def registrar(output_dir: str | None, origen: str, mensaje: str,
         "mensaje": mensaje,
         "ts": datetime.now().isoformat(timespec="seconds"),
     }
+    if fuente:
+        entrada["fuente"] = fuente
     with _LOCK:
         try:
             actuales = _leer_sin_lock(output_dir)

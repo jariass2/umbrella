@@ -321,10 +321,11 @@ def test_tabla_nutricional_agrega_por_elemento():
     rows = _nutricional_vitmin_rows(kic, canon)
     por_nombre = {r[0]: r for r in rows}
 
-    # Una sola fila de magnesio, con la suma 12,88 + 15,08 = 27,96 mg.
+    # Una sola fila de magnesio, con la suma 12,88 + 15,08 = 27,96 mg, que se
+    # publica a tres cifras significativas.
     assert "Magnesio" in por_nombre, f"Filas obtenidas: {rows}"
     assert sum(1 for r in rows if r[0] == "Magnesio") == 1
-    assert por_nombre["Magnesio"][1] == "27,96 mg"
+    assert por_nombre["Magnesio"][1] == "28 mg"
     # 27,96 / 375 = 7,456% → "7,5%" (VRN legal del Anexo XIII, no inventado).
     assert por_nombre["Magnesio"][2] == "7,5%"
 
@@ -639,3 +640,123 @@ def test_tabla_nutricional_acepta_cota_inferior_a():
     # La cota no tapa un error real: 2 g/100 g en 50 g son 1 g, más que «< 0,5 g».
     etq["fase_3_tabla_nutricional_completa"]["filas"][0]["valor_por_100g"] = "2 g"
     assert _cruce_nutricional_por_100(etq, ft)
+
+
+def test_recomponer_no_arrastra_avisos_del_compositor(tmp_path):
+    """Recomponer sustituye los avisos que calculó la composición anterior y
+    conserva los del orquestador. Antes, un origen fuera de la lista de
+    prefijos («Coherencia de la ficha de fórmula») se arrastraba entre
+    recomposiciones aunque el fallo ya estuviese corregido."""
+    import json
+    import shutil
+    if not (OUTPUTS_DIR / "agente_1_kic_v2.json").exists():
+        pytest.skip("No hay outputs/v2 — ejecuta el pipeline primero")
+    run = tmp_path / "run"
+    shutil.copytree(OUTPUTS_DIR, run)
+    (run / "avisos.json").write_text(json.dumps([
+        {"severidad": "media", "origen": "Agente 1 KIC",
+         "mensaje": "La respuesta no incluye estos apartados: X."},
+        {"severidad": "alta", "origen": "Coherencia de la ficha de fórmula",
+         "mensaje": "**Fantasma** — aviso de una composición vieja"},
+    ]), encoding="utf-8")
+
+    def componer():
+        compose_informe("Producto de prueba\n\n- Ingrediente: 1mg",
+                        str(run / "informe.md"), output_dir=str(run))
+        return json.loads((run / "avisos.json").read_text(encoding="utf-8"))
+
+    primera = componer()
+    mensajes = [a["mensaje"] for a in primera]
+    assert "La respuesta no incluye estos apartados: X." in mensajes
+    assert not any("Fantasma" in m for m in mensajes)
+    assert "Fantasma" not in (run / "informe.md").read_text(encoding="utf-8")
+
+    segunda = componer()
+    assert sorted(a["mensaje"] for a in segunda) == sorted(mensajes)
+    orq = [a for a in segunda if a["origen"] == "Agente 1 KIC"]
+    assert len(orq) == 1 and orq[0]["fuente"] == "orquestador"
+
+
+def test_pct_vrn_claim_suma_todas_las_fuentes():
+    """«Fuente de magnesio» se juzga sobre el magnesio total. Con dos sales al
+    8 % cada una el nutriente llega al 16 % y el claim es aplicable; antes se
+    devolvía el 8 % de la primera y salía «No aplicable»."""
+    from pipeline.report_composer import _pct_vrn_calculado
+    kic = [{"ingrediente": "Magnesium citrate"},
+           {"ingrediente": "Magnesium bisglycinate"},
+           {"ingrediente": "Zinc gluconate"}]
+    canon = [{"name": "Magnesium citrate", "active_mg": 30},
+             {"name": "Magnesium bisglycinate", "active_mg": 30},
+             {"name": "Zinc gluconate", "active_mg": 1}]
+    pct = _pct_vrn_calculado("Magnesio", kic, canon)
+    assert pct is not None and abs(pct - 16.0) < 0.1
+    assert abs(_pct_vrn_calculado("Zinc", kic, canon) - 10.0) < 0.1
+
+
+def test_pct_vrn_claim_con_cantidades_en_el_nombre():
+    """Claims escribe la dosis en el nombre («Zinc … — 1,391 mg por toma»).
+    La unidad «mg» casaba con el símbolo del magnesio y en el run 68 zinc,
+    calcio y colágeno salían con el % del magnesio. El total se calcula sin
+    redondear por fuente: 12,88 + 15,08 mg de Mg son 7,46 %, no 3,4 + 4,0."""
+    from pipeline.report_composer import _ing_ident_key, _pct_vrn_calculado
+    assert _ing_ident_key("Zinc (citrato + bisglicinato) — 1,391 mg por toma") == "min:zn"
+    assert _ing_ident_key("Curcuminoides 95% (75 mg por toma)") is None
+    assert _ing_ident_key("Péptidos de colágeno — 81,7 mg por toma") is None
+    assert _ing_ident_key("Magnesio (bisglicinato) — 100 mg Mg por toma") == "min:mg"
+    kic = [{"ingrediente": "Citrato trimagnésico anhidro (magnesio)"},
+           {"ingrediente": "Citrato de zinc trihidrato"},
+           {"ingrediente": "Péptidos de colágeno (Fortibone)"},
+           {"ingrediente": "Bisglicinato de magnesio"},
+           {"ingrediente": "Bisglicinato de zinc"}]
+    canon = [{"active_name": "Mg", "active_mg": 12.88},
+             {"active_name": "Zn", "active_mg": 0.47},
+             {"active_name": "Collagen Peptides", "active_mg": 81.727},
+             {"active_name": "Mg", "active_mg": 15.08},
+             {"active_name": "Zn", "active_mg": 0.921}]
+    zn = _pct_vrn_calculado("Zinc (citrato + bisglicinato) — 1,391 mg por toma", kic, canon)
+    mg = _pct_vrn_calculado("Magnesio (citrato + bisglicinato) — 27,96 mg por toma", kic, canon)
+    assert abs(zn - 13.91) < 0.01
+    assert abs(mg - 7.456) < 0.01
+    assert _pct_vrn_calculado("Péptidos de colágeno — 81,7 mg por toma", kic, canon) is None
+    # El estearato de magnesio es excipiente: no suma (run 42: 28,0 % → 26,7 %).
+    kic42 = [{"ingrediente": "Estearato de magnesio vegetal", "tipologia": "ADITIVO_TECNOLÓGICO"},
+             {"ingrediente": "Bisglicinato de magnesio (12% Mg elemental)", "tipologia": "MINERAL"}]
+    canon42 = [{"active_name": "Mg Stearate", "active_mg": 5.0},
+               {"active_name": "Mg", "active_mg": 100.0}]
+    pct42 = _pct_vrn_calculado("Magnesio (bisglicinato de magnesio) — 100 mg Mg por toma",
+                               kic42, canon42)
+    assert abs(pct42 - 26.67) < 0.01
+
+
+def test_vitaminas_por_nombre_quimico_y_sales_calcicas():
+    """Las vitaminas se identifican por su nombre químico, y una sal cálcica
+    de vitamina es la vitamina, no calcio. Antes «Calcium L-Methylfolate» y
+    «Calcium D-Pantothenate» resolvían a min:ca, y «Vitamina C» a nada."""
+    from pipeline.report_composer import _ing_ident_key
+    casos = {
+        "Calcium L-Methylfolate": "vit:b9", "Ácido fólico": "vit:b9",
+        "Calcium D-Pantothenate": "vit:b5", "Pyridoxine HCl": "vit:b6",
+        "Thiamine HCl": "vit:b1", "Riboflavin": "vit:b2",
+        "Nicotinamide": "vit:b3", "Methylcobalamin": "vit:b12",
+        "Retinyl acetate": "vit:a", "Vitamina A": "vit:a",
+        "Vitamina C": "vit:c", "Vitamin E": "vit:e",
+        "Calcium carbonate": "min:ca", "Ginkgo biloba folium": None,
+    }
+    for nombre, esperado in casos.items():
+        assert _ing_ident_key(nombre) == esperado, nombre
+
+
+def test_cantidad_nutricional_tres_cifras_significativas():
+    """La tabla nutricional no publica más precisión de la que hay: el run_67
+    sacaba «0,8243 mg» y «26,6171 µg»."""
+    from pipeline.report_composer import _fmt_cantidad
+    assert _fmt_cantidad(0.8243, "mg") == "0,824 mg"
+    assert _fmt_cantidad(0.0266171, "µg") == "26,6 µg"
+    assert _fmt_cantidad(67.9062, "mg") == "67,9 mg"
+    assert _fmt_cantidad(0.000375, "µg") == "0,375 µg"
+    assert _fmt_cantidad(375.0, "mg") == "375 mg"
+    assert _fmt_cantidad(1250.4, "mg") == "1250 mg"
+    assert _fmt_cantidad(15.0, "mg") == "15 mg"
+    # Mitad hacia arriba, como en etiqueta (round() de Python daba 56,2).
+    assert _fmt_cantidad(56.25, "mg") == "56,3 mg"
+    assert _fmt_cantidad(0.01125, "µg") == "11,3 µg"

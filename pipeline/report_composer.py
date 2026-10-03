@@ -7,11 +7,13 @@ Sin llamadas a LLM — composición puramente programática.
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import unicodedata
 from collections import OrderedDict
 from datetime import date
+from decimal import ROUND_HALF_UP, Decimal
 
 from pipeline import avisos as _avisos_mod
 from pipeline.pricing import PRICES_USD_PER_M
@@ -478,6 +480,24 @@ _ADITIVOS_NO_NUTRIENTES = (
 )
 
 
+# Nombre químico → vitamina. Sin anclar al inicio de palabra donde el nombre
+# lleva prefijo (metil-, ciano-, hidroxo-, cálcico…).
+_VIT_QUIMICAS = (
+    ("vit:b9", r"fol(?:ic|ico|ato|ate|inic|inico)\b"),
+    ("vit:b5", r"panto(?:th|t)en"),
+    ("vit:b6", r"p[iy]ridox"),
+    ("vit:b1", r"\bt(?:h)?iamin"),
+    ("vit:b2", r"riboflav"),
+    ("vit:b3", r"niacin|nicotin(?:amid|ic|ico)"),
+    ("vit:b12", r"cobalamin"),
+    ("vit:a", r"\bretin(?:ol|yl|ilo)|\bvit(?:amina?)?\.?\s+a\b"),
+)
+
+# Número + unidad, ya en ASCII («µg» llega como «g» tras `_ing_ascii`).
+_RE_CANTIDAD = re.compile(
+    r"\d+(?:[.,]\d+)?\s*(?:mg|mcg|ug|g|kg|ml|l|ui|iu|%)(?![a-z])")
+
+
 def _ing_ident_key(name: str) -> str | None:
     """Clave de identidad fuerte para vitaminas y minerales (inequívoca entre
     idiomas). Las vitaminas se comprueban ANTES que los minerales para que la
@@ -486,19 +506,29 @@ def _ing_ident_key(name: str) -> str | None:
     s = _ing_ascii(name)
     if any(re.search(p, s) for p in _ADITIVOS_NO_NUTRIENTES):
         return None
+    # Las cantidades fuera antes de buscar símbolos: la unidad «mg» casaba con
+    # el símbolo del magnesio y «Zinc — 1,391 mg por toma» o «Curcuminoides
+    # (75 mg por toma)» salían como magnesio (runs 42 y 68, 2026-10-03).
+    s = _RE_CANTIDAD.sub(" ", s)
     m = re.search(r"\bb\s*([0-9]{1,2})\b", s)
     if m and ("vit" in s or ("b" + m.group(1)) in s.replace(" ", "")):
         return f"vit:b{int(m.group(1))}"
-    if re.search(r"\bvit\.?\s*c\b", s) or "ascorbic" in s:
+    if re.search(r"\bvit(?:amin[ae]?)?\.?\s*c\b", s) or "ascorbic" in s:
         return "vit:c"
     if re.search(r"\bd3\b", s) or "cholecalciferol" in s or "colecalciferol" in s:
         return "vit:d3"
-    if re.search(r"\bvit\.?\s*e\b", s) or "tocopherol" in s or "tocoferol" in s:
+    if re.search(r"\bvit(?:amin[ae]?)?\.?\s*e\b", s) or "tocopherol" in s or "tocoferol" in s:
         return "vit:e"
-    if re.search(r"\bvit\.?\s*h\b", s) or "biotin" in s or "biotina" in s:
+    if re.search(r"\bvit(?:amin[ae]?)?\.?\s*h\b", s) or "biotin" in s or "biotina" in s:
         return "vit:h"
     if re.search(r"\bk2\b", s) or "mk7" in s.replace("-", "").replace(" ", "") or "mk-7" in s:
         return "vit:k2"
+    # Vitaminas por nombre químico. Hasta el 2026-10-03 solo se reconocían por
+    # «B6», «vit. C»…, y las sales cálcicas («Calcium L-Methylfolate», «Calcium
+    # D-Pantothenate») caían al calcio en el bucle de minerales de abajo.
+    for key, pat in _VIT_QUIMICAS:
+        if re.search(pat, s):
+            return key
     for key, pats in _MIN_KEYS:
         if any(re.search(p, s) for p in pats):
             return key
@@ -738,14 +768,38 @@ def _vitamina_desde_sal(key: str | None, canon_i: dict | None) -> tuple[float, s
 def _pct_vrn_calculado(nombre: str, kic_ings: list[dict],
                        canon_alineada: list[dict | None]) -> float | None:
     """%VRN calculado desde la ficha para el ingrediente que nombra Claims.
-    None si no es una vitamina/mineral con VRN o no se localiza en KIC."""
-    for ing, canon_i in zip(kic_ings, canon_alineada):
+    None si no es una vitamina/mineral con VRN o no se localiza en KIC.
+
+    El claim es del nutriente, no de la fuente: con magnesio de citrato y de
+    bisglicinato, «fuente de magnesio» se juzga sobre la suma. Antes se
+    devolvía el % de la primera fuente y un nutriente que llegaba al 15 %
+    entre dos sales salía como «No aplicable»."""
+    def _clave(ing: dict, canon_i: dict | None):
+        return (_ing_ident_key(ing.get("ingrediente", ""))
+                or (canon_i and _ing_ident_key(canon_i.get("active_name", ""))))
+
+    pares = list(zip(kic_ings, canon_alineada))
+    for ing, canon_i in pares:
         if _mismo_ingrediente(nombre, ing.get("ingrediente", "")):
-            key = (_ing_ident_key(ing.get("ingrediente", ""))
-                   or (canon_i and _ing_ident_key(canon_i.get("active_name", ""))))
+            key = _clave(ing, canon_i)
             if key not in _NRV or not canon_i:
                 return None
-            return _num_pct(_vrn_ingrediente(ing, canon_i))
+            total: float | None = None
+            for otro, canon_o in pares:
+                if not canon_o or _clave(otro, canon_o) != key:
+                    continue
+                # Mismo filtro que la tabla nutricional: el estearato de
+                # magnesio (excipiente) no suma al magnesio declarado. Sin él,
+                # el claim del run 42 daba 28,0 % frente al 26,7 % de la tabla.
+                tip = (otro.get("tipologia") or "").upper()
+                if tip and tip not in ("VITAMINA", "MINERAL"):
+                    continue
+                calc = _vrn_calculo(otro, canon_o)
+                pct = (calc[0] if calc is not None
+                       else _num_pct(otro.get("porcentaje_nrv", "")))
+                if pct is not None:
+                    total = (total or 0.0) + pct
+            return total
     return None
 
 
@@ -758,7 +812,27 @@ def _vrn_ingrediente(ing: dict, canon_i: dict | None) -> str:
     vitamina D al '150% (15 µg/día)' cuando el VRN legal son 5 µg (Xavier tachó
     la tabla entera, 2026-07-27). Cae al valor de KIC solo si no identificamos
     el nutriente, y nunca inventa un % para boro o silicio, que no tienen VRN."""
+    calc = _vrn_calculo(ing, canon_i)
+    if calc is None:
+        return _fmt_pct(ing.get("porcentaje_nrv", ""))
+    pct, nota = calc
+    if pct is None:
+        return "Sin VRN"
+    return f"{_fmt_pct_num(pct)} ({nota})" if nota else _fmt_pct_num(pct)
+
+
+def _vrn_calculo(ing: dict, canon_i: dict | None) -> tuple[float | None, str | None] | None:
+    """Núcleo de `_vrn_ingrediente` sin redondear: (pct, nota) calculado,
+    (None, None) si el nutriente no tiene VRN, None si no se puede calcular.
+    El claim suma fuentes con este valor bruto: sumar los % ya redondeados
+    daba 3,4 + 4,0 = 7,4 % de magnesio donde el real es 7,46 % (run 68)."""
     nombre = ing.get("ingrediente", "")
+    # Un excipiente no aporta nutriente declarable: el estearato de magnesio
+    # salía con «1,3 %» de VRN en la tabla de ingredientes (runs 42, 62, 63,
+    # 65) cuando KIC ya lo daba como «N/A».
+    tip = (ing.get("tipologia") or "").upper()
+    if tip.startswith("ADITIVO") or tip == "EXCIPIENTE":
+        return None
     key = _ing_ident_key(nombre)
     if key is None and canon_i:
         key = (_ing_ident_key(canon_i.get("active_name", ""))
@@ -770,9 +844,9 @@ def _vrn_ingrediente(ing: dict, canon_i: dict | None) -> str:
         akey, amg, nota = anion
         nrv_mg, _u = _NRV.get(akey, (None, None))
         if nrv_mg:
-            return f"{_fmt_pct_num(amg / nrv_mg * 100)} ({nota})"
+            return amg / nrv_mg * 100, nota
     if key in _SIN_VRN:
-        return "Sin VRN"
+        return None, None
     mg = canon_i.get("active_mg") if canon_i else None
     if key in _NRV and isinstance(mg, (int, float)):
         nrv_mg, _unidad = _NRV[key]
@@ -780,9 +854,9 @@ def _vrn_ingrediente(ing: dict, canon_i: dict | None) -> str:
             sal = _vitamina_desde_sal(key, canon_i)
             if sal is not None:
                 frac, nota = sal
-                return f"{_fmt_pct_num(mg * frac / nrv_mg * 100)} ({nota})"
-            return _fmt_pct_num(mg / nrv_mg * 100)
-    return _fmt_pct(ing.get("porcentaje_nrv", ""))
+                return mg * frac / nrv_mg * 100, nota
+            return mg / nrv_mg * 100, None
+    return None
 
 
 # ── Verificación cruzada entre agentes ───────────────────────────────────────
@@ -2017,10 +2091,22 @@ _NUTRIENTE_NOMBRE = {
 
 
 def _fmt_cantidad(mg: float, unidad: str) -> str:
-    """0.000375 mg en µg -> '0,375 µg'; 56.25 mg -> '56,25 mg' (decimal español)."""
+    """0.000375 mg en µg -> '0,375 µg'; 56.25 mg -> '56,3 mg' (decimal español).
+
+    Tres cifras significativas, y nunca decimales por encima de 100. Con
+    cuatro decimales fijos la tabla publicaba «0,8243 mg» o «26,6171 µg»
+    (run_67), una precisión que ni la ficha ni el análisis sostienen."""
     val = mg * 1000 if unidad == "µg" else mg
-    s = f"{val:.4f}".rstrip("0").rstrip(".").replace(".", ",")
-    return f"{s} {unidad}"
+    if val == 0:
+        return f"0 {unidad}"
+    decimales = max(0, 2 - math.floor(math.log10(abs(val))))
+    # Redondeo de etiqueta (mitad hacia arriba): round() de Python redondea
+    # al par y sobre floats binarios, y 56,25 salía 56,2.
+    s = str(Decimal(repr(val)).quantize(Decimal(1).scaleb(-decimales),
+                                        rounding=ROUND_HALF_UP))
+    if "." in s:
+        s = s.rstrip("0").rstrip(".")
+    return f"{s.replace('.', ',')} {unidad}"
 
 
 def _fmt_pct_num(pct: float) -> str:
@@ -3414,6 +3500,24 @@ def _anexo_informacion_pendiente(etq: dict | None) -> list[str]:
     return lines
 
 
+
+FUENTE_COMPOSITOR = "compositor"
+
+# Orígenes que el compositor emitía antes de marcar sus avisos con `fuente`.
+_ORIGENES_COMPOSITOR_LEGADO = ("Cruce ", "Bloqueante regulatorio",
+                               "Menciones obligatorias de etiqueta",
+                               "Fuga de idioma",
+                               "Coherencia de la ficha de fórmula")
+
+
+def _es_aviso_del_compositor(aviso: dict) -> bool:
+    """True si el aviso lo calculó una composición anterior (y por tanto se
+    va a recalcular ahora). Los del orquestador no llevan esa marca."""
+    if aviso.get("fuente") == FUENTE_COMPOSITOR:
+        return True
+    return str(aviso.get("origen", "")).startswith(_ORIGENES_COMPOSITOR_LEGADO)
+
+
 def compose_informe(formula: str, path: str, agent_models: dict | None = None,
                     timings: dict | None = None, total_elapsed: float = 0,
                     output_dir: str | None = None) -> None:
@@ -3447,11 +3551,15 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
     # recomposición de un mismo run duplicaba la lista: el run_59 mostraba a la
     # vez «7 menciones pendientes» y «9 menciones pendientes», la vieja y la
     # nueva, sin nada que dijese cuál valía.
-    _recalculables = ("Cruce ", "Bloqueante regulatorio",
-                      "Menciones obligatorias de etiqueta", "Fuga de idioma")
+    # Hasta el 2026-10-03 el filtro era una lista de prefijos de origen, y se
+    # quedó atrás: «Coherencia de la ficha de fórmula» no estaba y se arrastraba
+    # entre recomposiciones. Ahora todo aviso que escribe el compositor lleva
+    # `fuente: compositor` y se descarta por esa marca. Los prefijos se quedan
+    # solo para leer avisos.json escritos antes de la marca.
     avisos_run: list[dict] = [
-        a for a in _avisos_mod.cargar(output_dir)
-        if not str(a.get("origen", "")).startswith(_recalculables)
+        {**a, "fuente": a.get("fuente") or "orquestador"}
+        for a in _avisos_mod.cargar(output_dir)
+        if not _es_aviso_del_compositor(a)
     ]
     avisos_run += cruces_entre_agentes(kic, reg, clm, etq, canonica, ft)
 
@@ -3705,8 +3813,11 @@ def compose_informe(formula: str, path: str, agent_models: dict | None = None,
     # Persistir el registro completo: es lo que lee el dashboard.
     _avisos_mod.limpiar(output_dir)
     for a in avisos_run:
+        # Lo heredado lleva ya su fuente («orquestador»); lo
+        # calculado aquí se marca para descartarlo en la próxima composición.
         _avisos_mod.registrar(output_dir, a.get("origen", "—"),
-                              a.get("mensaje", ""), a.get("severidad", "media"))
+                              a.get("mensaje", ""), a.get("severidad", "media"),
+                              fuente=a.get("fuente", FUENTE_COMPOSITOR))
     if avisos_run:
         print(f"⚠️  {len(avisos_run)} aviso(s) en esta ejecución — ver la sección "
               f"«Avisos de la ejecución» del informe y {_avisos_mod.FICHERO}.")
