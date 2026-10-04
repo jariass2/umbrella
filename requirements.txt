@@ -23,3 +23,6 @@ markupsafe>=3.0,<4.0
 reportlab>=4.5,<5.0
 # Spanish hyphenation for justified body text (avoids ugly word gaps)
 pyphen>=0.14,<1.0
+
+# Formula-sheet PDF parsing (dashboard/utils/ft_pdf_parser.py)
+pypdfium2>=4.0,<6.0
